@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - EAU DEY PLAY</title>
+  
+  <!-- CSS Links -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <div class="admin-container">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="admin-logo">EAU DEY PLAY</div>
+      <nav class="admin-nav">
+        <li class="admin-nav-item">
+          <button class="admin-nav-link active" data-view="dashboard">
+            📊 Dashboard
+          </button>
+        </li>
+        <li class="admin-nav-item">
+          <button class="admin-nav-link" data-view="products">
+            📦 Manage Products
+          </button>
+        </li>
+        <li class="admin-nav-item">
+          <button class="admin-nav-link" data-view="orders">
+            🛒 Manage Orders
+          </button>
+        </li>
+        <li class="admin-nav-item" style="margin-top: var(--spacing-xl);">
+          <button class="admin-nav-link" id="logout-btn">
+            🚪 Logout
+          </button>
+        </li>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="admin-main">
+      <div class="admin-header">
+        <h1 class="admin-title">Super Admin Dashboard</h1>
+        <div class="admin-user-info">
+          <span class="admin-user-email" id="user-email"></span>
+        </div>
+      </div>
+
+      <!-- Content Container (dynamically updated) -->
+      <div id="admin-content">
+        <!-- Dashboard will be loaded here -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Product Modal -->
+  <div class="product-modal" id="product-modal">
+    <div class="product-modal-content">
+      <div class="product-modal-header">
+        <h2 class="product-modal-title" id="modal-title">Add New Product</h2>
+        <button class="product-modal-close" id="modal-close">×</button>
+      </div>
+
+      <div class="product-modal-body">
+        <form id="product-form">
+          <div class="product-form-group">
+            <label for="product-name">Product Name *</label>
+            <input type="text" id="product-name" name="name" required>
+          </div>
+
+          <div class="product-form-group">
+            <label for="product-price">Price *</label>
+            <input type="number" id="product-price" name="price" step="0.01" required>
+          </div>
+
+          <div class="product-form-group">
+            <label for="product-category">Category *</label>
+            <select id="product-category" name="category" required>
+              <option value="">Select Category</option>
+              <option value="service">Service</option>
+              <option value="merchandise">Merchandise</option>
+            </select>
+          </div>
+
+          <div class="product-form-group">
+            <label for="product-description">Description</label>
+            <textarea id="product-description" name="description"></textarea>
+          </div>
+
+          <div class="product-form-group">
+            <label for="product-image">Image URL</label>
+            <input type="text" id="product-image" name="image" placeholder="Leave blank for placeholder">
+          </div>
+
+          <div class="product-form-group">
+            <label for="product-button-text">Button Text</label>
+            <input type="text" id="product-button-text" name="buttonText" placeholder="e.g., BOOK, ADD TO CART" value="BOOK">
+          </div>
+
+          <div class="product-modal-footer">
+            <button type="button" class="btn btn-secondary" id="modal-cancel">CANCEL</button>
+            <button type="submit" class="btn">SAVE PRODUCT</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/admin-app.js"></script>
+  <script>
+    // Set user email in header
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = JSON.parse(localStorage.getItem('eau-de-play-current-user') || '{}');
+      const userEmail = document.getElementById('user-email');
+      if (userEmail && user.email) {
+        userEmail.textContent = user.email;
+      }
+    });
+
+    // Cancel button in modal
+    document.addEventListener('DOMContentLoaded', () => {
+      const cancelBtn = document.getElementById('modal-cancel');
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+          document.getElementById('product-modal').classList.remove('active');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

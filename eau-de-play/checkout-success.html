@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Confirmed - EAU DEY PLAY</title>
+  
+  <!-- CSS Links -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/public.css">
+  <link rel="stylesheet" href="css/cart.css">
+</head>
+<body>
+  <!-- Navbar Placeholder -->
+  <div id="navbar-placeholder"></div>
+
+  <!-- Success Page -->
+  <section class="cart-page">
+    <div class="container">
+      <div class="success-container">
+        <div class="success-box">
+          <div class="success-icon">✓</div>
+          <h2>Order Confirmed!</h2>
+          <p>Thank you for your purchase. Your order has been successfully placed.</p>
+          
+          <div class="order-number" id="order-id">
+            Order #ORD-1234567890
+          </div>
+
+          <p style="font-size: var(--font-size-sm); color: var(--color-text-light);">
+            A confirmation email has been sent to your email address.
+            <br>
+            You can track your order status in your email or contact us for updates.
+          </p>
+
+          <div style="display: flex; gap: var(--spacing-lg); margin-top: var(--spacing-xl);">
+            <a href="index.html" class="btn" style="flex: 1; text-align: center;">BACK TO HOME</a>
+            <a href="shop.html" class="btn btn-secondary" style="flex: 1; text-align: center; padding: var(--spacing-lg);">CONTINUE SHOPPING</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer Placeholder -->
+  <div id="footer-placeholder"></div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/public-app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Get order ID from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderId = urlParams.get('orderId');
+      
+      if (orderId) {
+        document.getElementById('order-id').textContent = 'Order #' + orderId;
+      }
+    });
+  </script>
+</body>
+</html>

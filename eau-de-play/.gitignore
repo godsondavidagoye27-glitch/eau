@@ -1,0 +1,72 @@
+# Git Ignore File for EAU DEY PLAY
+
+# IDE & Editor Files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node Modules (if you decide to add build tools later)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build & Distribution
+dist/
+build/
+*.min.js
+*.min.css
+
+# Temporary Files
+*.tmp
+*.bak
+temp/
+tmp/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# OS Files
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Local Database Backups (if using backup system)
+backup/
+*.backup
+*.bak
+
+# Compiled Files
+*.class
+*.pyc
+*.pyo
+__pycache__/
+
+# IDE Generated Files
+.classpath
+.project
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Testing
+coverage/
+.nyc_output/
+
+# Anything in assets/images except the directory
+# (can add actual images separately)
+assets/images/*
+!assets/images/.gitkeep

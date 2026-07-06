@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account - EAU DEY PLAY</title>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/public.css">
+  <link rel="stylesheet" href="css/cart.css">
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <section class="account-section">
+    <div class="account-container">
+      <h2>My Account</h2>
+      <div class="account-grid">
+        <div class="account-left">
+          <div class="profile-box">
+            <h3>Profile</h3>
+            <p id="profile-email"></p>
+            <button id="signout-btn" class="btn">Sign Out</button>
+          </div>
+
+          <div class="orders-box">
+            <h3>My Orders</h3>
+            <div id="orders-list">
+              <!-- Orders populated here -->
+            </div>
+          </div>
+        </div>
+
+        <div class="account-right">
+          <h3>Delivery Tracker</h3>
+          <div id="delivery-tracker">
+            <p>Select an order to view delivery status.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-placeholder"></div>
+
+      <!-- Order Detail Modal -->
+      <div id="order-modal" class="modal" aria-hidden="true">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 id="modal-title">Order Details</h3>
+            <button class="modal-close" id="modal-close">✕</button>
+          </div>
+          <div class="modal-body" id="modal-body">
+            <!-- details inserted here -->
+          </div>
+        </div>
+      </div>
+
+        <script type="module" src="js/account.js"></script>
+        <script type="module" src="js/public-app.js"></script>
+</body>
+</html>

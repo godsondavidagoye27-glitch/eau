@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin - Ship Orders</title>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <style>
+    .admin-list { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+    .order-row { display:flex; gap:12px; align-items:center; padding:12px; border-bottom:1px solid var(--color-border);} 
+    .order-meta { flex:1 }
+    .ship-actions { display:flex; gap:8px; align-items:center }
+    input[type=text]{padding:8px;border:1px solid var(--color-border);border-radius:4px}
+  </style>
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+  <main class="admin-list">
+    <h1>Ship Orders (Admin)</h1>
+    <div style="margin-bottom:16px; display:flex; gap:12px; align-items:center;">
+      <label for="csv-file" style="font-weight:600;">Bulk CSV:</label>
+      <input id="csv-file" type="file" accept=".csv">
+      <button id="process-csv" class="btn">Parse CSV</button>
+      <a href="#" id="download-template" class="btn">Download Template</a>
+      <button id="bulk-ship" class="btn btn-primary">Ship Selected</button>
+    </div>
+
+    <div id="csv-rows" style="margin-bottom:16px;"></div>
+
+    <div id="orders-admin"></div>
+  </main>
+  <div id="footer-placeholder"></div>
+  <script type="module" src="js/admin-ship.js"></script>
+</body>
+</html>

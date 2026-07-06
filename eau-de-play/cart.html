@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Cart - EAU DEY PLAY</title>
+  
+  <!-- CSS Links -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/public.css">
+  <link rel="stylesheet" href="css/cart.css">
+</head>
+<body>
+  <!-- Navbar Placeholder -->
+  <div id="navbar-placeholder"></div>
+
+  <!-- Cart Page -->
+  <section class="cart-page">
+    <div class="cart-container">
+      <div class="cart-header">
+        <h1>Shopping Cart</h1>
+        <p>Review your items and proceed to checkout</p>
+      </div>
+
+      <div class="cart-content">
+        <!-- Cart Items -->
+        <div id="cart-items-container">
+          <!-- Dynamically populated by cart.js -->
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="cart-summary">
+          <h3>Order Summary</h3>
+          
+          <div class="summary-row">
+            <label>Subtotal</label>
+            <span id="cart-subtotal">$0.00</span>
+          </div>
+
+          <div class="summary-row">
+            <label>Tax (8%)</label>
+            <span id="cart-tax">$0.00</span>
+          </div>
+
+          <div class="summary-total">
+            <div class="total-row grand-total">
+              <label>Total</label>
+              <span class="total-price" id="cart-total-with-tax">$0.00</span>
+            </div>
+          </div>
+
+          <div class="cart-actions">
+            <a href="checkout.html" class="btn btn-checkout" id="checkout-btn">PROCEED TO CHECKOUT</a>
+            <a href="shop.html" class="btn btn-continue-shopping">CONTINUE SHOPPING</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer Placeholder -->
+  <div id="footer-placeholder"></div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/cart.js"></script>
+  <script type="module" src="js/public-app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Render cart items
+      window.cartManager.renderCartItems('cart-items-container');
+      window.cartManager.updateTotal();
+
+      // Disable checkout if cart is empty
+      const checkoutBtn = document.getElementById('checkout-btn');
+      if (checkoutBtn && window.cartManager.getCartItems().length === 0) {
+        checkoutBtn.disabled = true;
+        checkoutBtn.style.opacity = '0.5';
+        checkoutBtn.style.cursor = 'not-allowed';
+      }
+    });
+  </script>
+</body>
+</html>
