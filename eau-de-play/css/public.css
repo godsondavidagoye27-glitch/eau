@@ -27,6 +27,22 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
+.hero {
+  background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+              url("https://cdn.phototourl.com/free/2026-07-06-e5d57e0d-120a-407a-85f6-9d5e4f8dba0f.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+
+  color: white;
+}
+
 @media (max-width: 768px) {
   .hero {
     min-height: 40vh;
