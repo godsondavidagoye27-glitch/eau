@@ -159,7 +159,7 @@ export class PublicApp {
     this.db.add('messages', message);
 
     // Send to Tally
-    const tallyFormId = import.meta.env.VITE_TALLY_FORM_ID;
+    const tallyFormId = window.TALLY_FORM_ID;
     if (tallyFormId && tallyFormId !== 'your-tally-form-id') {
       this.sendToTally(formData, tallyFormId).catch(err => {
         console.warn('Tally submission failed:', err);
