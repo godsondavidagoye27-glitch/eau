@@ -155,7 +155,17 @@ export class PublicApp {
       date: new Date().toISOString()
     };
 
+    // Save to local database
     this.db.add('messages', message);
+
+    // Send to Tally
+    const tallyFormId = import.meta.env.VITE_TALLY_FORM_ID;
+    if (tallyFormId && tallyFormId !== 'your-tally-form-id') {
+      this.sendToTally(formData, tallyFormId).catch(err => {
+        console.warn('Tally submission failed:', err);
+        // Continue showing success even if Tally fails
+      });
+    }
 
     // Show success message
     const successEl = document.getElementById('success-message');
@@ -167,6 +177,44 @@ export class PublicApp {
     }
 
     form.reset();
+  }
+
+  async sendToTally(formData, formId) {
+    // Convert FormData to Tally submission format
+    const tallyData = {
+      data: [
+        {
+          key: 'firstName',
+          value: formData.get('firstName') || ''
+        },
+        {
+          key: 'lastName',
+          value: formData.get('lastName') || ''
+        },
+        {
+          key: 'email',
+          value: formData.get('email') || ''
+        },
+        {
+          key: 'message',
+          value: formData.get('message') || ''
+        }
+      ]
+    };
+
+    const response = await fetch(`https://tally.so/api/forms/${formId}/submissions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(tallyData)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Tally submission failed: ${response.statusText}`);
+    }
+
+    return response.json();
   }
 
   // CART METHODS (Handled by CartManager in cart.js)
