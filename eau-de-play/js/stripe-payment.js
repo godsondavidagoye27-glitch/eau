@@ -4,8 +4,17 @@
 
 import { loadStripe } from 'https://js.stripe.com/v3/';
 
-const STRIPE_PUBLIC_KEY = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+function getRuntimeConfig() {
+  const runtimeConfig = typeof window !== 'undefined' ? (window.__APP_CONFIG__ || null) : null;
+  const envConfig = typeof import.meta !== 'undefined' ? import.meta.env : null;
+
+  return {
+    stripePublicKey: runtimeConfig?.stripePublicKey || runtimeConfig?.stripePublishableKey || envConfig?.VITE_STRIPE_PUBLIC_KEY || '',
+    apiUrl: runtimeConfig?.apiUrl || envConfig?.VITE_API_URL || '/api'
+  };
+}
+
+const { stripePublicKey: STRIPE_PUBLIC_KEY, apiUrl: API_URL } = getRuntimeConfig();
 
 if (!STRIPE_PUBLIC_KEY) {
   console.error('❌ MISSING STRIPE PUBLIC KEY');

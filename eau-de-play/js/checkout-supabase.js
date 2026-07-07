@@ -6,6 +6,12 @@ import { supabaseAuth } from './supabase-auth.js';
 import { supabase } from './supabase.js';
 import { stripePayment } from './stripe-payment.js';
 
+function getApiUrl() {
+  const runtimeConfig = typeof window !== 'undefined' ? (window.__APP_CONFIG__ || null) : null;
+  const envConfig = typeof import.meta !== 'undefined' ? import.meta.env : null;
+  return runtimeConfig?.apiUrl || envConfig?.VITE_API_URL || '/api';
+}
+
 export class Checkout {
   constructor() {
     this.stripe = stripePayment;
@@ -128,8 +134,9 @@ export class Checkout {
 
       // Optionally notify backend to start fulfillment/tracking polling
       try {
-        if (typeof fetch === 'function' && import.meta.env?.VITE_API_URL) {
-          fetch(`${import.meta.env.VITE_API_URL}/track/initiate`, {
+        if (typeof fetch === 'function') {
+          const apiUrl = getApiUrl();
+          fetch(`${apiUrl}/track/initiate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ orderId: order.id })

@@ -20,6 +20,36 @@ const MIME_TYPES = {
   '.map': 'application/json; charset=utf-8'
 };
 
+function getRuntimeConfigScript() {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
+  const stripePublicKey = process.env.VITE_STRIPE_PUBLIC_KEY || process.env.STRIPE_PUBLIC_KEY || '';
+  const apiUrl = process.env.VITE_API_URL || process.env.API_URL || '';
+
+  return `
+    <script>
+      window.__APP_CONFIG__ = {
+        supabaseUrl: ${JSON.stringify(supabaseUrl)},
+        supabaseAnonKey: ${JSON.stringify(supabaseAnonKey)},
+        stripePublicKey: ${JSON.stringify(stripePublicKey)},
+        apiUrl: ${JSON.stringify(apiUrl)}
+      };
+      window.__SUPABASE_CONFIG__ = {
+        url: ${JSON.stringify(supabaseUrl)},
+        anonKey: ${JSON.stringify(supabaseAnonKey)}
+      };
+    </script>
+  `;
+}
+
+function injectRuntimeConfig(html) {
+  const configScript = getRuntimeConfigScript();
+  if (html.includes('</head>')) {
+    return html.replace('</head>', `${configScript}</head>`);
+  }
+  return html.replace('</body>', `${configScript}</body>`);
+}
+
 const server = http.createServer((req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   let pathname = decodeURIComponent(requestUrl.pathname);
@@ -62,8 +92,14 @@ const server = http.createServer((req, res) => {
       return;
     }
 
+    let responseBody = data;
+    if (contentType.startsWith('text/html')) {
+      const html = data.toString('utf8');
+      responseBody = Buffer.from(injectRuntimeConfig(html), 'utf8');
+    }
+
     res.writeHead(200, { 'Content-Type': contentType });
-    res.end(data);
+    res.end(responseBody);
   });
 });
 

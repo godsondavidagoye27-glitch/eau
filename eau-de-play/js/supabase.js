@@ -2,26 +2,44 @@
 // SUPABASE CONFIGURATION & INITIALIZATION
 // ============================================
 
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/module/supabase-js.js';
+let createClient;
 
-// Initialize Supabase Client
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+try {
+  ({ createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'));
+} catch (error) {
+  console.warn('Supabase module failed to load from CDN, continuing without client.', error);
+  createClient = null;
+}
+
+function getSupabaseConfig() {
+  const runtimeConfig = typeof window !== 'undefined' ? (window.__SUPABASE_CONFIG__ || window.__APP_CONFIG__ || null) : null;
+  const envConfig = typeof import.meta !== 'undefined' ? import.meta.env : null;
+  const envUrl = envConfig?.VITE_SUPABASE_URL || '';
+  const envKey = envConfig?.VITE_SUPABASE_ANON_KEY || '';
+  const appConfig = typeof window !== 'undefined' ? window.__APP_CONFIG__ : null;
+
+  return {
+    url: runtimeConfig?.url || runtimeConfig?.supabaseUrl || appConfig?.supabaseUrl || envUrl || '',
+    key: runtimeConfig?.anonKey || runtimeConfig?.supabaseAnonKey || appConfig?.supabaseAnonKey || envKey || ''
+  };
+}
+
+const { url: SUPABASE_URL, key: SUPABASE_KEY } = getSupabaseConfig();
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('❌ MISSING SUPABASE CREDENTIALS');
-  console.error('Create .env.local with:');
-  console.error('  VITE_SUPABASE_URL=https://your-project.supabase.co');
-  console.error('  VITE_SUPABASE_ANON_KEY=your-anon-key');
+  console.error('Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, or add window.__SUPABASE_CONFIG__ before loading the app.');
 }
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
-  }
-});
+export const supabase = createClient && SUPABASE_URL && SUPABASE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    })
+  : null;
 
 // ============================================
 // SUPABASE DATABASE MODULE

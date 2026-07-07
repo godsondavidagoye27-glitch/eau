@@ -305,11 +305,32 @@
   resize: vertical;
 }
 
-.product-modal-footer {
-  display: flex;
-  gap: var(--spacing-md);
-  justify-content: flex-end;
-}
+  .media-list {
+    display: grid;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .media-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--spacing-sm);
+    align-items: center;
+  }
+
+  .media-row label {
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+  }
+
+  .media-row input {
+    width: 100%;
+  }
+
+  .media-row .remove-media {
+    align-self: end;
+  }
+
 
 .product-modal-footer button {
   padding: var(--spacing-md) var(--spacing-lg);

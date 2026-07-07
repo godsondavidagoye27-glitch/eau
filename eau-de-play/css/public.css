@@ -27,6 +27,22 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
+.hero {
+  background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+              url("https://cdn.phototourl.com/free/2026-07-06-e5d57e0d-120a-407a-85f6-9d5e4f8dba0f.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+
+  color: white;
+}
+
 @media (max-width: 768px) {
   .hero {
     min-height: 40vh;
@@ -39,6 +55,287 @@
 
   .hero p {
     font-size: var(--font-size-base);
+  }
+}
+
+.afro-home-banner {
+  padding: var(--spacing-3xl) var(--spacing-lg);
+  background: linear-gradient(135deg, rgba(0,0,0,0.75), rgba(0,0,0,0.5)),
+              url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1400&q=80');
+  background-size: cover;
+  background-position: center;
+  color: white;
+}
+
+.afro-home-banner-content {
+  max-width: 860px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.afro-home-banner .eyebrow,
+.afro-home-banner h2,
+.afro-home-banner p {
+  color: white;
+}
+
+.afro-home-banner h2 {
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  margin: var(--spacing-md) 0;
+}
+
+.hero-cta-group {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.hero-cta-group .btn {
+  min-width: 170px;
+}
+
+.afro-page-hero,
+.afro-event-header,
+.gallery-preview-section,
+.gallery-grid-section,
+.newsletter-section {
+  padding: var(--spacing-4xl) var(--spacing-lg);
+}
+
+.afro-page-hero {
+  background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.65)), url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1400&q=80');
+  background-size: cover;
+  background-position: center;
+  color: white;
+}
+
+.afro-hero-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.afro-page-hero .eyebrow,
+.afro-page-hero h1,
+.afro-page-hero p {
+  color: white;
+}
+
+.afro-page-hero h1 {
+  font-size: clamp(3rem, 5vw, 5rem);
+  margin: var(--spacing-xl) 0;
+}
+
+.afro-event-header,
+.gallery-preview-section,
+.gallery-grid-section,
+.newsletter-section {
+  background-color: var(--color-background);
+}
+
+.afro-event-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-3xl);
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.event-header-copy {
+  max-width: 720px;
+}
+
+.event-header-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  justify-content: center;
+}
+
+.section-title {
+  max-width: 1000px;
+  margin: 0 auto var(--spacing-xl);
+  text-align: center;
+}
+
+.preview-carousel {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  overflow: hidden;
+  padding: var(--spacing-md) 0;
+}
+
+.carousel-window {
+  overflow: hidden;
+  width: 100%;
+  border-radius: 24px;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.08);
+  background: linear-gradient(135deg, #fff8f2, #f7f7f7);
+}
+
+.carousel-track {
+  display: flex;
+  gap: var(--spacing-md);
+  transition: transform 0.6s ease;
+  width: max-content;
+  padding: var(--spacing-md);
+}
+
+.preview-card {
+  position: relative;
+  width: 240px;
+  height: 180px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--color-background-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+}
+
+.preview-card img,
+.preview-card .carousel-placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-card-label,
+.gallery-card-label {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.carousel-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xl);
+  color: var(--color-text-light);
+  background: repeating-linear-gradient(45deg, #f5f5f5 0 10px, #eeeeee 10px 20px);
+}
+
+.carousel-control {
+  border: none;
+  background: linear-gradient(135deg, #111, #333);
+  color: white;
+  border-radius: 9999px;
+  width: 48px;
+  height: 48px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.gallery-card,
+.video-card {
+  position: relative;
+  min-height: 260px;
+  background-color: var(--color-background-light);
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+.gallery-card img,
+.video-card iframe,
+.video-card .video-embed {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-light);
+  font-weight: var(--font-weight-bold);
+  padding: var(--spacing-md);
+  text-align: center;
+  min-height: 260px;
+  width: 100%;
+  background: linear-gradient(135deg, #fdf2e8, #f4f4f4);
+}
+
+.video-embed {
+  width: 100%;
+  height: 100%;
+}
+
+.video-embed iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.newsletter-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--spacing-md);
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.newsletter-form input,
+.newsletter-form button {
+  min-height: 56px;
+}
+
+.newsletter-feedback {
+  margin-top: var(--spacing-md);
+  text-align: center;
+  color: var(--color-text);
+}
+
+.btn-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .afro-event-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .preview-card {
+    min-width: 180px;
+  }
+
+  .newsletter-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .afro-page-hero,
+  .afro-event-header,
+  .gallery-preview-section,
+  .gallery-grid-section,
+  .newsletter-section {
+    padding: var(--spacing-2xl) var(--spacing-md);
   }
 }
 
@@ -602,5 +899,40 @@
 @media (max-width: 720px) {
   .auth-top {
     flex-direction: column;
+  }
+}
+
+
+
+@media (max-width: 768px) {
+  .hero {
+    min-height: 100vh; /* better full-screen mobile fit */
+    padding: 0 20px;   /* prevents horizontal overflow */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    overflow-x: hidden; /* kills horizontal scroll issues */
+    box-sizing: border-box;
+  }
+
+  .hero h1 {
+    font-size: clamp(1.5rem, 6vw, 2.2rem);
+    line-height: 1.2;
+    word-wrap: break-word;
+  }
+
+  .hero p {
+    font-size: clamp(0.9rem, 3.5vw, 1rem);
+    line-height: 1.5;
+    max-width: 90%;
+    margin: 0 auto;
+  }
+
+  .hero .btn {
+    display: inline-block;
+    padding: 12px 20px;
+    font-size: 0.9rem;
   }
 }

@@ -23,6 +23,7 @@ export function createNavbar() {
             <li><a href="services.html" class="${isActive('services.html')}">SERVICES</a></li>
             <li><a href="shop.html" class="${isActive('shop.html')}">SHOP</a></li>
             <li><a href="about.html" class="${isActive('about.html')}">ABOUT</a></li>
+            <li><a href="afro-pulse-27.html" class="${isActive('afro-pulse-27.html')}">AFRO PULSE</a></li>
             <li><a href="contact.html" class="${isActive('contact.html')}">CONTACT</a></li>
           </ul>
         </div>
@@ -46,6 +47,7 @@ export function createNavbar() {
           <li><a href="services.html" class="${isActive('services.html')}">SERVICES</a></li>
           <li><a href="shop.html" class="${isActive('shop.html')}">SHOP</a></li>
           <li><a href="about.html" class="${isActive('about.html')}">ABOUT</a></li>
+          <li><a href="afro-pulse-27.html" class="${isActive('afro-pulse-27.html')}">AFRO PULSE</a></li>
           <li><a href="contact.html" class="${isActive('contact.html')}">CONTACT</a></li>
           <li><a href="cart.html" class="cart-link ${cartActive}">🛒 CART <span class="cart-count">0</span></a></li>
           <li><a href="auth.html" class="auth-link ${isActive('auth.html')}">LOGIN / SIGNUP</a></li>
