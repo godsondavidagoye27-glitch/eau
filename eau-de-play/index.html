@@ -63,6 +63,17 @@
   <div id="footer-placeholder"></div>
 
   <!-- Scripts -->
+  <script>
+    // Preserve the original AFRO banner HTML immediately, before any module runs
+    (function(){
+      try {
+        var el = document.querySelector('.afro-home-banner-content');
+        window.__AFRO_ORIGINAL_AFRO_BANNER = el ? el.innerHTML : '';
+      } catch (e) {
+        window.__AFRO_ORIGINAL_AFRO_BANNER = '';
+      }
+    })();
+  </script>
   <script type="module" src="js/public-app.js"></script>
 </body>
 </html>

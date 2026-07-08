@@ -419,6 +419,13 @@ export class PublicApp {
     const config = this.db.getById('settings', 'afro-pulse');
     if (!config) return;
 
+    // If the original static AFRO banner was captured early on page load,
+    // always prefer it to avoid dynamic overrides from later syncs.
+    if (typeof window !== 'undefined' && window.__AFRO_ORIGINAL_AFRO_BANNER && window.__AFRO_ORIGINAL_AFRO_BANNER.trim().length > 0) {
+      content.innerHTML = window.__AFRO_ORIGINAL_AFRO_BANNER;
+      return;
+    }
+
     const title = config.title || "AFRO PULSE '27";
     const subtitle = config.subtitle || 'Every edition set to spark up summer seasons in Iceland.';
     const ticketText = config.ticketButtonText || 'Get Tickets';
