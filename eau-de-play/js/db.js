@@ -2,8 +2,6 @@
 // DATABASE MODULE - LocalStorage CRUD Operations
 // ============================================
 
-import { supabase } from './supabase.js';
-
 export class Database {
   constructor(storageKey = 'eau-de-play-db') {
     this.storageKey = storageKey;
@@ -146,8 +144,18 @@ export class Database {
     return null;
   }
 
+  async getSupabaseClient() {
+    try {
+      const mod = await import('./supabase.js');
+      return mod.supabase || mod.default || null;
+    } catch (err) {
+      console.warn('Supabase client unavailable', err);
+      return null;
+    }
+  }
+
   async syncToSupabase(data) {
-    const client = supabase;
+    const client = await this.getSupabaseClient();
     if (!client || typeof client.from !== 'function') {
       return false;
     }
