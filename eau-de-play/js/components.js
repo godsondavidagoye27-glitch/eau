@@ -104,7 +104,7 @@ export function createFooter() {
   `;
 }
 
-export function injectNavbarAndFooter(showFooter = true) {
+export function injectNavbarAndFooter(showFooter = false) {
   // Inject Navbar
   const navbarPlaceholder = document.getElementById('navbar-placeholder');
   if (navbarPlaceholder) {
