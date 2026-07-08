@@ -25,6 +25,11 @@ export class PublicApp {
   }
 
   setupPageSpecificLogic() {
+    // Ensure homepage-only background class is cleared before page setup
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.classList.remove('home-background');
+    }
+
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 
     if (currentPage === 'index.html' || currentPage === '') {
@@ -388,6 +393,10 @@ export class PublicApp {
 
   // HOME PAGE SETUP
   setupHomePage() {
+    // Apply homepage-only orange background
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.classList.add('home-background');
+    }
     this.renderFeaturedProducts();
     this.renderHomeAfroPulseBanner();
   }

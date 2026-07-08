@@ -62,43 +62,19 @@ export function createNavbar() {
 }
 
 export function createFooter() {
+  // Minimal quick-links footer used across all pages
   return `
-    <footer>
-      <div class="footer-content">
-        <div class="footer-grid">
-          <div class="footer-section">
-            <h3>EAU DEY PLAY</h3>
-            <p>Unlock Success with a Splash of Fun</p>
-            <p>Creative agency specializing in premium services and merchandise.</p>
-          </div>
-          <div class="footer-section">
-            <h3>SERVICES</h3>
-            <ul>
-              <li><a href="services.html">DJ Services</a></li>
-              <li><a href="services.html">Photography</a></li>
-              <li><a href="services.html">Event Planning</a></li>
-              <li><a href="services.html">Sports Solutions</a></li>
-            </ul>
-          </div>
-          <div class="footer-section">
-            <h3>QUICK LINKS</h3>
-            <ul>
-              <li><a href="about.html">About Us</a></li>
-              <li><a href="shop.html">Shop</a></li>
-              <li><a href="contact.html">Contact</a></li>
-              <li><a href="admin-login.html">Admin Login</a></li>
-            </ul>
-          </div>
-          <div class="footer-section">
-            <h3>CONTACT</h3>
-            <p>Email: info@eaudeplay.com</p>
-            <p>Phone: +1 (555) 123-4567</p>
-            <p>Address: 123 Creative Lane, Design City</p>
-          </div>
-        </div>
-        <div class="footer-bottom">
-          <p>&copy; 2024 EAU DEY PLAY. All rights reserved. Unlock Success with a Splash of Fun.</p>
-        </div>
+    <footer class="site-footer">
+      <div class="site-footer-inner container">
+        <nav class="footer-links">
+          <a href="index.html">Home</a>
+          <a href="services.html">Services</a>
+          <a href="shop.html">Shop</a>
+          <a href="about.html">About</a>
+          <a href="afro-pulse-27.html">AFRO PULSE</a>
+          <a href="gallery.html">Gallery</a>
+          <a href="contact.html">Contact</a>
+        </nav>
       </div>
     </footer>
   `;
@@ -111,10 +87,19 @@ export function injectNavbarAndFooter(showFooter = false) {
     navbarPlaceholder.innerHTML = createNavbar();
   }
 
-  // Remove footer placeholder from all pages
+  // Inject or replace footer with quick links
   const footerPlaceholder = document.getElementById('footer-placeholder');
+  const footerHtml = createFooter();
   if (footerPlaceholder) {
-    footerPlaceholder.remove();
+    footerPlaceholder.innerHTML = footerHtml;
+  } else {
+    // append footer at end of body if no placeholder
+    const existing = document.querySelector('footer.site-footer');
+    if (!existing) {
+      const div = document.createElement('div');
+      div.innerHTML = footerHtml;
+      document.body.appendChild(div.firstElementChild);
+    }
   }
   
   // Add navbar toggle behavior for mobile
