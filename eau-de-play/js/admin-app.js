@@ -15,8 +15,10 @@ export class AdminApp {
   }
 
   init() {
-    // Check if user is logged in
-    if (!this.auth.isAuthenticated()) {
+    const currentUser = this.auth.getCurrentUser();
+
+    // Check if user is logged in and has admin role
+    if (!currentUser || currentUser.role !== 'admin') {
       window.location.href = 'admin-login.html';
       return;
     }

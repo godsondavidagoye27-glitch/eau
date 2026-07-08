@@ -33,7 +33,7 @@ class AdminLogin {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
-    const result = this.auth.login(email, password);
+    const result = this.auth.login(email, password, { requireRole: 'admin' });
 
     if (result.success) {
       // Redirect to dashboard

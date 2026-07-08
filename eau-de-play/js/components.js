@@ -111,12 +111,10 @@ export function injectNavbarAndFooter(showFooter = false) {
     navbarPlaceholder.innerHTML = createNavbar();
   }
 
-  // Inject Footer (only if showFooter is true)
+  // Remove footer placeholder from all pages
   const footerPlaceholder = document.getElementById('footer-placeholder');
-  if (footerPlaceholder && showFooter) {
-    footerPlaceholder.innerHTML = createFooter();
-  } else if (footerPlaceholder) {
-    footerPlaceholder.innerHTML = ''; // Clear footer placeholder
+  if (footerPlaceholder) {
+    footerPlaceholder.remove();
   }
   
   // Add navbar toggle behavior for mobile

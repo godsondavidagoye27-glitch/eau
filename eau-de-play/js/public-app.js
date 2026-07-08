@@ -12,10 +12,7 @@ export class PublicApp {
   }
 
   init() {
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    // Skip footer on home page
-    const showFooter = !(currentPage === 'index.html' || currentPage === '');
-    injectNavbarAndFooter(showFooter);
+    injectNavbarAndFooter();
     this.setupPageSpecificLogic();
   }
 
@@ -342,6 +339,31 @@ export class PublicApp {
   // HOME PAGE SETUP
   setupHomePage() {
     this.renderFeaturedProducts();
+    this.renderHomeAfroPulseBanner();
+  }
+
+  renderHomeAfroPulseBanner() {
+    const content = document.querySelector('.afro-home-banner-content');
+    if (!content) return;
+
+    const config = this.db.getById('settings', 'afro-pulse');
+    if (!config) return;
+
+    const title = config.title || "AFRO PULSE '27";
+    const subtitle = config.subtitle || 'Every edition set to spark up summer seasons in Iceland.';
+    const ticketText = config.ticketButtonText || 'Get Tickets';
+    const ticketUrl = config.ticketUrl || 'afro-pulse-27.html';
+    const ticketTarget = config.ticketUrl ? ' target="_blank" rel="noopener noreferrer"' : '';
+
+    content.innerHTML = `
+      <span class="eyebrow">AFRO PULSE '27</span>
+      <h2>${title}</h2>
+      <p>${subtitle}</p>
+      <div class="hero-cta-group">
+        <a href="${ticketUrl}"${ticketTarget} class="btn btn-large">${ticketText}</a>
+        <a href="afro-pulse-27.html" class="btn btn-secondary">Learn More</a>
+      </div>
+    `;
   }
 
   renderFeaturedProducts() {

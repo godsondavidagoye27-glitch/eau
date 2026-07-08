@@ -92,16 +92,22 @@ export class Auth {
   }
 
   // LOGIN
-  login(email, password) {
+  login(email, password, options = {}) {
+    const { requireRole = null } = options;
     const users = this.db.getAll('users');
     const user = users.find(u => u.email === email && u.password === password);
-    
-    if (user) {
-      this.currentUser = user;
-      this.saveCurrentUser(user);
-      return { success: true, user };
+
+    if (!user) {
+      return { success: false, error: 'Invalid email or password' };
     }
-    return { success: false, error: 'Invalid email or password' };
+
+    if (requireRole && user.role !== requireRole) {
+      return { success: false, error: 'Only admins can access the admin panel.' };
+    }
+
+    this.currentUser = user;
+    this.saveCurrentUser(user);
+    return { success: true, user };
   }
 
   // LOGOUT
