@@ -405,6 +405,17 @@ export class PublicApp {
     const content = document.querySelector('.afro-home-banner-content');
     if (!content) return;
 
+    // Preserve the original static HTML for the AFRO banner so we don't overwrite
+    // the author's original markup with a generated duplicate. Capture once.
+    if (!this._afroOriginalCaptured) {
+      try {
+        this._afroOriginalHTML = content.innerHTML || '';
+      } catch (e) {
+        this._afroOriginalHTML = '';
+      }
+      this._afroOriginalCaptured = true;
+    }
+
     const config = this.db.getById('settings', 'afro-pulse');
     if (!config) return;
 
@@ -424,7 +435,15 @@ export class PublicApp {
       }
     }
 
-    // Otherwise render the afro-home-banner content
+    // If we captured a non-empty original banner, prefer it to avoid showing
+    // a generated duplicate. This preserves the original design as authored
+    // in `index.html` unless an admin explicitly requests replacement.
+    if (this._afroOriginalHTML && this._afroOriginalHTML.trim().length > 0) {
+      content.innerHTML = this._afroOriginalHTML;
+      return;
+    }
+
+    // Otherwise render the afro-home-banner content (fallback)
     content.innerHTML = `
       <span class="eyebrow">AFRO PULSE '27</span>
       <h2>${title}</h2>
