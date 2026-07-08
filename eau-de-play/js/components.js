@@ -67,7 +67,7 @@ export function createFooter() {
     <footer class="site-footer">
       <div class="site-footer-inner container">
         <nav class="footer-links">
-          <a href="https://www.instagram.com/deyplay.rvx/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">Instagram</a>
+          <a href="https://www.instagram.com/deyplay.rvk?igsh=bjZ4ZTFhdDJlYzUw" target="_blank" rel="noopener noreferrer" aria-label="Instagram">Instagram</a>
           <a href="https://facebook.com/eaudeyplay" target="_blank" rel="noopener noreferrer" aria-label="Facebook">Facebook</a>
           <a href="https://twitter.com/eaudeyplay" target="_blank" rel="noopener noreferrer" aria-label="Twitter">Twitter</a>
           <a href="https://tiktok.com/@eaudeyplay" target="_blank" rel="noopener noreferrer" aria-label="TikTok">TikTok</a>
