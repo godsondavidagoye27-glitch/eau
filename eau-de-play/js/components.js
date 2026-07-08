@@ -166,6 +166,35 @@ export function injectNavbarAndFooter() {
   window.addEventListener('userLoggedIn', (e) => refreshAuthLinks(e.detail));
   window.addEventListener('userLoggedOut', () => refreshAuthLinks(null));
 
+  // Initialize auth links from existing localStorage or Supabase session
+  (async function initializeAuthLinks() {
+    try {
+      const stored = localStorage.getItem('eau-de-play-current-user') || localStorage.getItem('eau-de-play-user');
+      if (stored) {
+        try {
+          const user = JSON.parse(stored);
+          refreshAuthLinks(user);
+        } catch (e) {
+          // ignore parse errors
+        }
+      }
+
+      // attempt to sync with Supabase auth if available
+      try {
+        const mod = await import('./supabase-auth.js');
+        const supAuth = mod.supabaseAuth || mod.default;
+        if (supAuth && typeof supAuth.getCurrentUser === 'function') {
+          const user = await supAuth.getCurrentUser();
+          if (user) refreshAuthLinks(user);
+        }
+      } catch (err) {
+        // Supabase auth may not be available on this page - that's fine
+      }
+    } catch (err) {
+      console.warn('Failed to initialize auth links', err);
+    }
+  })();
+
   // Wire auth link to perform logout if user is logged in
   const authLinkEl = document.querySelector('.auth-link');
   if (authLinkEl) {
