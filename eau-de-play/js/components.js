@@ -72,7 +72,6 @@ export function createFooter() {
           <a href="https://twitter.com/eaudeyplay" target="_blank" rel="noopener noreferrer" aria-label="Twitter">Twitter</a>
           <a href="https://tiktok.com/@eaudeyplay" target="_blank" rel="noopener noreferrer" aria-label="TikTok">TikTok</a>
           <a href="mailto:info@eaudeplay.com" aria-label="Email">Email</a>
-          <a href="tel:+15551234567" aria-label="Phone">+1 (555) 123-4567</a>
         </nav>
       </div>
     </footer>
