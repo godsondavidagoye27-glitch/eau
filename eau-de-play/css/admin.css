@@ -195,7 +195,7 @@
 }
 
 .btn-edit:hover {
-  background-color: #1976d2;
+  background-color: #ff9800;
 }
 
 .btn-delete {
@@ -203,7 +203,7 @@
 }
 
 .btn-delete:hover {
-  background-color: #d32f2f;
+  background-color: #ff3d00;
 }
 
 /* ADD/EDIT PRODUCT MODAL */

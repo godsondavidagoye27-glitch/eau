@@ -182,7 +182,7 @@ button:disabled,
 }
 
 .btn-danger:hover {
-  background-color: #d32f2f;
+  background-color: #ff3d00;
 }
 
 .btn-success {
@@ -190,7 +190,7 @@ button:disabled,
 }
 
 .btn-success:hover {
-  background-color: #388e3c;
+  background-color: #ff9800;
 }
 
 /* LIST STYLES */
