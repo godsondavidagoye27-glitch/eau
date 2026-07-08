@@ -74,6 +74,35 @@
       }
     })();
   </script>
+  <script>
+    // Remove any duplicate .afro-home-banner elements (keep the first one)
+    (function(){
+      function removeExtraAfro() {
+        try {
+          const banners = document.querySelectorAll('.afro-home-banner');
+          if (banners && banners.length > 1) {
+            for (let i = 1; i < banners.length; i++) {
+              banners[i].remove();
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      removeExtraAfro();
+
+      // Observe briefly for dynamic insertions and remove extras if they appear
+      try {
+        const mo = new MutationObserver(() => removeExtraAfro());
+        mo.observe(document.body, { childList: true, subtree: true });
+        // stop observing after 6s to avoid long-running observers
+        setTimeout(() => mo.disconnect(), 6000);
+      } catch (e) {
+        // ignore
+      }
+    })();
+  </script>
   <script type="module" src="js/public-app.js"></script>
 </body>
 </html>
