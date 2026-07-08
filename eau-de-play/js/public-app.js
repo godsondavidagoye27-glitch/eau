@@ -405,6 +405,12 @@ export class PublicApp {
     const ticketUrl = config.ticketUrl || 'afro-pulse-27.html';
     const ticketTarget = config.ticketUrl ? ' target="_blank" rel="noopener noreferrer"' : '';
 
+    // If a generic .hero exists on the page, hide it to avoid duplicate banners
+    const genericHero = document.querySelector('.hero');
+    if (genericHero) {
+      genericHero.style.display = 'none';
+    }
+
     content.innerHTML = `
       <span class="eyebrow">AFRO PULSE '27</span>
       <h2>${title}</h2>
@@ -421,9 +427,20 @@ export class PublicApp {
     if (!container) return;
 
     const products = this.db.getAll('products').slice(0, 4);
-    const html = products.map(product => `
+
+    const safeSrc = (src) => {
+      if (!src) return '';
+      const trimmed = src.trim();
+      if (trimmed.startsWith('http') || trimmed.startsWith('data:') || trimmed.startsWith('/')) return trimmed;
+      return `assets/images/${trimmed}`;
+    };
+
+    const html = products.map(product => {
+      const src = safeSrc(product.image) || '';
+      const imgHtml = src ? `<img src="${src}" alt="${product.name}" class="card-img">` : `<div class="card-img" style="display:flex;align-items:center;justify-content:center;color:var(--color-text-light);">No image</div>`;
+      return `
       <div class="card">
-        <img src="${product.image}" alt="${product.name}" class="card-img">
+        ${imgHtml}
         <div class="card-title">${product.name}</div>
         <div class="card-price">$${product.price}</div>
         <div class="card-description">${product.description}</div>
@@ -431,7 +448,8 @@ export class PublicApp {
           ${product.buttonText || 'VIEW'}
         </button>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     container.innerHTML = html;
   }
@@ -446,10 +464,20 @@ export class PublicApp {
     if (!container) return;
 
     const services = this.db.getByCategory('products', 'service');
-    const html = services.map(service => `
+    const safeSrc = (src) => {
+      if (!src) return '';
+      const trimmed = src.trim();
+      if (trimmed.startsWith('http') || trimmed.startsWith('data:') || trimmed.startsWith('/')) return trimmed;
+      return `assets/images/${trimmed}`;
+    };
+
+    const html = services.map(service => {
+      const src = safeSrc(service.image);
+      const img = src ? `<img src="${src}" alt="${service.name}">` : `<div class="service-card-placeholder">No image</div>`;
+      return `
       <div class="service-card">
         <div class="service-card-img">
-          <img src="${service.image}" alt="${service.name}">
+          ${img}
         </div>
         <div class="service-card-body">
           <h3 class="service-card-title">${service.name}</h3>
@@ -462,7 +490,8 @@ export class PublicApp {
           </div>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     container.innerHTML = html;
   }
@@ -477,10 +506,20 @@ export class PublicApp {
     if (!container) return;
 
     const merchandise = this.db.getByCategory('merchandise', 'merchandise');
-    const html = merchandise.map(product => `
+    const safeSrc = (src) => {
+      if (!src) return '';
+      const trimmed = src.trim();
+      if (trimmed.startsWith('http') || trimmed.startsWith('data:') || trimmed.startsWith('/')) return trimmed;
+      return `assets/images/${trimmed}`;
+    };
+
+    const html = merchandise.map(product => {
+      const src = safeSrc(product.image);
+      const img = src ? `<img src="${src}" alt="${product.name}">` : `<div class="product-card-placeholder">No image</div>`;
+      return `
       <div class="product-card">
         <div class="product-card-img">
-          <img src="${product.image}" alt="${product.name}">
+          ${img}
         </div>
         <div class="product-card-body">
           <h3 class="product-card-title">${product.name}</h3>
@@ -495,7 +534,8 @@ export class PublicApp {
           </button>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     container.innerHTML = html;
   }
