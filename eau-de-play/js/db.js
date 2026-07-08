@@ -25,7 +25,7 @@ export class Database {
             category: "service",
             price: 500,
             description: "Professional DJ services for events",
-            image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f5f5f5' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%23999'%3EDIJ Service%3C/text%3E%3C/svg%3E",
+            image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80",
             buttonText: "BOOK"
           },
           {
@@ -34,7 +34,7 @@ export class Database {
             category: "service",
             price: 800,
             description: "Professional photography and videography packages",
-            image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f5f5f5' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%23999'%3EPhoto/Video%3C/text%3E%3C/svg%3E",
+            image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=900&q=80",
             buttonText: "BOOK"
           },
           {
@@ -43,7 +43,7 @@ export class Database {
             category: "service",
             price: 1200,
             description: "Complete event planning and coordination",
-            image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f5f5f5' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%23999'%3EEvent Planning%3C/text%3E%3C/svg%3E",
+            image: "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=900&q=80",
             buttonText: "BOOK"
           },
           {
@@ -52,7 +52,7 @@ export class Database {
             category: "service",
             price: 600,
             description: "Sports event management and coverage",
-            image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f5f5f5' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%23999'%3ESports%3C/text%3E%3C/svg%3E",
+            image: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=900&q=80",
             buttonText: "BOOK"
           }
         ],
@@ -63,7 +63,7 @@ export class Database {
             category: "merchandise",
             price: 25,
             description: "Premium cotton t-shirt with logo",
-            image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f5f5f5' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%23999'%3ET-Shirt%3C/text%3E%3C/svg%3E",
+            image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
             buttonText: "ADD TO CART"
           },
           {
@@ -72,7 +72,7 @@ export class Database {
             category: "merchandise",
             price: 20,
             description: "Adjustable cap with embroidered logo",
-            image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f5f5f5' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%23999'%3ECap%3C/text%3E%3C/svg%3E",
+            image: "https://images.unsplash.com/photo-1521369909024-2afc2930f1f3?auto=format&fit=crop&w=900&q=80",
             buttonText: "ADD TO CART"
           },
           {
@@ -81,7 +81,7 @@ export class Database {
             category: "merchandise",
             price: 60,
             description: "Comfortable pullover hoodie",
-            image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f5f5f5' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%23999'%3EHoodie%3C/text%3E%3C/svg%3E",
+            image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
             buttonText: "ADD TO CART"
           }
         ],
