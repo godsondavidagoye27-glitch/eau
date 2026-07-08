@@ -70,7 +70,7 @@ export function createFooter() {
           <a href="https://www.instagram.com/deyplay.rvk?igsh=bjZ4ZTFhdDJlYzUw" target="_blank" rel="noopener noreferrer" aria-label="Instagram">Instagram</a>
           <a href="https://facebook.com/eaudeyplay" target="_blank" rel="noopener noreferrer" aria-label="Facebook">Facebook</a>
           <a href="https://twitter.com/eaudeyplay" target="_blank" rel="noopener noreferrer" aria-label="Twitter">Twitter</a>
-          <a href="https://tiktok.com/@eaudeyplay" target="_blank" rel="noopener noreferrer" aria-label="TikTok">TikTok</a>
+          <a href="https://www.tiktok.com/@eau.dey.play?_r=1&_t=ZN-97rkM4Xkbag" target="_blank" rel="noopener noreferrer" aria-label="TikTok">TikTok</a>
           <a href="mailto:eaudeyplay@gmail.com" aria-label="Email">Email</a>
         </nav>
       </div>
