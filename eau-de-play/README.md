@@ -10,7 +10,28 @@ A fully functional, multi-page website built with vanilla HTML5, CSS3, and ES6+ 
    - Email: `admin@eaudeplay.com`
    - Password: `admin123`
 
-## 📁 Project Structure
+## � Newsletter Setup (Resend)
+
+To enable newsletter subscriptions via Resend, set these environment variables:
+
+```bash
+RESEND_API_KEY=your_resend_api_key_here
+RESEND_SENDER=newsletter@yourdomain.com
+```
+
+Then configure the admin dashboard newsletter endpoint to:
+
+```text
+http://localhost:3000/api/newsletter
+```
+
+If you deploy the site, use your production URL instead, for example:
+
+```text
+https://your-domain.com/api/newsletter
+```
+
+## �📁 Project Structure
 
 ```
 eau-de-play/
