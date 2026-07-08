@@ -436,7 +436,7 @@ export class PublicApp {
     const safeSrc = (src) => {
       if (!src) return '';
       const trimmed = src.trim();
-      if (trimmed.startsWith('http') || trimmed.startsWith('data:') || trimmed.startsWith('/')) return trimmed;
+      if (trimmed.startsWith('http') || trimmed.startsWith('data:') || trimmed.startsWith('/') || trimmed.startsWith('assets/')) return trimmed;
       return `assets/images/${trimmed}`;
     };
 
@@ -472,7 +472,7 @@ export class PublicApp {
     const safeSrc = (src) => {
       if (!src) return '';
       const trimmed = src.trim();
-      if (trimmed.startsWith('http') || trimmed.startsWith('data:') || trimmed.startsWith('/')) return trimmed;
+      if (trimmed.startsWith('http') || trimmed.startsWith('data:') || trimmed.startsWith('/') || trimmed.startsWith('assets/')) return trimmed;
       return `assets/images/${trimmed}`;
     };
 
@@ -514,7 +514,7 @@ export class PublicApp {
     const safeSrc = (src) => {
       if (!src) return '';
       const trimmed = src.trim();
-      if (trimmed.startsWith('http') || trimmed.startsWith('data:') || trimmed.startsWith('/')) return trimmed;
+      if (trimmed.startsWith('http') || trimmed.startsWith('data:') || trimmed.startsWith('/') || trimmed.startsWith('assets/')) return trimmed;
       return `assets/images/${trimmed}`;
     };
 

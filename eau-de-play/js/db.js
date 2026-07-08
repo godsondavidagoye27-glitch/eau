@@ -25,7 +25,7 @@ export class Database {
             category: "service",
             price: 500,
             description: "Professional DJ services for events",
-            image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80",
+            image: "assets/images/IMG_1566.JPG",
             buttonText: "BOOK"
           },
           {
@@ -34,7 +34,7 @@ export class Database {
             category: "service",
             price: 800,
             description: "Professional photography and videography packages",
-            image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=900&q=80",
+            image: "assets/images/IMG_1521.JPG",
             buttonText: "BOOK"
           },
           {
@@ -43,7 +43,7 @@ export class Database {
             category: "service",
             price: 1200,
             description: "Complete event planning and coordination",
-            image: "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=900&q=80",
+            image: "assets/images/IMG_1081.JPG",
             buttonText: "BOOK"
           },
           {
@@ -52,7 +52,7 @@ export class Database {
             category: "service",
             price: 600,
             description: "Sports event management and coverage",
-            image: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=900&q=80",
+            image: "assets/images/IMG_1632.JPG",
             buttonText: "BOOK"
           }
         ],
@@ -63,7 +63,7 @@ export class Database {
             category: "merchandise",
             price: 25,
             description: "Premium cotton t-shirt with logo",
-            image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
+            image: "assets/images/IMG_1599.JPG",
             buttonText: "ADD TO CART"
           },
           {
@@ -72,7 +72,7 @@ export class Database {
             category: "merchandise",
             price: 20,
             description: "Adjustable cap with embroidered logo",
-            image: "https://images.unsplash.com/photo-1521369909024-2afc2930f1f3?auto=format&fit=crop&w=900&q=80",
+            image: "assets/images/IMG_2128.JPG",
             buttonText: "ADD TO CART"
           },
           {
@@ -81,7 +81,7 @@ export class Database {
             category: "merchandise",
             price: 60,
             description: "Comfortable pullover hoodie",
-            image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
+            image: "assets/images/IMG_1953.JPG",
             buttonText: "ADD TO CART"
           }
         ],
