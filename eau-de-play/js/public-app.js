@@ -427,11 +427,25 @@ export class PublicApp {
 
     // If a generic .hero exists on the page, keep it and hide the afro-home-banner
     const genericHero = document.querySelector('.hero');
-    if (genericHero) {
-      const afroSection = content.closest('.afro-home-banner');
-      if (afroSection) {
-        afroSection.style.display = 'none';
-        return;
+    const afroSection = content.closest('.afro-home-banner');
+    if (genericHero && afroSection) {
+      try {
+        // Keep whichever banner appears first in the document (the top one),
+        // and hide the lower duplicate to avoid showing both.
+        const NODE = Node || window.Node;
+        const relation = afroSection.compareDocumentPosition(genericHero);
+        const afroBeforeHero = Boolean(relation & NODE.DOCUMENT_POSITION_FOLLOWING);
+        if (afroBeforeHero) {
+          // afro is before hero -> keep afro, hide hero
+          genericHero.style.display = 'none';
+        } else {
+          // hero is before afro -> keep hero, hide afro
+          afroSection.style.display = 'none';
+          return;
+        }
+      } catch (e) {
+        // Fallback: if anything goes wrong, prefer keeping the afro banner
+        try { genericHero.style.display = 'none'; } catch (err) {}
       }
     }
 
