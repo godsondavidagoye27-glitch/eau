@@ -405,12 +405,17 @@ export class PublicApp {
     const ticketUrl = config.ticketUrl || 'afro-pulse-27.html';
     const ticketTarget = config.ticketUrl ? ' target="_blank" rel="noopener noreferrer"' : '';
 
-    // If a generic .hero exists on the page, hide it to avoid duplicate banners
+    // If a generic .hero exists on the page, keep it and hide the afro-home-banner
     const genericHero = document.querySelector('.hero');
     if (genericHero) {
-      genericHero.style.display = 'none';
+      const afroSection = content.closest('.afro-home-banner');
+      if (afroSection) {
+        afroSection.style.display = 'none';
+        return;
+      }
     }
 
+    // Otherwise render the afro-home-banner content
     content.innerHTML = `
       <span class="eyebrow">AFRO PULSE '27</span>
       <h2>${title}</h2>
