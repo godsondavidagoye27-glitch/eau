@@ -12,7 +12,10 @@ export class PublicApp {
   }
 
   init() {
-    injectNavbarAndFooter();
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    // Skip footer on home page
+    const showFooter = !(currentPage === 'index.html' || currentPage === '');
+    injectNavbarAndFooter(showFooter);
     this.setupPageSpecificLogic();
   }
 
@@ -29,6 +32,8 @@ export class PublicApp {
       this.setupAboutPage();
     } else if (currentPage === 'afro-pulse-27.html') {
       this.setupAfroPulsePage();
+    } else if (currentPage === 'gallery.html') {
+      this.setupGalleryPage();
     } else if (currentPage === 'contact.html') {
       this.setupContactPage();
     }
@@ -140,7 +145,7 @@ export class PublicApp {
         </div>
         <div class="event-header-actions">
           ${ticketButtonHtml}
-          <a href="#gallery-section" class="btn btn-secondary">View Gallery</a>
+          <a href="gallery.html" class="btn btn-secondary">View Full Gallery</a>
         </div>
       </section>
 
@@ -156,20 +161,6 @@ export class PublicApp {
           </div>
           <button id="carousel-next" class="carousel-control" aria-label="Next images">›</button>
         </div>
-      </section>
-
-      <section class="gallery-grid-section container">
-        <div class="section-title">
-          <h2>AFRO PULSE Gallery</h2>
-          <p>Fill these slots with your strongest event images and video highlights.</p>
-        </div>
-        <div class="gallery-grid">${galleryImagesHtml}</div>
-
-        <div class="section-title" style="margin-top: var(--spacing-3xl);">
-          <h2>Video Highlights</h2>
-          <p>Embed past performances and event recaps here for fans to preview.</p>
-        </div>
-        <div class="video-grid">${galleryVideosHtml}</div>
       </section>
 
       <section class="newsletter-section container" id="newsletter-section">
@@ -305,6 +296,47 @@ export class PublicApp {
         this.updateCarouselPosition();
       });
     }
+  }
+
+  // GALLERY PAGE SETUP
+  setupGalleryPage() {
+    const eventConfig = this.getAfroPulseSettings();
+    this.renderGalleryPage(eventConfig);
+  }
+
+  renderGalleryPage(config) {
+    const galleryImagesHtml = config.galleryImages.map((image, index) => {
+      const content = image.src
+        ? `<img src="${image.src}" alt="AFRO PULSE image ${index + 1}">`
+        : `<div class="gallery-placeholder"><span>Featured slot ${index + 1}</span></div>`;
+      return `<div class="gallery-card">${content}<div class="gallery-card-label">${image.src ? `Moment ${index + 1}` : `Slot ${index + 1}`}</div></div>`;
+    }).join('');
+
+    const pageContent = document.getElementById('gallery-page-content');
+    if (!pageContent) return;
+
+    pageContent.innerHTML = `
+      <section class="afro-page-hero">
+        <div class="afro-hero-inner container">
+          <span class="eyebrow">GALLERY</span>
+          <h1>AFRO PULSE '27 Gallery</h1>
+          <p>Explore the complete collection of moments from AFRO PULSE '27. From the energy on the dance floor to the creativity behind the scenes, relive every unforgettable moment.</p>
+          <div class="hero-cta-group">
+            <a href="afro-pulse-27.html" class="btn btn-large">Back to Event</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="gallery-grid-section container">
+        <div class="section-title">
+          <h2>AFRO PULSE Gallery</h2>
+          <p>Every shot captures the essence and energy of our event.</p>
+        </div>
+        <div class="gallery-grid">${galleryImagesHtml}</div>
+      </section>
+    `;
+
+    injectNavbarAndFooter();
   }
 
   // HOME PAGE SETUP

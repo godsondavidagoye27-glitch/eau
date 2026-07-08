@@ -24,6 +24,7 @@ export function createNavbar() {
             <li><a href="shop.html" class="${isActive('shop.html')}">SHOP</a></li>
             <li><a href="about.html" class="${isActive('about.html')}">ABOUT</a></li>
             <li><a href="afro-pulse-27.html" class="${isActive('afro-pulse-27.html')}">AFRO PULSE</a></li>
+            <li><a href="gallery.html" class="${isActive('gallery.html')}">GALLERY</a></li>
             <li><a href="contact.html" class="${isActive('contact.html')}">CONTACT</a></li>
           </ul>
         </div>
@@ -48,6 +49,7 @@ export function createNavbar() {
           <li><a href="shop.html" class="${isActive('shop.html')}">SHOP</a></li>
           <li><a href="about.html" class="${isActive('about.html')}">ABOUT</a></li>
           <li><a href="afro-pulse-27.html" class="${isActive('afro-pulse-27.html')}">AFRO PULSE</a></li>
+          <li><a href="gallery.html" class="${isActive('gallery.html')}">GALLERY</a></li>
           <li><a href="contact.html" class="${isActive('contact.html')}">CONTACT</a></li>
           <li><a href="cart.html" class="cart-link ${cartActive}">🛒 CART <span class="cart-count">0</span></a></li>
           <li><a href="auth.html" class="auth-link ${isActive('auth.html')}">LOGIN / SIGNUP</a></li>
@@ -102,17 +104,19 @@ export function createFooter() {
   `;
 }
 
-export function injectNavbarAndFooter() {
+export function injectNavbarAndFooter(showFooter = true) {
   // Inject Navbar
   const navbarPlaceholder = document.getElementById('navbar-placeholder');
   if (navbarPlaceholder) {
     navbarPlaceholder.innerHTML = createNavbar();
   }
 
-  // Inject Footer
+  // Inject Footer (only if showFooter is true)
   const footerPlaceholder = document.getElementById('footer-placeholder');
-  if (footerPlaceholder) {
+  if (footerPlaceholder && showFooter) {
     footerPlaceholder.innerHTML = createFooter();
+  } else if (footerPlaceholder) {
+    footerPlaceholder.innerHTML = ''; // Clear footer placeholder
   }
   
   // Add navbar toggle behavior for mobile
