@@ -4,6 +4,8 @@ const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 const ROOT_DIR = path.join(__dirname, 'eau-de-play');
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+const RESEND_SENDER = process.env.RESEND_SENDER || 'newsletter@yourdomain.com';
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -53,6 +55,71 @@ function injectRuntimeConfig(html) {
 const server = http.createServer((req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   let pathname = decodeURIComponent(requestUrl.pathname);
+
+  if (pathname === '/api/newsletter' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk;
+      if (body.length > 1e6) {
+        req.destroy();
+      }
+    });
+
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const email = (payload.email || '').trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid email address' }));
+          return;
+        }
+
+        if (!RESEND_API_KEY) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Resend API key is not configured' }));
+          return;
+        }
+
+        const sendRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: RESEND_SENDER,
+            to: email,
+            subject: 'Thanks for subscribing!',
+            html: `
+              <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111;">
+                <h1>Thanks for subscribing!</h1>
+                <p>You are now signed up to receive updates from EAU DEY PLAY.</p>
+                <p>We’ll keep you posted with event news, tickets, and special offers.</p>
+              </div>
+            `
+          })
+        });
+
+        if (!sendRes.ok) {
+          const errorText = await sendRes.text();
+          console.error('Resend error:', errorText);
+          res.writeHead(502, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to send newsletter confirmation' }));
+          return;
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true }));
+      } catch (err) {
+        console.error('Newsletter endpoint error:', err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Server error' }));
+      }
+    });
+
+    return;
+  }
 
   if (pathname === '/') {
     pathname = '/index.html';
