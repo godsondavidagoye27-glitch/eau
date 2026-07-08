@@ -99,6 +99,7 @@ export class Auth {
     const adminEmail = 'eaudeyplay@gmail.com';
     const adminPassword = 'EAUDETPLAY456$';
 
+    // Only accept the exact admin credentials configured here
     if (normalizedEmail !== adminEmail || normalizedPassword !== adminPassword) {
       return { success: false, error: 'Invalid email or password' };
     }
@@ -133,7 +134,11 @@ export class Auth {
 
   // IS AUTHENTICATED
   isAuthenticated() {
-    return this.currentUser !== null;
+    // Ensure current user matches the configured admin credentials
+    if (!this.currentUser) return false;
+    const adminEmail = 'eaudeyplay@gmail.com';
+    const adminPassword = 'EAUDETPLAY456$';
+    return this.currentUser.email === adminEmail && this.currentUser.password === adminPassword && this.currentUser.role === 'admin';
   }
 
   // SAVE CURRENT USER
@@ -143,8 +148,20 @@ export class Auth {
 
   // LOAD CURRENT USER
   loadCurrentUser() {
-    const user = localStorage.getItem('eau-de-play-current-user');
-    return user ? JSON.parse(user) : null;
+    try {
+      const raw = localStorage.getItem('eau-de-play-current-user');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      // Validate stored user matches the configured admin credentials
+      const adminEmail = 'eaudeyplay@gmail.com';
+      const adminPassword = 'EAUDETPLAY456$';
+      if (parsed && parsed.email === adminEmail && parsed.password === adminPassword && parsed.role === 'admin') {
+        return parsed;
+      }
+      return null;
+    } catch (err) {
+      return null;
+    }
   }
 
   // REGISTER (for future use)
