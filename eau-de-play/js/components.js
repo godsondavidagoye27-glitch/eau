@@ -67,11 +67,11 @@ export function createFooter() {
     <footer class="site-footer">
       <div class="site-footer-inner container">
         <nav class="footer-links">
-          <a href="https://instagram.com/eaudeyplay" target="_blank" rel="noopener noreferrer" aria-label="Instagram">Instagram</a>
+          <a href="https://www.instagram.com/deyplay.rvx/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">Instagram</a>
           <a href="https://facebook.com/eaudeyplay" target="_blank" rel="noopener noreferrer" aria-label="Facebook">Facebook</a>
           <a href="https://twitter.com/eaudeyplay" target="_blank" rel="noopener noreferrer" aria-label="Twitter">Twitter</a>
           <a href="https://tiktok.com/@eaudeyplay" target="_blank" rel="noopener noreferrer" aria-label="TikTok">TikTok</a>
-          <a href="mailto:info@eaudeplay.com" aria-label="Email">Email</a>
+          <a href="mailto:eaudeyplay@gmail.com" aria-label="Email">Email</a>
         </nav>
       </div>
     </footer>
