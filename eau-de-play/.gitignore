@@ -66,7 +66,5 @@ __pycache__/
 coverage/
 .nyc_output/
 
-# Anything in assets/images except the directory
-# (can add actual images separately)
-assets/images/*
-!assets/images/.gitkeep
+# Previously ignored assets/images; images are tracked now
+# (removed the ignore so project images can be committed)
