@@ -2,6 +2,8 @@
 // DATABASE MODULE - LocalStorage CRUD Operations
 // ============================================
 
+import { supabase } from './supabase.js';
+
 export class Database {
   constructor(storageKey = 'eau-de-play-db') {
     this.storageKey = storageKey;
@@ -144,6 +146,34 @@ export class Database {
     return null;
   }
 
+  async syncToSupabase(data) {
+    const client = supabase;
+    if (!client || typeof client.from !== 'function') {
+      return false;
+    }
+
+    const payload = {
+      id: 1,
+      content: data,
+      updated_at: new Date().toISOString()
+    };
+
+    const candidateTables = ['site_data', 'site_content', 'site_settings'];
+
+    for (const table of candidateTables) {
+      try {
+        const { error } = await client.from(table).upsert(payload, { onConflict: 'id' }).select();
+        if (!error) {
+          return true;
+        }
+      } catch (err) {
+        console.warn(`Supabase sync to ${table} failed`, err);
+      }
+    }
+
+    return false;
+  }
+
   // GET ALL ITEMS
   getAll(collection) {
     const data = this.getData();
@@ -213,6 +243,7 @@ export class Database {
     localStorage.setItem(this.storageKey, JSON.stringify(data));
     if (typeof window !== 'undefined') {
       window.__SITE_DATA__ = data;
+      window.dispatchEvent(new CustomEvent('siteDataUpdated', { detail: data }));
     }
 
     if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
@@ -224,6 +255,12 @@ export class Database {
         console.warn('Failed to sync shared site data', err);
       });
     }
+
+    if (typeof window !== 'undefined') {
+      this.syncToSupabase(data).catch((err) => {
+        console.warn('Supabase sync failed', err);
+      });
+    }
   }
 
   syncFromServerData(data) {
@@ -231,6 +268,7 @@ export class Database {
     localStorage.setItem(this.storageKey, JSON.stringify(data));
     if (typeof window !== 'undefined') {
       window.__SITE_DATA__ = data;
+      window.dispatchEvent(new CustomEvent('siteDataUpdated', { detail: data }));
     }
     return data;
   }

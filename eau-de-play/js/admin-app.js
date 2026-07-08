@@ -126,17 +126,29 @@ export class AdminApp {
 
         <div class="products-header" style="margin-top: var(--spacing-2xl);">
           <h3>Gallery Images</h3>
-          <p>Paste image URLs below. Empty slots remain as placeholders.</p>
+          <p>Paste image URLs below or add a new slot. Changes save instantly.</p>
+        </div>
+        <div class="product-form-group">
+          <label for="new-image-url">Add Image</label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <input type="text" id="new-image-url" placeholder="Paste image URL (optional)">
+            <button type="button" class="btn btn-small" id="add-gallery-image">Add Image</button>
+          </div>
         </div>
         <div id="gallery-images-list" class="media-list"></div>
-        <button type="button" class="btn btn-small" id="add-gallery-image">Add Image Slot</button>
 
         <div class="products-header" style="margin-top: var(--spacing-2xl);">
           <h3>Video Embeds</h3>
-          <p>Paste YouTube, Vimeo or iframe URLs for each video slot.</p>
+          <p>Paste YouTube, Vimeo or iframe URLs. New video slots are created instantly.</p>
+        </div>
+        <div class="product-form-group">
+          <label for="new-video-url">Add Video</label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <input type="text" id="new-video-url" placeholder="Paste video URL (optional)">
+            <button type="button" class="btn btn-small" id="add-gallery-video">Add Video</button>
+          </div>
         </div>
         <div id="gallery-videos-list" class="media-list"></div>
-        <button type="button" class="btn btn-small" id="add-gallery-video">Add Video Slot</button>
       </div>
     `;
 
@@ -167,6 +179,21 @@ export class AdminApp {
     }
   }
 
+  persistEventConfig(config) {
+    const normalizedConfig = {
+      ...config,
+      galleryImages: Array.isArray(config.galleryImages) ? config.galleryImages : [],
+      galleryVideos: Array.isArray(config.galleryVideos) ? config.galleryVideos : []
+    };
+
+    const savedConfig = this.db.update('settings', 'afro-pulse', normalizedConfig);
+    if (savedConfig) {
+      Object.assign(config, savedConfig);
+    }
+    window.dispatchEvent(new CustomEvent('siteDataUpdated', { detail: this.db.getData() }));
+    return savedConfig || normalizedConfig;
+  }
+
   bindEventSettingsListeners(config) {
     const form = document.getElementById('event-settings-form');
     const imagesList = document.getElementById('gallery-images-list');
@@ -191,26 +218,28 @@ export class AdminApp {
           galleryVideos: Array.from(document.querySelectorAll('.video-url')).map((input, index) => ({
             id: config.galleryVideos[index]?.id || `vid-${index + 1}`,
             embedUrl: input.value.trim()
-          })),
+          }))
         };
-        this.db.update('settings', 'afro-pulse', updates);
-        alert('Event settings saved. Refresh the AFRO PULSE page to see changes.');
+        this.persistEventConfig({ ...config, ...updates });
+        alert('Event settings saved and synced.');
       });
     }
 
     if (addImageButton) {
       addImageButton.addEventListener('click', () => {
-        config.galleryImages.push({ id: `img-${config.galleryImages.length + 1}`, src: '' });
+        const imageUrl = document.getElementById('new-image-url')?.value?.trim() || '';
+        config.galleryImages = [...(config.galleryImages || []), { id: `img-${Date.now()}`, src: imageUrl }];
+        this.persistEventConfig(config);
         this.renderMediaRows(config);
-        this.bindEventSettingsListeners(config);
       });
     }
 
     if (addVideoButton) {
       addVideoButton.addEventListener('click', () => {
-        config.galleryVideos.push({ id: `vid-${config.galleryVideos.length + 1}`, embedUrl: '' });
+        const videoUrl = document.getElementById('new-video-url')?.value?.trim() || '';
+        config.galleryVideos = [...(config.galleryVideos || []), { id: `vid-${Date.now()}`, embedUrl: videoUrl }];
+        this.persistEventConfig(config);
         this.renderMediaRows(config);
-        this.bindEventSettingsListeners(config);
       });
     }
 
@@ -221,16 +250,26 @@ export class AdminApp {
           const type = event.target.getAttribute('data-type');
           const id = row?.getAttribute('data-id');
           if (type === 'image') {
-            config.galleryImages = config.galleryImages.filter(item => item.id !== id);
+            config.galleryImages = (config.galleryImages || []).filter(item => item.id !== id);
           }
           if (type === 'video') {
-            config.galleryVideos = config.galleryVideos.filter(item => item.id !== id);
+            config.galleryVideos = (config.galleryVideos || []).filter(item => item.id !== id);
           }
+          this.persistEventConfig(config);
           this.renderMediaRows(config);
-          this.bindEventSettingsListeners(config);
+        }
+      });
+
+      imagesList.addEventListener('change', (event) => {
+        if (event.target.matches('.media-input.image-url')) {
+          const row = event.target.closest('.media-row');
+          const id = row?.getAttribute('data-id');
+          config.galleryImages = (config.galleryImages || []).map((item) => item.id === id ? { ...item, src: event.target.value.trim() } : item);
+          this.persistEventConfig(config);
         }
       });
     }
+
     if (videosList) {
       videosList.addEventListener('click', (event) => {
         if (event.target.matches('.remove-media')) {
@@ -238,13 +277,22 @@ export class AdminApp {
           const type = event.target.getAttribute('data-type');
           const id = row?.getAttribute('data-id');
           if (type === 'image') {
-            config.galleryImages = config.galleryImages.filter(item => item.id !== id);
+            config.galleryImages = (config.galleryImages || []).filter(item => item.id !== id);
           }
           if (type === 'video') {
-            config.galleryVideos = config.galleryVideos.filter(item => item.id !== id);
+            config.galleryVideos = (config.galleryVideos || []).filter(item => item.id !== id);
           }
+          this.persistEventConfig(config);
           this.renderMediaRows(config);
-          this.bindEventSettingsListeners(config);
+        }
+      });
+
+      videosList.addEventListener('change', (event) => {
+        if (event.target.matches('.media-input.video-url')) {
+          const row = event.target.closest('.media-row');
+          const id = row?.getAttribute('data-id');
+          config.galleryVideos = (config.galleryVideos || []).map((item) => item.id === id ? { ...item, embedUrl: event.target.value.trim() } : item);
+          this.persistEventConfig(config);
         }
       });
     }
@@ -434,6 +482,7 @@ export class AdminApp {
   deleteProduct(productId) {
     if (confirm('Are you sure you want to delete this product?')) {
       this.db.delete('products', productId);
+      window.dispatchEvent(new CustomEvent('siteDataUpdated', { detail: this.db.getData() }));
       this.showProducts();
     }
   }
@@ -457,6 +506,8 @@ export class AdminApp {
       // Add new product
       this.db.add('products', productData);
     }
+
+    window.dispatchEvent(new CustomEvent('siteDataUpdated', { detail: this.db.getData() }));
 
     // Close modal and refresh
     document.getElementById('product-modal').classList.remove('active');

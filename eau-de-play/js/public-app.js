@@ -16,6 +16,12 @@ export class PublicApp {
     injectNavbarAndFooter();
     this.setupPageSpecificLogic();
     this.startSharedDataSync();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('siteDataUpdated', () => {
+        this.syncSharedData();
+      });
+    }
   }
 
   setupPageSpecificLogic() {
@@ -97,23 +103,36 @@ export class PublicApp {
       return config;
     }
 
-    const normalizedGalleryImages = Array.from({ length: defaultGalleryImages.length }, (_, index) => {
-      const existingItem = (config.galleryImages || [])[index];
-      const fallback = defaultGalleryImages[index];
-      const currentSrc = existingItem?.src?.trim();
-      const validSrc = currentSrc && (currentSrc.startsWith('assets/') || currentSrc.startsWith('/assets/') || currentSrc.startsWith('http'))
-        ? currentSrc
-        : fallback?.src || '';
-      return {
-        id: existingItem?.id || fallback?.id || `img-${index + 1}`,
-        src: validSrc
-      };
-    });
+    const existingImages = Array.isArray(config.galleryImages) ? config.galleryImages : [];
+    const normalizedGalleryImages = existingImages.length > 0
+      ? existingImages.map((existingItem, index) => {
+          const fallback = defaultGalleryImages[index] || { id: `img-${index + 1}`, src: '' };
+          const currentSrc = existingItem?.src?.trim();
+          const validSrc = currentSrc && (currentSrc.startsWith('assets/') || currentSrc.startsWith('/assets/') || currentSrc.startsWith('http'))
+            ? currentSrc
+            : fallback?.src || '';
+          return {
+            id: existingItem?.id || fallback?.id || `img-${index + 1}`,
+            src: validSrc
+          };
+        })
+      : defaultGalleryImages.map((fallback, index) => ({
+          id: fallback?.id || `img-${index + 1}`,
+          src: fallback?.src || ''
+        }));
+
+    const existingVideos = Array.isArray(config.galleryVideos) ? config.galleryVideos : [];
+    const normalizedGalleryVideos = existingVideos.length > 0
+      ? existingVideos.map((video, index) => ({
+          id: video?.id || `vid-${index + 1}`,
+          embedUrl: video?.embedUrl || ''
+        }))
+      : Array.from({ length: 3 }, (_, index) => ({ id: `vid-${index + 1}`, embedUrl: '' }));
 
     const updatedConfig = {
       ...config,
       galleryImages: normalizedGalleryImages,
-      galleryVideos: config.galleryVideos || Array.from({ length: 3 }, (_, index) => ({ id: `vid-${index + 1}`, embedUrl: '' }))
+      galleryVideos: normalizedGalleryVideos
     };
 
     if (JSON.stringify(updatedConfig) !== JSON.stringify(config)) {
@@ -326,11 +345,18 @@ export class PublicApp {
   }
 
   renderGalleryPage(config) {
-    const galleryImagesHtml = config.galleryImages.map((image, index) => {
+    const galleryImagesHtml = (config.galleryImages || []).map((image, index) => {
       const content = image.src
         ? `<img src="${image.src}" alt="AFRO PULSE image ${index + 1}">`
         : `<div class="gallery-placeholder"><span>Featured slot ${index + 1}</span></div>`;
       return `<div class="gallery-card">${content}<div class="gallery-card-label">${image.src ? `Moment ${index + 1}` : `Slot ${index + 1}`}</div></div>`;
+    }).join('');
+
+    const galleryVideosHtml = (config.galleryVideos || []).map((video, index) => {
+      const content = video.embedUrl
+        ? this.formatVideoEmbed(video.embedUrl)
+        : `<div class="gallery-placeholder"><span>Video slot ${index + 1}</span></div>`;
+      return `<div class="gallery-card">${content}<div class="gallery-card-label">${video.embedUrl ? `Video ${index + 1}` : `Video slot ${index + 1}`}</div></div>`;
     }).join('');
 
     const pageContent = document.getElementById('gallery-page-content');
@@ -353,7 +379,7 @@ export class PublicApp {
           <h2>AFRO PULSE Gallery</h2>
           <p>Every shot captures the essence and energy of our event.</p>
         </div>
-        <div class="gallery-grid">${galleryImagesHtml}</div>
+        <div class="gallery-grid">${galleryImagesHtml}${galleryVideosHtml}</div>
       </section>
     `;
 
