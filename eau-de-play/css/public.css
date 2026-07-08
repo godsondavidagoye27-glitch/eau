@@ -61,7 +61,7 @@
 .afro-home-banner {
   padding: var(--spacing-3xl) var(--spacing-lg);
   background: linear-gradient(135deg, rgba(0,0,0,0.75), rgba(0,0,0,0.5)),
-              url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1400&q=80');
+              url('https://kommodo.ai/i/2GFbi6xuied1VJz6wFIO');
   background-size: cover;
   background-position: center;
   color: white;
@@ -104,7 +104,7 @@
 }
 
 .afro-page-hero {
-  background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.65)), url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1400&q=80');
+  background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.65)), url('https://kommodo.ai/i/OnscCpABiAGWUxRlIcdk');
   background-size: cover;
   background-position: center;
   color: white;
