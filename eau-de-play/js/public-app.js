@@ -8,12 +8,14 @@ import { injectNavbarAndFooter } from './components.js';
 export class PublicApp {
   constructor() {
     this.db = new Database();
+    this.syncInterval = null;
     this.init();
   }
 
   init() {
     injectNavbarAndFooter();
     this.setupPageSpecificLogic();
+    this.startSharedDataSync();
   }
 
   setupPageSpecificLogic() {
@@ -33,6 +35,28 @@ export class PublicApp {
       this.setupGalleryPage();
     } else if (currentPage === 'contact.html') {
       this.setupContactPage();
+    }
+  }
+
+  startSharedDataSync() {
+    if (this.syncInterval) {
+      window.clearInterval(this.syncInterval);
+    }
+
+    this.syncInterval = window.setInterval(() => {
+      this.syncSharedData();
+    }, 5000);
+  }
+
+  async syncSharedData() {
+    try {
+      const response = await fetch('/api/site-data');
+      if (!response.ok) return;
+      const data = await response.json();
+      this.db.syncFromServerData(data);
+      this.setupPageSpecificLogic();
+    } catch (err) {
+      console.warn('Failed to sync shared site data', err);
     }
   }
 

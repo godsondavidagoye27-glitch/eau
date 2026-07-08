@@ -9,6 +9,12 @@ export class Database {
   }
 
   initializeDB() {
+    const sharedData = this.getSharedData();
+    if (sharedData && typeof sharedData === 'object') {
+      localStorage.setItem(this.storageKey, JSON.stringify(sharedData));
+      return;
+    }
+
     const existing = localStorage.getItem(this.storageKey);
     if (!existing) {
       const initialData = {
@@ -131,6 +137,13 @@ export class Database {
     }
   }
 
+  getSharedData() {
+    if (typeof window !== 'undefined' && window.__SITE_DATA__) {
+      return window.__SITE_DATA__;
+    }
+    return null;
+  }
+
   // GET ALL ITEMS
   getAll(collection) {
     const data = this.getData();
@@ -186,6 +199,11 @@ export class Database {
 
   // GET ALL DATA
   getData() {
+    const sharedData = this.getSharedData();
+    if (sharedData) {
+      return sharedData;
+    }
+
     const data = localStorage.getItem(this.storageKey);
     return data ? JSON.parse(data) : {};
   }
@@ -193,6 +211,28 @@ export class Database {
   // SAVE ALL DATA
   saveData(data) {
     localStorage.setItem(this.storageKey, JSON.stringify(data));
+    if (typeof window !== 'undefined') {
+      window.__SITE_DATA__ = data;
+    }
+
+    if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
+      window.fetch('/api/site-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data })
+      }).catch((err) => {
+        console.warn('Failed to sync shared site data', err);
+      });
+    }
+  }
+
+  syncFromServerData(data) {
+    if (!data || typeof data !== 'object') return null;
+    localStorage.setItem(this.storageKey, JSON.stringify(data));
+    if (typeof window !== 'undefined') {
+      window.__SITE_DATA__ = data;
+    }
+    return data;
   }
 
   // FILTER BY CATEGORY
