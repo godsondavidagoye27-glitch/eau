@@ -9,6 +9,9 @@ export class SupabaseAuth {
     this.client = supabase;
     this.currentUser = null;
     this.initializeAuth();
+    // restore session on load so other modules relying on
+    // `eau-de-play-current-user` see the logged-in user
+    this.restoreSession().catch((e) => console.warn('Restore session failed', e));
   }
 
   // INITIALIZE AUTH STATE LISTENER
@@ -17,14 +20,34 @@ export class SupabaseAuth {
       console.log('🔐 Auth event:', event);
       if (session?.user) {
         this.currentUser = session.user;
+        // keep both legacy and new keys in sync
         localStorage.setItem('eau-de-play-user', JSON.stringify(session.user));
+        localStorage.setItem('eau-de-play-current-user', JSON.stringify(session.user));
         window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: session.user }));
       } else {
         this.currentUser = null;
+        // remove both keys so UI modules update correctly
         localStorage.removeItem('eau-de-play-user');
+        localStorage.removeItem('eau-de-play-current-user');
         window.dispatchEvent(new CustomEvent('userLoggedOut'));
       }
     });
+  }
+
+  // Try to restore an existing session on page load and sync localStorage
+  async restoreSession() {
+    try {
+      const { data } = await this.client.auth.getSession();
+      const session = data?.session || null;
+      if (session?.user) {
+        this.currentUser = session.user;
+        localStorage.setItem('eau-de-play-user', JSON.stringify(session.user));
+        localStorage.setItem('eau-de-play-current-user', JSON.stringify(session.user));
+        window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: session.user }));
+      }
+    } catch (error) {
+      console.warn('Could not restore session:', error?.message || error);
+    }
   }
 
   // SIGN UP
@@ -54,6 +77,12 @@ export class SupabaseAuth {
       });
       if (error) throw error;
       this.currentUser = data.user;
+      // ensure legacy localStorage key used elsewhere is set
+      if (data?.user) {
+        localStorage.setItem('eau-de-play-user', JSON.stringify(data.user));
+        localStorage.setItem('eau-de-play-current-user', JSON.stringify(data.user));
+        window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: data.user }));
+      }
       return { success: true, user: data.user };
     } catch (error) {
       console.error('❌ Sign in error:', error.message);
@@ -67,6 +96,10 @@ export class SupabaseAuth {
       const { error } = await this.client.auth.signOut();
       if (error) throw error;
       this.currentUser = null;
+      // clear both keys
+      localStorage.removeItem('eau-de-play-user');
+      localStorage.removeItem('eau-de-play-current-user');
+      window.dispatchEvent(new CustomEvent('userLoggedOut'));
       return { success: true };
     } catch (error) {
       console.error('❌ Sign out error:', error.message);
