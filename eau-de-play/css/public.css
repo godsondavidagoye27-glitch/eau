@@ -18,7 +18,7 @@
 .hero h1 {
   font-size: var(--font-size-4xl);
   margin-bottom: var(--spacing-lg);
-  color: var(--color-background);
+  color: rgb(255, 139, 0);
 }
 
 .hero p {
