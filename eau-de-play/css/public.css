@@ -59,12 +59,15 @@
 }
 
 .afro-home-banner {
-  padding: var(--spacing-3xl) var(--spacing-lg);
-  background: linear-gradient(135deg, rgba(0,0,0,0.75), rgba(0,0,0,0.5)),
-              url('https://kommodo.ai/i/3udwqi5v7fGjwhi59Vg6');
+  padding: 0; /* inner element handles padding and background */
+  color: white;
+}
+
+.afro-home-banner .afro-banner-inner {
+  padding: var(--spacing-4xl) 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('../assets/images/IMG_1427.JPG');
   background-size: cover;
   background-position: center;
-  color: white;
 }
 
 .afro-home-banner-content {
