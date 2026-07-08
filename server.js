@@ -186,7 +186,11 @@ function getRuntimeConfigScript() {
 }
 
 function getSiteDataScript(siteData) {
-  return `<script>window.__SITE_DATA__ = ${JSON.stringify(siteData)};</script>`;
+  // Safely serialize site data to avoid prematurely closing the script tag
+  const json = JSON.stringify(siteData)
+    .replace(/<\/script/gi, '<\\/script')
+    .replace(/<!--/g, '<\\!--');
+  return `<script>window.__SITE_DATA__ = ${json};</script>`;
 }
 
 function injectRuntimeConfig(html, siteData) {
