@@ -398,10 +398,11 @@
 }
 
 .service-card {
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
+  background-color: var(--color-primary);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius-md);
   overflow: hidden;
+  color: #000000;
   transition: box-shadow var(--transition-base),
     transform var(--transition-base);
 }
@@ -435,18 +436,19 @@
 .service-card-title {
   font-size: var(--font-size-lg);
   margin-bottom: var(--spacing-md);
+  color: #000000;
 }
 
 .service-card-price {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
-  color: var(--color-primary);
+  color: #000000;
   margin-bottom: var(--spacing-md);
 }
 
 .service-card-description {
   font-size: var(--font-size-sm);
-  color: var(--color-text-light);
+  color: #000000;
   margin-bottom: var(--spacing-lg);
   line-height: 1.6;
 }
@@ -479,10 +481,11 @@
 }
 
 .product-card {
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
+  background-color: var(--color-primary);
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius-md);
   overflow: hidden;
+  color: #000000;
   transition: box-shadow var(--transition-base),
     transform var(--transition-base);
 }
@@ -514,12 +517,13 @@
 .product-card-title {
   font-size: var(--font-size-lg);
   margin-bottom: var(--spacing-md);
+  color: #000000;
 }
 
 .product-card-price {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
-  color: var(--color-primary);
+  color: #000000;
   margin-bottom: var(--spacing-md);
 }
 
