@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — Bookings</title>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <main class="container" style="padding:24px 12px;">
+    <h1>Bookings — Admin</h1>
+    <div style="margin-bottom:12px;">
+      <button id="refresh" class="btn">Refresh</button>
+      <button id="migrate" class="btn">Migrate local bookings</button>
+    </div>
+    <div id="message" style="margin-bottom:12px;color:#b00020;"></div>
+    <div id="bookings-root">Loading...</div>
+  </main>
+
+  <script type="module" src="js/admin-bookings.js"></script>
+</body>
+</html>

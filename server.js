@@ -552,6 +552,63 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Stripe webhook endpoint
+  if (pathname === '/webhook' && req.method === 'POST') {
+    const sig = req.headers['stripe-signature'];
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || process.env.VITE_STRIPE_WEBHOOK_SECRET || '';
+    const chunks = [];
+    req.on('data', (chunk) => { chunks.push(chunk); });
+    req.on('end', async () => {
+      const buf = Buffer.concat(chunks);
+      if (!webhookSecret) {
+        console.warn('Received webhook but no webhook secret configured');
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Webhook secret not configured' }));
+        return;
+      }
+
+      try {
+        const Stripe = require('stripe');
+        const stripe = Stripe(process.env.STRIPE_SECRET_KEY || process.env.VITE_STRIPE_SECRET_KEY || '');
+        const event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
+
+        // Handle relevant events
+        if (event.type === 'payment_intent.succeeded' || event.type === 'payment_intent.payment_failed') {
+          const pi = event.data.object;
+          // find booking by paymentIntentId
+          try {
+            const data = loadSiteData();
+            const bookings = data.bookings || [];
+            let changed = false;
+            for (let b of bookings) {
+              if (b.payment && b.payment.paymentIntentId === pi.id) {
+                b.payment.paymentStatus = pi.status;
+                // attempt to set last4 if available
+                const charges = pi.charges && pi.charges.data ? pi.charges.data : [];
+                if (charges.length > 0) {
+                  const card = charges[0].payment_method_details && charges[0].payment_method_details.card;
+                  if (card && card.last4) b.payment.cardLast4 = card.last4;
+                }
+                changed = true;
+              }
+            }
+            if (changed) saveSiteData(data);
+          } catch (err) {
+            console.error('Error updating booking from webhook:', err);
+          }
+        }
+
+        res.writeHead(200);
+        res.end('ok');
+      } catch (err) {
+        console.error('Stripe webhook verification failed:', err && err.message);
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid webhook' }));
+      }
+    });
+    return;
+  }
+
   if (pathname === '/api/newsletter' && req.method === 'POST') {
     let body = '';
     req.on('data', (chunk) => {
