@@ -20,8 +20,14 @@ const MIME_TYPES = {
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
   '.txt': 'text/plain; charset=utf-8',
-  '.map': 'application/json; charset=utf-8'
+  '.map': 'application/json; charset=utf-8',
+  '.mp4': 'video/mp4',
+  '.mov': 'video/quicktime',
+  '.webm': 'video/webm',
+  '.avi': 'video/x-msvideo',
+  '.webp': 'image/webp'
 };
+
 
 const DEFAULT_SITE_DATA = {
   products: [
@@ -202,6 +208,105 @@ function injectRuntimeConfig(html, siteData) {
   return html.replace('</body>', `${configScript}${dataScript}</body>`);
 }
 
+function getSupabaseStorageConfig() {
+  return {
+    url: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '',
+    serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '',
+    bucket: process.env.SUPABASE_STORAGE_BUCKET || process.env.VITE_SUPABASE_STORAGE_BUCKET || 'uploads'
+  };
+}
+
+function getContentTypeFromFilename(filename) {
+  const ext = path.extname(filename).toLowerCase();
+  return MIME_TYPES[ext] || 'application/octet-stream';
+}
+
+async function ensureSupabaseBucketExists(bucket, url, serviceKey) {
+  const checkRes = await fetch(`${url}/storage/v1/bucket/${encodeURIComponent(bucket)}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${serviceKey}`,
+      apikey: serviceKey
+    }
+  });
+
+  if (checkRes.ok) {
+    return;
+  }
+
+  if (checkRes.status !== 404) {
+    let detail = 'Unable to verify Supabase bucket';
+    try {
+      const errJson = await checkRes.json();
+      detail = errJson?.message || errJson?.error || detail;
+    } catch (err) {
+      // ignore
+    }
+    throw new Error(detail);
+  }
+
+  const createRes = await fetch(`${url}/storage/v1/bucket`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${serviceKey}`,
+      apikey: serviceKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ name: bucket, public: true })
+  });
+
+  if (!createRes.ok) {
+    let detail = 'Unable to create Supabase bucket';
+    try {
+      const errJson = await createRes.json();
+      detail = errJson?.message || errJson?.error || detail;
+    } catch (err) {
+      // ignore
+    }
+    throw new Error(detail);
+  }
+}
+
+async function uploadToSupabaseStorage(filename, buffer) {
+  const { url, serviceKey, bucket } = getSupabaseStorageConfig();
+
+  if (!url || !serviceKey) {
+    throw new Error('Supabase Storage is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the environment.');
+  }
+
+  await ensureSupabaseBucketExists(bucket, url, serviceKey);
+
+  const ext = path.extname(filename).toLowerCase() || '';
+  const safeBase = path.basename(filename, ext).replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 40) || 'file';
+  const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeBase}${ext}`;
+  const objectPath = `uploads/${uniqueName}`;
+  const encodedPath = encodeURIComponent(objectPath).replace(/%2F/g, '/');
+
+  const response = await fetch(`${url}/storage/v1/object/${bucket}/${encodedPath}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${serviceKey}`,
+      apikey: serviceKey,
+      'Content-Type': getContentTypeFromFilename(filename),
+      'x-upsert': 'true'
+    },
+    body: buffer
+  });
+
+  if (!response.ok) {
+    let detail = 'Cloud upload failed';
+    try {
+      const errJson = await response.json();
+      detail = errJson?.message || errJson?.error || detail;
+    } catch (err) {
+      // ignore
+    }
+    throw new Error(detail);
+  }
+
+  return `${url}/storage/v1/object/public/${bucket}/${encodedPath}`;
+}
+
 const server = http.createServer((req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   let pathname = decodeURIComponent(requestUrl.pathname);
@@ -271,7 +376,59 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (pathname === '/api/upload' && req.method === 'POST') {
+    const chunks = [];
+    let size = 0;
+    const MAX_UPLOAD_SIZE = 100 * 1024 * 1024; // 100MB
+    let aborted = false;
+
+    req.on('data', (chunk) => {
+      size += chunk.length;
+      if (size > MAX_UPLOAD_SIZE) {
+        aborted = true;
+        req.destroy();
+      } else {
+        chunks.push(chunk);
+      }
+    });
+
+    req.on('end', async () => {
+      if (aborted) return;
+      try {
+        const body = Buffer.concat(chunks).toString('utf8');
+        const payload = JSON.parse(body || '{}');
+        const filename = (payload.filename || 'upload').toString();
+        const rawData = (payload.data || '').toString();
+
+        if (!rawData) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'No file data provided' }));
+          return;
+        }
+
+        const match = rawData.match(/^data:(.+);base64,(.*)$/s);
+        const base64 = match ? match[2] : rawData;
+        const buffer = Buffer.from(base64, 'base64');
+
+        const publicUrl = await uploadToSupabaseStorage(filename, buffer);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, url: publicUrl, storage: 'supabase' }));
+      } catch (err) {
+        console.error('Upload endpoint error:', err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message || 'Server error while uploading file' }));
+      }
+    });
+
+    req.on('error', (err) => {
+      console.error('Upload request error:', err);
+    });
+
+    return;
+  }
+
   if (pathname === '/api/site-data') {
+
     if (req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(loadSiteData()));

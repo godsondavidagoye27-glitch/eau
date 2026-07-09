@@ -96,9 +96,15 @@
           </div>
 
           <div class="product-form-group">
-            <label for="product-image">Image URL</label>
+            <label for="product-image">Image / Video URL</label>
             <input type="text" id="product-image" name="image" placeholder="Leave blank for placeholder">
+            <div style="margin-top:8px;">
+              <label for="product-image-file" style="font-weight:normal; display:block; margin-bottom:4px;">Or upload a photo/video from your computer:</label>
+              <input type="file" id="product-image-file" accept="image/*,video/*">
+              <span id="product-image-upload-status" style="font-size:12px; color:#666; margin-left:8px;"></span>
+            </div>
           </div>
+
 
           <div class="product-form-group">
             <label for="product-button-text">Button Text</label>

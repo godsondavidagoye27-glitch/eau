@@ -45,7 +45,40 @@ export class AdminApp {
     }
   }
 
+  // Reads a File object as a base64 data URL
+  readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Could not read file'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Uploads a File to the server and returns the public URL for it
+  async uploadMediaFile(file) {
+    const dataUrl = await this.readFileAsDataURL(file);
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: file.name, data: dataUrl })
+    });
+
+    if (!response.ok) {
+      let message = 'Upload failed';
+      try {
+        const errJson = await response.json();
+        message = errJson.error || message;
+      } catch (e) { /* ignore */ }
+      throw new Error(message);
+    }
+
+    const result = await response.json();
+    return result.url;
+  }
+
   switchView(view) {
+
     this.currentView = view;
     
     // Update active nav link
@@ -130,25 +163,32 @@ export class AdminApp {
         </div>
         <div class="product-form-group">
           <label for="new-image-url">Add Image</label>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
             <input type="text" id="new-image-url" placeholder="Paste image URL (optional)">
+            <span style="color:#888;">OR</span>
+            <input type="file" id="new-image-file" accept="image/*,video/*">
             <button type="button" class="btn btn-small" id="add-gallery-image">Add Image</button>
           </div>
+          <span id="new-image-upload-status" style="font-size:12px; color:#666;"></span>
         </div>
         <div id="gallery-images-list" class="media-list"></div>
 
         <div class="products-header" style="margin-top: var(--spacing-2xl);">
           <h3>Video Embeds</h3>
-          <p>Paste YouTube, Vimeo or iframe URLs. New video slots are created instantly.</p>
+          <p>Paste YouTube, Vimeo or iframe URLs, or upload a video file directly from your computer.</p>
         </div>
         <div class="product-form-group">
           <label for="new-video-url">Add Video</label>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
             <input type="text" id="new-video-url" placeholder="Paste video URL (optional)">
+            <span style="color:#888;">OR</span>
+            <input type="file" id="new-video-file" accept="video/*">
             <button type="button" class="btn btn-small" id="add-gallery-video">Add Video</button>
           </div>
+          <span id="new-video-upload-status" style="font-size:12px; color:#666;"></span>
         </div>
         <div id="gallery-videos-list" class="media-list"></div>
+
       </div>
     `;
 
@@ -226,22 +266,79 @@ export class AdminApp {
     }
 
     if (addImageButton) {
-      addImageButton.addEventListener('click', () => {
-        const imageUrl = document.getElementById('new-image-url')?.value?.trim() || '';
-        config.galleryImages = [...(config.galleryImages || []), { id: `img-${Date.now()}`, src: imageUrl }];
+      addImageButton.addEventListener('click', async () => {
+        const urlInput = document.getElementById('new-image-url');
+        const fileInput = document.getElementById('new-image-file');
+        const statusEl = document.getElementById('new-image-upload-status');
+        const file = fileInput?.files?.[0];
+        let src = urlInput?.value?.trim() || '';
+
+        if (file) {
+          try {
+            addImageButton.disabled = true;
+            if (statusEl) statusEl.textContent = 'Uploading...';
+            src = await this.uploadMediaFile(file);
+            if (statusEl) statusEl.textContent = 'Uploaded!';
+          } catch (err) {
+            if (statusEl) statusEl.textContent = '';
+            alert('Upload failed: ' + err.message);
+            addImageButton.disabled = false;
+            return;
+          }
+          addImageButton.disabled = false;
+        }
+
+        if (!src) {
+          alert('Please paste an image URL or choose a file to upload.');
+          return;
+        }
+
+        config.galleryImages = [...(config.galleryImages || []), { id: `img-${Date.now()}`, src }];
         this.persistEventConfig(config);
         this.renderMediaRows(config);
+        if (urlInput) urlInput.value = '';
+        if (fileInput) fileInput.value = '';
+        if (statusEl) statusEl.textContent = '';
       });
     }
 
     if (addVideoButton) {
-      addVideoButton.addEventListener('click', () => {
-        const videoUrl = document.getElementById('new-video-url')?.value?.trim() || '';
-        config.galleryVideos = [...(config.galleryVideos || []), { id: `vid-${Date.now()}`, embedUrl: videoUrl }];
+      addVideoButton.addEventListener('click', async () => {
+        const urlInput = document.getElementById('new-video-url');
+        const fileInput = document.getElementById('new-video-file');
+        const statusEl = document.getElementById('new-video-upload-status');
+        const file = fileInput?.files?.[0];
+        let embedUrl = urlInput?.value?.trim() || '';
+
+        if (file) {
+          try {
+            addVideoButton.disabled = true;
+            if (statusEl) statusEl.textContent = 'Uploading...';
+            embedUrl = await this.uploadMediaFile(file);
+            if (statusEl) statusEl.textContent = 'Uploaded!';
+          } catch (err) {
+            if (statusEl) statusEl.textContent = '';
+            alert('Upload failed: ' + err.message);
+            addVideoButton.disabled = false;
+            return;
+          }
+          addVideoButton.disabled = false;
+        }
+
+        if (!embedUrl) {
+          alert('Please paste a video URL or choose a file to upload.');
+          return;
+        }
+
+        config.galleryVideos = [...(config.galleryVideos || []), { id: `vid-${Date.now()}`, embedUrl }];
         this.persistEventConfig(config);
         this.renderMediaRows(config);
+        if (urlInput) urlInput.value = '';
+        if (fileInput) fileInput.value = '';
+        if (statusEl) statusEl.textContent = '';
       });
     }
+
 
     if (imagesList) {
       imagesList.addEventListener('click', (event) => {
@@ -451,7 +548,27 @@ export class AdminApp {
     if (form) {
       form.addEventListener('submit', (e) => this.handleProductFormSubmit(e));
     }
+
+    const imageFileInput = document.getElementById('product-image-file');
+    const imageUrlInput = document.getElementById('product-image');
+    const uploadStatus = document.getElementById('product-image-upload-status');
+    if (imageFileInput) {
+      imageFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+          if (uploadStatus) uploadStatus.textContent = 'Uploading...';
+          const url = await this.uploadMediaFile(file);
+          if (imageUrlInput) imageUrlInput.value = url;
+          if (uploadStatus) uploadStatus.textContent = 'Uploaded!';
+        } catch (err) {
+          if (uploadStatus) uploadStatus.textContent = '';
+          alert('Upload failed: ' + err.message);
+        }
+      });
+    }
   }
+
 
   openProductModal() {
     this.editingProductId = null;
