@@ -85,7 +85,20 @@ export class PublicApp {
   isRenderableMediaValue(value) {
     const trimmed = String(value || '').trim();
     if (!trimmed) return false;
-    return trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/assets/uploads/') || trimmed.startsWith('assets/uploads/');
+
+    const lowerValue = trimmed.toLowerCase();
+    return lowerValue.startsWith('http://')
+      || lowerValue.startsWith('https://')
+      || lowerValue.startsWith('data:')
+      || lowerValue.startsWith('blob:')
+      || lowerValue.startsWith('/assets/')
+      || lowerValue.startsWith('assets/')
+      || lowerValue.startsWith('./')
+      || lowerValue.startsWith('../')
+      || lowerValue.startsWith('/images/')
+      || lowerValue.startsWith('images/')
+      || lowerValue.startsWith('/uploads/')
+      || lowerValue.startsWith('uploads/');
   }
 
   getAfroPulseSettings() {
@@ -134,7 +147,7 @@ export class PublicApp {
       return updatedConfig;
     }
 
-    return config;
+    return updatedConfig;
   }
 
   renderAfroPulsePage(config) {

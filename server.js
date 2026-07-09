@@ -261,6 +261,36 @@ async function ensureSupabaseBucketExists(bucket, url, serviceKey) {
   });
 
   if (checkRes.ok) {
+    let bucketInfo = null;
+    try {
+      bucketInfo = await checkRes.json();
+    } catch (err) {
+      // ignore
+    }
+
+    if (bucketInfo?.public !== true) {
+      const patchRes = await fetch(`${url}/storage/v1/bucket/${encodeURIComponent(bucket)}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${serviceKey}`,
+          apikey: serviceKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ public: true })
+      });
+
+      if (!patchRes.ok) {
+        let detail = 'Unable to make Supabase bucket public';
+        try {
+          const errJson = await patchRes.json();
+          detail = errJson?.message || errJson?.error || detail;
+        } catch (err) {
+          // ignore
+        }
+        throw new Error(detail);
+      }
+    }
+
     return;
   }
 
