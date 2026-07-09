@@ -337,6 +337,39 @@ async function uploadToSupabaseStorage(filename, buffer) {
   return `${url}/storage/v1/object/public/${bucket}/${encodedPath}`;
 }
 
+function getLocalUploadPath(filename) {
+  const ext = path.extname(filename).toLowerCase() || '.bin';
+  const safeBase = path.basename(filename, ext).replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 40) || 'file';
+  const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeBase}${ext}`;
+  const uploadDir = path.join(ROOT_DIR, 'assets', 'uploads');
+  fs.mkdirSync(uploadDir, { recursive: true });
+  return {
+    uploadDir,
+    filePath: path.join(uploadDir, uniqueName)
+  };
+}
+
+function uploadToLocalStorage(filename, buffer) {
+  const { filePath } = getLocalUploadPath(filename);
+  fs.writeFileSync(filePath, buffer);
+  return `/assets/uploads/${path.basename(filePath)}`;
+}
+
+async function uploadMedia(filename, buffer, requestUrl) {
+  try {
+    return {
+      url: await uploadToSupabaseStorage(filename, buffer),
+      storage: 'supabase'
+    };
+  } catch (err) {
+    console.warn('Supabase upload failed, falling back to local storage:', err.message || err);
+    return {
+      url: uploadToLocalStorage(filename, buffer),
+      storage: 'local'
+    };
+  }
+}
+
 const server = http.createServer((req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   let pathname = decodeURIComponent(requestUrl.pathname);
@@ -440,9 +473,9 @@ const server = http.createServer((req, res) => {
         const base64 = match ? match[2] : rawData;
         const buffer = Buffer.from(base64, 'base64');
 
-        const publicUrl = await uploadToSupabaseStorage(filename, buffer);
+        const { url: publicUrl, storage } = await uploadMedia(filename, buffer, requestUrl);
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, url: publicUrl, storage: 'supabase' }));
+        res.end(JSON.stringify({ success: true, url: publicUrl, storage }));
       } catch (err) {
         console.error('Upload endpoint error:', err);
         res.writeHead(500, { 'Content-Type': 'application/json' });
