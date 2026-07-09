@@ -112,8 +112,8 @@ export class AdminApp {
         ticketButtonText: 'Get Tickets',
         newsletterEndpoint: '',
         newsletterConfirmation: '',
-        galleryImages: Array.from({ length: 22 }, (_, index) => ({ id: `img-${index + 1}`, src: '' })),
-        galleryVideos: Array.from({ length: 3 }, (_, index) => ({ id: `vid-${index + 1}`, embedUrl: '' })),
+        galleryImages: [],
+        galleryVideos: [],
       };
       this.db.add('settings', config);
     }

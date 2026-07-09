@@ -94,22 +94,8 @@ export class Database {
             ticketButtonText: 'Get Tickets',
             newsletterEndpoint: '',
             newsletterConfirmation: 'Thanks for subscribing! We’ll keep you updated.',
-            galleryImages: [
-              { id: 'img-1', src: 'assets/images/IMG_1566.JPG' },
-              { id: 'img-2', src: 'assets/images/IMG_1521.JPG' },
-              { id: 'img-3', src: 'assets/images/IMG_1427.JPG' },
-              { id: 'img-4', src: 'assets/images/IMG_1081.JPG' },
-              { id: 'img-5', src: 'assets/images/IMG_1027.JPG' },
-              { id: 'img-6', src: 'assets/images/IMG_0971.JPG' },
-              { id: 'img-7', src: 'assets/images/IMG_2128.JPG' },
-              { id: 'img-8', src: 'assets/images/IMG_2060.JPG' },
-              { id: 'img-9', src: 'assets/images/IMG_1953.JPG' },
-              { id: 'img-10', src: 'assets/images/IMG_1632.JPG' },
-              { id: 'img-11', src: 'assets/images/IMG_1599.JPG' },
-              { id: 'img-12', src: 'assets/images/IMG_4764.JPG.jpeg' },
-              ...Array.from({ length: 10 }, (_, index) => ({ id: `img-${index + 13}`, src: '' }))
-            ],
-            galleryVideos: Array.from({ length: 3 }, (_, index) => ({ id: `vid-${index + 1}`, embedUrl: '' })),
+            galleryImages: [],
+            galleryVideos: [],
           }
         ],
         orders: [

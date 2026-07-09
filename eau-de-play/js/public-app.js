@@ -79,18 +79,14 @@ export class PublicApp {
     this.setupAfroPulseInteractions(eventConfig);
   }
 
+  isRenderableMediaValue(value) {
+    const trimmed = String(value || '').trim();
+    if (!trimmed) return false;
+    return trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/assets/uploads/') || trimmed.startsWith('assets/uploads/');
+  }
+
   getAfroPulseSettings() {
     let config = this.db.getById('settings', 'afro-pulse');
-    const defaultGalleryImages = [
-      { id: 'img-1', src: 'assets/images/IMG_1566.JPG' },
-      { id: 'img-2', src: 'assets/images/IMG_1521.JPG' },
-      { id: 'img-3', src: 'assets/images/IMG_1427.JPG' },
-      { id: 'img-4', src: 'assets/images/IMG_1081.JPG' },
-      { id: 'img-5', src: 'assets/images/IMG_1027.JPG' },
-      { id: 'img-6', src: 'assets/images/IMG_0971.JPG' },
-      { id: 'img-7', src: 'assets/images/IMG_2128.JPG' },
-      { id: 'img-8', src: 'assets/images/IMG_2060.JPG' }
-    ];
 
     if (!config) {
       config = {
@@ -101,38 +97,28 @@ export class PublicApp {
         ticketButtonText: 'Get Tickets',
         newsletterEndpoint: '',
         newsletterConfirmation: 'Thanks for subscribing! We’ll keep you updated.',
-        galleryImages: defaultGalleryImages,
-        galleryVideos: Array.from({ length: 3 }, (_, index) => ({ id: `vid-${index + 1}`, embedUrl: '' })),
+        galleryImages: [],
+        galleryVideos: [],
       };
       this.db.add('settings', config);
       return config;
     }
 
     const existingImages = Array.isArray(config.galleryImages) ? config.galleryImages : [];
-    const normalizedGalleryImages = existingImages.length > 0
-      ? existingImages.map((existingItem, index) => {
-          const fallback = defaultGalleryImages[index] || { id: `img-${index + 1}`, src: '' };
-          const currentSrc = existingItem?.src?.trim();
-          const validSrc = currentSrc && (currentSrc.startsWith('assets/') || currentSrc.startsWith('/assets/') || currentSrc.startsWith('http'))
-            ? currentSrc
-            : fallback?.src || '';
-          return {
-            id: existingItem?.id || fallback?.id || `img-${index + 1}`,
-            src: validSrc
-          };
-        })
-      : defaultGalleryImages.map((fallback, index) => ({
-          id: fallback?.id || `img-${index + 1}`,
-          src: fallback?.src || ''
-        }));
+    const normalizedGalleryImages = existingImages
+      .map((existingItem, index) => ({
+        id: existingItem?.id || `img-${index + 1}`,
+        src: this.isRenderableMediaValue(existingItem?.src) ? existingItem.src.trim() : ''
+      }))
+      .filter((image) => this.isRenderableMediaValue(image.src));
 
     const existingVideos = Array.isArray(config.galleryVideos) ? config.galleryVideos : [];
-    const normalizedGalleryVideos = existingVideos.length > 0
-      ? existingVideos.map((video, index) => ({
-          id: video?.id || `vid-${index + 1}`,
-          embedUrl: video?.embedUrl || ''
-        }))
-      : Array.from({ length: 3 }, (_, index) => ({ id: `vid-${index + 1}`, embedUrl: '' }));
+    const normalizedGalleryVideos = existingVideos
+      .map((video, index) => ({
+        id: video?.id || `vid-${index + 1}`,
+        embedUrl: this.isRenderableMediaValue(video?.embedUrl) ? video.embedUrl.trim() : ''
+      }))
+      .filter((video) => this.isRenderableMediaValue(video.embedUrl));
 
     const updatedConfig = {
       ...config,
@@ -153,19 +139,15 @@ export class PublicApp {
       ? `<a id="ticket-action-button" href="${config.ticketUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-large">${config.ticketButtonText || 'Get Tickets'}</a>`
       : `<button id="ticket-action-button" type="button" class="btn btn-large btn-disabled" disabled>Coming Soon</button>`;
 
-    const galleryImagesHtml = config.galleryImages.map((image, index) => {
-      const content = image.src
-        ? `<img src="${image.src}" alt="AFRO PULSE image ${index + 1}">`
-        : `<div class="gallery-placeholder"><span>Featured slot ${index + 1}</span></div>`;
-      return `<div class="gallery-card">${content}<div class="gallery-card-label">${image.src ? `Moment ${index + 1}` : `Slot ${index + 1}`}</div></div>`;
-    }).join('');
+    const galleryImagesHtml = (config.galleryImages || [])
+      .filter((image) => this.isRenderableMediaValue(image?.src))
+      .map((image, index) => `<div class="gallery-card"><img src="${image.src}" alt="AFRO PULSE image ${index + 1}"><div class="gallery-card-label">Moment ${index + 1}</div></div>`)
+      .join('');
 
-    const galleryVideosHtml = config.galleryVideos.map((video, index) => {
-      const content = video.embedUrl
-        ? this.formatVideoEmbed(video.embedUrl)
-        : `<div class="gallery-placeholder"><span>Video ${index + 1}</span></div>`;
-      return `<div class="video-card">${content}</div>`;
-    }).join('');
+    const galleryVideosHtml = (config.galleryVideos || [])
+      .filter((video) => this.isRenderableMediaValue(video?.embedUrl))
+      .map((video, index) => `<div class="video-card">${this.formatVideoEmbed(video.embedUrl)}</div>`)
+      .join('');
 
     const pageContent = document.getElementById('afro-page-content');
     if (!pageContent) return;
@@ -249,13 +231,13 @@ export class PublicApp {
     const track = document.getElementById('carousel-track');
     if (!track) return;
 
-    const previewImages = (images || []).slice(0, 8);
-    track.innerHTML = previewImages.map((image, index) => {
-      const content = image.src
-        ? `<img src="${image.src}" alt="Preview ${index + 1}">`
-        : `<div class="carousel-placeholder"><span>Slot ${index + 1}</span></div>`;
-      return `<div class="preview-card">${content}<div class="preview-card-label">${image.src ? `Featured ${index + 1}` : `Open Slot ${index + 1}`}</div></div>`;
-    }).join('');
+    const previewImages = (images || []).filter((image) => this.isRenderableMediaValue(image?.src)).slice(0, 8);
+    track.innerHTML = previewImages.map((image, index) => `
+      <div class="preview-card">
+        <img src="${image.src}" alt="Preview ${index + 1}">
+        <div class="preview-card-label">Featured ${index + 1}</div>
+      </div>
+    `).join('');
 
     this.afroPreviewImages = previewImages;
     this.afroPreviewIndex = 0;
@@ -350,19 +332,15 @@ export class PublicApp {
   }
 
   renderGalleryPage(config) {
-    const galleryImagesHtml = (config.galleryImages || []).map((image, index) => {
-      const content = image.src
-        ? `<img src="${image.src}" alt="AFRO PULSE image ${index + 1}">`
-        : `<div class="gallery-placeholder"><span>Featured slot ${index + 1}</span></div>`;
-      return `<div class="gallery-card">${content}<div class="gallery-card-label">${image.src ? `Moment ${index + 1}` : `Slot ${index + 1}`}</div></div>`;
-    }).join('');
+    const galleryImagesHtml = (config.galleryImages || [])
+      .filter((image) => this.isRenderableMediaValue(image?.src))
+      .map((image, index) => `<div class="gallery-card"><img src="${image.src}" alt="AFRO PULSE image ${index + 1}"><div class="gallery-card-label">Moment ${index + 1}</div></div>`)
+      .join('');
 
-    const galleryVideosHtml = (config.galleryVideos || []).map((video, index) => {
-      const content = video.embedUrl
-        ? this.formatVideoEmbed(video.embedUrl)
-        : `<div class="gallery-placeholder"><span>Video slot ${index + 1}</span></div>`;
-      return `<div class="gallery-card">${content}<div class="gallery-card-label">${video.embedUrl ? `Video ${index + 1}` : `Video slot ${index + 1}`}</div></div>`;
-    }).join('');
+    const galleryVideosHtml = (config.galleryVideos || [])
+      .filter((video) => this.isRenderableMediaValue(video?.embedUrl))
+      .map((video, index) => `<div class="gallery-card">${this.formatVideoEmbed(video.embedUrl)}<div class="gallery-card-label">Video ${index + 1}</div></div>`)
+      .join('');
 
     const pageContent = document.getElementById('gallery-page-content');
     if (!pageContent) return;
