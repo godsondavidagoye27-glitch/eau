@@ -91,23 +91,52 @@ export class Auth {
     this.currentUser = this.loadCurrentUser();
   }
 
+  getAdminCandidates() {
+    const candidates = [
+      { email: 'eaudeyplay@gmail.com', password: 'EAUDETPLAY456$' },
+      { email: 'admin@eaudeplay.com', password: 'admin123' }
+    ];
+
+    const storedUsers = this.db.getAll('users') || [];
+    storedUsers.forEach((user) => {
+      if (user?.role === 'admin' && user?.email && user?.password) {
+        candidates.push({ email: String(user.email).trim().toLowerCase(), password: String(user.password) });
+      }
+    });
+
+    const unique = [];
+    const seen = new Set();
+    candidates.forEach((candidate) => {
+      const key = `${candidate.email}:${candidate.password}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(candidate);
+      }
+    });
+
+    return unique;
+  }
+
+  matchesAdminCredentials(email, password) {
+    const normalizedEmail = (email || '').trim().toLowerCase();
+    const normalizedPassword = password || '';
+    return this.getAdminCandidates().some((candidate) => candidate.email === normalizedEmail && candidate.password === normalizedPassword);
+  }
+
   // LOGIN
   login(email, password, options = {}) {
     const { requireRole = null } = options;
     const normalizedEmail = (email || '').trim().toLowerCase();
     const normalizedPassword = password || '';
-    const adminEmail = 'eaudeyplay@gmail.com';
-    const adminPassword = 'EAUDETPLAY456$';
 
-    // Only accept the exact admin credentials configured here
-    if (normalizedEmail !== adminEmail || normalizedPassword !== adminPassword) {
+    if (!this.matchesAdminCredentials(normalizedEmail, normalizedPassword)) {
       return { success: false, error: 'Invalid email or password' };
     }
 
     const user = {
       id: 1,
-      email: adminEmail,
-      password: adminPassword,
+      email: normalizedEmail,
+      password: normalizedPassword,
       role: 'admin'
     };
 
@@ -117,6 +146,9 @@ export class Auth {
 
     this.currentUser = user;
     this.saveCurrentUser(user);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: user }));
+    }
     return { success: true, user };
   }
 
@@ -124,6 +156,9 @@ export class Auth {
   logout() {
     this.currentUser = null;
     localStorage.removeItem('eau-de-play-current-user');
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('userLoggedOut'));
+    }
     return true;
   }
 
@@ -134,11 +169,10 @@ export class Auth {
 
   // IS AUTHENTICATED
   isAuthenticated() {
-    // Ensure current user matches the configured admin credentials
     if (!this.currentUser) return false;
-    const adminEmail = 'eaudeyplay@gmail.com';
-    const adminPassword = 'EAUDETPLAY456$';
-    return this.currentUser.email === adminEmail && this.currentUser.password === adminPassword && this.currentUser.role === 'admin';
+    const normalizedEmail = (this.currentUser.email || '').trim().toLowerCase();
+    const normalizedPassword = this.currentUser.password || '';
+    return this.currentUser.role === 'admin' && this.matchesAdminCredentials(normalizedEmail, normalizedPassword);
   }
 
   // SAVE CURRENT USER
@@ -152,10 +186,10 @@ export class Auth {
       const raw = localStorage.getItem('eau-de-play-current-user');
       if (!raw) return null;
       const parsed = JSON.parse(raw);
-      // Validate stored user matches the configured admin credentials
-      const adminEmail = 'eaudeyplay@gmail.com';
-      const adminPassword = 'EAUDETPLAY456$';
-      if (parsed && parsed.email === adminEmail && parsed.password === adminPassword && parsed.role === 'admin') {
+      if (!parsed || parsed.role !== 'admin') return null;
+      const normalizedEmail = (parsed.email || '').trim().toLowerCase();
+      const normalizedPassword = parsed.password || '';
+      if (this.matchesAdminCredentials(normalizedEmail, normalizedPassword)) {
         return parsed;
       }
       return null;

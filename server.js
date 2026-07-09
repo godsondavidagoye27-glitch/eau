@@ -8,6 +8,36 @@ const DATA_FILE = path.join(__dirname, 'data', 'site-data.json');
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const RESEND_SENDER = process.env.RESEND_SENDER || 'newsletter@yourdomain.com';
 
+function loadEnvFile(filePath) {
+  if (!filePath || !fs.existsSync(filePath)) return;
+
+  const content = fs.readFileSync(filePath, 'utf8');
+  content.split(/\r?\n/).forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return;
+
+    const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+    if (!match) return;
+
+    const [, key, rawValue] = match;
+    let value = rawValue.trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+
+    if (!process.env[key]) {
+      process.env[key] = value;
+    }
+  });
+}
+
+[
+  path.join(__dirname, '.env'),
+  path.join(__dirname, '.env.local'),
+  path.join(__dirname, 'eau-de-play', '.env'),
+  path.join(__dirname, 'eau-de-play', '.env.local')
+].forEach(loadEnvFile);
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -211,8 +241,8 @@ function injectRuntimeConfig(html, siteData) {
 function getSupabaseStorageConfig() {
   return {
     url: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '',
-    serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '',
-    bucket: process.env.SUPABASE_STORAGE_BUCKET || process.env.VITE_SUPABASE_STORAGE_BUCKET || 'uploads'
+    serviceKey: process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '',
+    bucket: process.env.VITE_SUPABASE_STORAGE_BUCKET || process.env.SUPABASE_STORAGE_BUCKET || 'uploads'
   };
 }
 
@@ -271,7 +301,7 @@ async function uploadToSupabaseStorage(filename, buffer) {
   const { url, serviceKey, bucket } = getSupabaseStorageConfig();
 
   if (!url || !serviceKey) {
-    throw new Error('Supabase Storage is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the environment.');
+    throw new Error('Supabase Storage is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_SERVICE_ROLE_KEY (or the non-VITE equivalents) to your environment or .env file.');
   }
 
   await ensureSupabaseBucketExists(bucket, url, serviceKey);
