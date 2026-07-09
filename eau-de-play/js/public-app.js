@@ -521,15 +521,18 @@ export class PublicApp {
     const html = products.map(product => {
       const src = safeSrc(product.image) || '';
       const imgHtml = src ? `<img src="${src}" alt="${product.name}" class="card-img">` : `<div class="card-img" style="display:flex;align-items:center;justify-content:center;color:var(--color-text-light);">No image</div>`;
+      // Hide price for services on the card; show for merchandise
+      const priceHtml = product.category === 'service' ? '' : `<div class="card-price">$${product.price}</div>`;
+      const bookLink = product.category === 'service' ? `book.html?serviceId=${product.id}` : '#';
       return `
       <div class="card">
         ${imgHtml}
         <div class="card-title">${product.name}</div>
-        <div class="card-price">$${product.price}</div>
+        ${priceHtml}
         <div class="card-description">${product.description}</div>
-        <button class="btn" onclick="alert('${product.name} booking opening soon!')">
+        <a class="btn" href="${bookLink}">
           ${product.buttonText || 'VIEW'}
-        </button>
+        </a>
       </div>
     `;
     }).join('');
@@ -557,6 +560,7 @@ export class PublicApp {
     const html = services.map(service => {
       const src = safeSrc(service.image);
       const img = src ? `<img src="${src}" alt="${service.name}">` : `<div class="service-card-placeholder">No image</div>`;
+      const bookLink = `book.html?serviceId=${service.id}`;
       return `
       <div class="service-card">
         <div class="service-card-img">
@@ -564,12 +568,9 @@ export class PublicApp {
         </div>
         <div class="service-card-body">
           <h3 class="service-card-title">${service.name}</h3>
-          <div class="service-card-price">$${service.price}</div>
           <p class="service-card-description">${service.description}</p>
           <div class="service-card-footer">
-            <button class="btn" onclick="alert('Booking for ${service.name} coming soon!')">
-              ${service.buttonText}
-            </button>
+            <a class="btn" href="${bookLink}">${service.buttonText}</a>
           </div>
         </div>
       </div>

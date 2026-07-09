@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Booking Confirmation - EAU DEY PLAY</title>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/public.css">
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+  <main class="container" style="padding:var(--spacing-3xl) 12px;">
+    <div id="confirmation-root">
+      <h1>Loading confirmation...</h1>
+    </div>
+  </main>
+
+  <script type="module">
+    function qs(name){const p=new URLSearchParams(location.search);return p.get(name)}
+    const id = qs('bookingId');
+    const root = document.getElementById('confirmation-root');
+    const bookings = JSON.parse(localStorage.getItem('eau-bookings')||'[]');
+    const bk = bookings.find(b=>b.id===id);
+    if(!bk){root.innerHTML='<h2>Booking not found.</h2>';}
+    else{
+      root.innerHTML = `
+        <h1>Booking Confirmed</h1>
+        <div class="booking-summary">
+          <p><strong>Service:</strong> ${bk.serviceName}</p>
+          <p><strong>Where:</strong> ${bk.where}</p>
+          <p><strong>Start:</strong> ${bk.start}</p>
+          <p><strong>Hours:</strong> ${bk.hours}</p>
+          <p><strong>Rate:</strong> $${bk.ratePerHour} / hour</p>
+          <p><strong>Total:</strong> $${bk.total}</p>
+          <p><strong>Payment System:</strong> ${bk.payment.system}</p>
+          <p><strong>Card:</strong> ${bk.payment.cardNumber}</p>
+        </div>
+        <div style="margin-top:16px; display:flex; gap:12px;">
+          <button class="btn" id="print">Print Summary</button>
+          <button class="btn btn-secondary" id="cancel">Cancel Booking</button>
+        </div>
+      `;
+
+      document.getElementById('print').addEventListener('click', ()=>{
+        window.print();
+      });
+
+      document.getElementById('cancel').addEventListener('click', ()=>{
+        if(!confirm('Cancel this booking?')) return;
+        const remaining = bookings.filter(b=>b.id!==id);
+        localStorage.setItem('eau-bookings', JSON.stringify(remaining));
+        window.location.href = 'index.html';
+      });
+    }
+  </script>
+</body>
+</html>
