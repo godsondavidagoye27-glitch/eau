@@ -25,7 +25,16 @@ export class AdminApp {
 
     this.setupSidebar();
     this.setupModal();
+    this.refreshSharedDataFromServer();
     this.showDashboard();
+  }
+
+  async refreshSharedDataFromServer() {
+    try {
+      await this.db.refreshFromServer();
+    } catch (err) {
+      console.warn('Failed to refresh admin shared data', err);
+    }
   }
 
   setupSidebar() {
@@ -196,23 +205,51 @@ export class AdminApp {
     this.bindEventSettingsListeners(config);
   }
 
+  getMediaPreviewMarkup(item, type) {
+    const previewUrl = item?.previewUrl || (type === 'image' ? item?.src : item?.embedUrl) || '';
+    if (!previewUrl) {
+      return `<div class="media-preview media-preview-placeholder">${type === 'image' ? 'Image' : 'Video'}</div>`;
+    }
+
+    if (type === 'image') {
+      return `<div class="media-preview"><img src="${previewUrl}" alt="Preview"></div>`;
+    }
+
+    const lowerPreview = String(previewUrl).toLowerCase();
+    if (lowerPreview.startsWith('data:video') || lowerPreview.startsWith('blob:') || lowerPreview.endsWith('.mp4') || lowerPreview.endsWith('.webm') || lowerPreview.endsWith('.ogg') || lowerPreview.endsWith('.mov')) {
+      return `<div class="media-preview"><video src="${previewUrl}" muted playsinline preload="metadata"></video></div>`;
+    }
+
+    return `<div class="media-preview media-preview-placeholder">Video</div>`;
+  }
+
   renderMediaRows(config) {
     const imagesList = document.getElementById('gallery-images-list');
     const videosList = document.getElementById('gallery-videos-list');
     if (imagesList) {
-      imagesList.innerHTML = config.galleryImages.map((image, index) => `
+      imagesList.innerHTML = (config.galleryImages || []).map((image, index) => `
         <div class="media-row" data-id="${image.id}">
-          <label>Image ${index + 1}</label>
-          <input type="text" class="media-input image-url" value="${image.src || ''}" placeholder="Image URL or leave blank">
+          <div class="media-row-main">
+            ${this.getMediaPreviewMarkup(image, 'image')}
+            <div class="media-row-fields">
+              <label>Image ${index + 1}</label>
+              <input type="text" class="media-input image-url" value="${image.src || ''}" placeholder="Image URL or leave blank">
+            </div>
+          </div>
           <button type="button" class="btn btn-small btn-secondary remove-media" data-type="image">Remove</button>
         </div>
       `).join('');
     }
     if (videosList) {
-      videosList.innerHTML = config.galleryVideos.map((video, index) => `
+      videosList.innerHTML = (config.galleryVideos || []).map((video, index) => `
         <div class="media-row" data-id="${video.id}">
-          <label>Video ${index + 1}</label>
-          <input type="text" class="media-input video-url" value="${video.embedUrl || ''}" placeholder="YouTube, Vimeo, or embed URL">
+          <div class="media-row-main">
+            ${this.getMediaPreviewMarkup(video, 'video')}
+            <div class="media-row-fields">
+              <label>Video ${index + 1}</label>
+              <input type="text" class="media-input video-url" value="${video.embedUrl || ''}" placeholder="YouTube, Vimeo, or embed URL">
+            </div>
+          </div>
           <button type="button" class="btn btn-small btn-secondary remove-media" data-type="video">Remove</button>
         </div>
       `).join('');
@@ -230,6 +267,7 @@ export class AdminApp {
     if (savedConfig) {
       Object.assign(config, savedConfig);
     }
+    this.refreshSharedDataFromServer();
     window.dispatchEvent(new CustomEvent('siteDataUpdated', { detail: this.db.getData() }));
     return savedConfig || normalizedConfig;
   }
@@ -274,12 +312,21 @@ export class AdminApp {
         let src = urlInput?.value?.trim() || '';
 
         if (file) {
+          const tempId = `img-${Date.now()}`;
+          const previewUrl = await this.readFileAsDataURL(file);
+          config.galleryImages = [...(config.galleryImages || []), { id: tempId, src: '', previewUrl }];
+          this.renderMediaRows(config);
+
           try {
             addImageButton.disabled = true;
             if (statusEl) statusEl.textContent = 'Uploading...';
             src = await this.uploadMediaFile(file);
+            config.galleryImages = (config.galleryImages || []).map((item) => item.id === tempId ? { ...item, src, previewUrl: '' } : item);
+            this.renderMediaRows(config);
             if (statusEl) statusEl.textContent = 'Uploaded!';
           } catch (err) {
+            config.galleryImages = (config.galleryImages || []).filter((item) => item.id !== tempId);
+            this.renderMediaRows(config);
             if (statusEl) statusEl.textContent = '';
             alert('Upload failed: ' + err.message);
             addImageButton.disabled = false;
@@ -293,9 +340,14 @@ export class AdminApp {
           return;
         }
 
-        config.galleryImages = [...(config.galleryImages || []), { id: `img-${Date.now()}`, src }];
-        this.persistEventConfig(config);
-        this.renderMediaRows(config);
+        if (!file) {
+          config.galleryImages = [...(config.galleryImages || []), { id: `img-${Date.now()}`, src }];
+          this.persistEventConfig(config);
+          this.renderMediaRows(config);
+        } else {
+          this.persistEventConfig(config);
+          this.renderMediaRows(config);
+        }
         if (urlInput) urlInput.value = '';
         if (fileInput) fileInput.value = '';
         if (statusEl) statusEl.textContent = '';
@@ -311,12 +363,21 @@ export class AdminApp {
         let embedUrl = urlInput?.value?.trim() || '';
 
         if (file) {
+          const tempId = `vid-${Date.now()}`;
+          const previewUrl = await this.readFileAsDataURL(file);
+          config.galleryVideos = [...(config.galleryVideos || []), { id: tempId, embedUrl: '', previewUrl }];
+          this.renderMediaRows(config);
+
           try {
             addVideoButton.disabled = true;
             if (statusEl) statusEl.textContent = 'Uploading...';
             embedUrl = await this.uploadMediaFile(file);
+            config.galleryVideos = (config.galleryVideos || []).map((item) => item.id === tempId ? { ...item, embedUrl, previewUrl: '' } : item);
+            this.renderMediaRows(config);
             if (statusEl) statusEl.textContent = 'Uploaded!';
           } catch (err) {
+            config.galleryVideos = (config.galleryVideos || []).filter((item) => item.id !== tempId);
+            this.renderMediaRows(config);
             if (statusEl) statusEl.textContent = '';
             alert('Upload failed: ' + err.message);
             addVideoButton.disabled = false;
@@ -330,9 +391,14 @@ export class AdminApp {
           return;
         }
 
-        config.galleryVideos = [...(config.galleryVideos || []), { id: `vid-${Date.now()}`, embedUrl }];
-        this.persistEventConfig(config);
-        this.renderMediaRows(config);
+        if (!file) {
+          config.galleryVideos = [...(config.galleryVideos || []), { id: `vid-${Date.now()}`, embedUrl }];
+          this.persistEventConfig(config);
+          this.renderMediaRows(config);
+        } else {
+          this.persistEventConfig(config);
+          this.renderMediaRows(config);
+        }
         if (urlInput) urlInput.value = '';
         if (fileInput) fileInput.value = '';
         if (statusEl) statusEl.textContent = '';
