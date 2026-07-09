@@ -72,6 +72,10 @@ export class PublicApp {
       this.setupPageSpecificLogic();
     } catch (err) {
       console.warn('Failed to sync shared site data', err);
+      const fallbackData = this.db.getData();
+      if (fallbackData && typeof fallbackData === 'object') {
+        this.setupPageSpecificLogic();
+      }
     }
   }
 

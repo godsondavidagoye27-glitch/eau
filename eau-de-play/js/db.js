@@ -242,12 +242,20 @@ export class Database {
   // GET ALL DATA
   getData() {
     const sharedData = this.getSharedData();
-    if (sharedData) {
+    if (sharedData && typeof sharedData === 'object') {
       return sharedData;
     }
 
     const data = localStorage.getItem(this.storageKey);
-    return data ? JSON.parse(data) : {};
+    if (data) {
+      try {
+        return JSON.parse(data);
+      } catch (err) {
+        console.warn('Failed to parse local site data', err);
+      }
+    }
+
+    return {};
   }
 
   // SAVE ALL DATA
