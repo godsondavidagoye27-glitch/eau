@@ -118,8 +118,10 @@ function getRuntimeConfigScript() {
 }
 
 function getSiteDataScript(siteData) {
-  const json = JSON.stringify(siteData).replace(/<\\/script/gi, '<\\\\/script').replace(/<!--/g, '<\\!--');
-  return `<script>window.__SITE_DATA__ = ${json};</script>`;
+  const jsonString = JSON.stringify(siteData);
+  // escape closing script tags and comment openings to safely embed
+  const escaped = jsonString.replace(new RegExp('</script', 'gi'), '<\\/script').replace(/<!--/g, '<\\!--');
+  return `<script>window.__SITE_DATA__ = ${escaped};</script>`;
 }
 
 function injectRuntimeConfig(html, siteData) {
