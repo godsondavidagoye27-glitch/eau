@@ -530,7 +530,7 @@ export class PublicApp {
         <div class="card-title">${product.name}</div>
         ${priceHtml}
         <div class="card-description">${product.description}</div>
-        <a class="btn" href="${bookLink}">
+        <a class="btn" href="${bookLink}" onclick="sessionStorage.setItem('eau_selected_service', '${product.id}')">
           ${product.buttonText || 'VIEW'}
         </a>
       </div>
@@ -570,7 +570,7 @@ export class PublicApp {
           <h3 class="service-card-title">${service.name}</h3>
           <p class="service-card-description">${service.description}</p>
           <div class="service-card-footer">
-            <a class="btn" href="${bookLink}">${service.buttonText}</a>
+            <a class="btn" href="${bookLink}" onclick="sessionStorage.setItem('eau_selected_service', '${service.id}')">${service.buttonText}</a>
           </div>
         </div>
       </div>

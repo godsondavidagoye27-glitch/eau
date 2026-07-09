@@ -25,10 +25,17 @@ async function postBooking(payload) {
 async function init() {
   const db = new Database();
   await db.initializeFromServer();
-  const serviceId = parseInt(qs('serviceId'), 10);
+  let serviceId = parseInt(qs('serviceId'), 10);
+  if (!serviceId) {
+    const stored = sessionStorage.getItem('eau_selected_service');
+    if (stored) {
+      const parsed = parseInt(stored, 10);
+      if (!Number.isNaN(parsed)) serviceId = parsed;
+    }
+  }
   const root = document.getElementById('booking-root');
   if (!serviceId) {
-    root.innerHTML = '<h2>Invalid service selected.</h2>';
+    root.innerHTML = '<h2>Please select a service to book.</h2><p><a href="services.html" class="btn">Choose a service</a></p>';
     return;
   }
 
@@ -119,16 +126,16 @@ async function init() {
         if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
           // Persist booking to server with paymentIntentId
           const payload = {
-            serviceId,
-            serviceName: service.name,
-            where,
-            start,
-            total,
-            payment: {
-              system: 'stripe',
-              paymentIntentId: result.paymentIntent.id
-            }
-          };
+              serviceId,
+              serviceName: service.name,
+              where,
+              start,
+              total,
+              payment: {
+                system: 'stripe',
+                paymentIntentId: result.paymentIntent.id
+              }
+            };
 
           const saveRes = await postBooking(payload);
           if (saveRes && saveRes.success && saveRes.booking) {
