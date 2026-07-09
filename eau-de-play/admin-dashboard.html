@@ -17,31 +17,38 @@
     <aside class="admin-sidebar">
       <div class="admin-logo">EAU DEY PLAY</div>
       <nav class="admin-nav">
-        <li class="admin-nav-item">
-          <button class="admin-nav-link active" data-view="dashboard">
-            📊 Dashboard
-          </button>
-        </li>
-        <li class="admin-nav-item">
-          <button class="admin-nav-link" data-view="products">
-            📦 Manage Products
-          </button>
-        </li>
-        <li class="admin-nav-item">
-          <button class="admin-nav-link" data-view="event">
-            🎟️ AFRO PULSE '27
-          </button>
-        </li>
-        <li class="admin-nav-item">
-          <button class="admin-nav-link" data-view="orders">
-            🛒 Manage Orders
-          </button>
-        </li>
-        <li class="admin-nav-item" style="margin-top: var(--spacing-xl);">
-          <button class="admin-nav-link" id="logout-btn">
-            🚪 Logout
-          </button>
-        </li>
+        <ul class="admin-nav-list">
+          <li class="admin-nav-item">
+            <button class="admin-nav-link active" data-view="dashboard">
+              📊 Dashboard
+            </button>
+          </li>
+          <li class="admin-nav-item">
+            <button class="admin-nav-link" data-view="products">
+              📦 Manage Products
+            </button>
+          </li>
+          <li class="admin-nav-item">
+            <button class="admin-nav-link" data-view="event">
+              🎟️ AFRO PULSE '27
+            </button>
+          </li>
+          <li class="admin-nav-item">
+            <button class="admin-nav-link" data-view="orders">
+              🛒 Manage Orders
+            </button>
+          </li>
+          <li class="admin-nav-item">
+            <a class="admin-nav-link" href="index.html">
+              🏠 View Site
+            </a>
+          </li>
+          <li class="admin-nav-item admin-nav-spacer">
+            <button class="admin-nav-link" id="logout-btn">
+              🚪 Logout
+            </button>
+          </li>
+        </ul>
       </nav>
     </aside>
 
@@ -98,10 +105,10 @@
           <div class="product-form-group">
             <label for="product-image">Image / Video URL</label>
             <input type="text" id="product-image" name="image" placeholder="Leave blank for placeholder">
-            <div style="margin-top:8px;">
-              <label for="product-image-file" style="font-weight:normal; display:block; margin-bottom:4px;">Or upload a photo/video from your computer:</label>
+            <div class="product-upload-block">
+              <label for="product-image-file" class="product-upload-label">Or upload a photo/video from your computer:</label>
               <input type="file" id="product-image-file" accept="image/*,video/*">
-              <span id="product-image-upload-status" style="font-size:12px; color:#666; margin-left:8px;"></span>
+              <span id="product-image-upload-status" class="product-upload-status"></span>
             </div>
           </div>
 

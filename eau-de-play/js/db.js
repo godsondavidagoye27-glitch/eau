@@ -260,27 +260,50 @@ export class Database {
 
   // SAVE ALL DATA
   saveData(data) {
-    localStorage.setItem(this.storageKey, JSON.stringify(data));
+    const normalizedData = data && typeof data === 'object' ? data : {};
+    localStorage.setItem(this.storageKey, JSON.stringify(normalizedData));
     if (typeof window !== 'undefined') {
-      window.__SITE_DATA__ = data;
-      window.dispatchEvent(new CustomEvent('siteDataUpdated', { detail: data }));
+      window.__SITE_DATA__ = normalizedData;
     }
 
-    if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
-      window.fetch('/api/site-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data })
-      }).catch((err) => {
+    const syncAndNotify = async () => {
+      try {
+        if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
+          const response = await window.fetch('/api/site-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: normalizedData })
+          });
+
+          if (!response.ok) {
+            throw new Error('Server rejected site data update');
+          }
+
+          const result = await response.json();
+          if (result?.data && typeof result.data === 'object') {
+            const persistedData = result.data;
+            localStorage.setItem(this.storageKey, JSON.stringify(persistedData));
+            if (typeof window !== 'undefined') {
+              window.__SITE_DATA__ = persistedData;
+            }
+          }
+        }
+      } catch (err) {
         console.warn('Failed to sync shared site data', err);
-      });
-    }
+      }
 
-    if (typeof window !== 'undefined') {
-      this.syncToSupabase(data).catch((err) => {
-        console.warn('Supabase sync failed', err);
-      });
-    }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('siteDataUpdated', { detail: normalizedData }));
+      }
+
+      if (typeof window !== 'undefined') {
+        this.syncToSupabase(normalizedData).catch((err) => {
+          console.warn('Supabase sync failed', err);
+        });
+      }
+    };
+
+    return syncAndNotify();
   }
 
   async refreshFromServer() {

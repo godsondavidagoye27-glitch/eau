@@ -256,7 +256,7 @@ export class AdminApp {
     }
   }
 
-  persistEventConfig(config) {
+  async persistEventConfig(config) {
     const normalizedConfig = {
       ...config,
       galleryImages: Array.isArray(config.galleryImages) ? config.galleryImages : [],
@@ -272,10 +272,9 @@ export class AdminApp {
     }
 
     const nextData = { ...data, settings: updatedSettings };
-    this.db.saveData(nextData);
+    await this.db.saveData(nextData);
     Object.assign(config, normalizedConfig);
-    this.refreshSharedDataFromServer();
-    window.dispatchEvent(new CustomEvent('siteDataUpdated', { detail: nextData }));
+    await this.refreshSharedDataFromServer();
     return normalizedConfig;
   }
 
@@ -287,7 +286,7 @@ export class AdminApp {
     const addVideoButton = document.getElementById('add-gallery-video');
 
     if (form) {
-      form.addEventListener('submit', (e) => {
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const updates = {
           title: document.getElementById('event-title').value,
@@ -305,7 +304,7 @@ export class AdminApp {
             embedUrl: input.value.trim()
           }))
         };
-        this.persistEventConfig({ ...config, ...updates });
+        await this.persistEventConfig({ ...config, ...updates });
         alert('Event settings saved and synced.');
       });
     }
@@ -349,10 +348,10 @@ export class AdminApp {
 
         if (!file) {
           config.galleryImages = [...(config.galleryImages || []), { id: `img-${Date.now()}`, src }];
-          this.persistEventConfig(config);
+          await this.persistEventConfig(config);
           this.renderMediaRows(config);
         } else {
-          this.persistEventConfig(config);
+          await this.persistEventConfig(config);
           this.renderMediaRows(config);
         }
         if (urlInput) urlInput.value = '';
@@ -400,10 +399,10 @@ export class AdminApp {
 
         if (!file) {
           config.galleryVideos = [...(config.galleryVideos || []), { id: `vid-${Date.now()}`, embedUrl }];
-          this.persistEventConfig(config);
+          await this.persistEventConfig(config);
           this.renderMediaRows(config);
         } else {
-          this.persistEventConfig(config);
+          await this.persistEventConfig(config);
           this.renderMediaRows(config);
         }
         if (urlInput) urlInput.value = '';
@@ -435,7 +434,7 @@ export class AdminApp {
           const row = event.target.closest('.media-row');
           const id = row?.getAttribute('data-id');
           config.galleryImages = (config.galleryImages || []).map((item) => item.id === id ? { ...item, src: event.target.value.trim() } : item);
-          this.persistEventConfig(config);
+          void this.persistEventConfig(config);
         }
       });
     }
@@ -462,7 +461,7 @@ export class AdminApp {
           const row = event.target.closest('.media-row');
           const id = row?.getAttribute('data-id');
           config.galleryVideos = (config.galleryVideos || []).map((item) => item.id === id ? { ...item, embedUrl: event.target.value.trim() } : item);
-          this.persistEventConfig(config);
+          void this.persistEventConfig(config);
         }
       });
     }
@@ -672,12 +671,11 @@ export class AdminApp {
   deleteProduct(productId) {
     if (confirm('Are you sure you want to delete this product?')) {
       this.db.delete('products', productId);
-      window.dispatchEvent(new CustomEvent('siteDataUpdated', { detail: this.db.getData() }));
       this.showProducts();
     }
   }
 
-  handleProductFormSubmit(e) {
+  async handleProductFormSubmit(e) {
     e.preventDefault();
 
     const productData = {
@@ -696,8 +694,6 @@ export class AdminApp {
       // Add new product
       this.db.add('products', productData);
     }
-
-    window.dispatchEvent(new CustomEvent('siteDataUpdated', { detail: this.db.getData() }));
 
     // Close modal and refresh
     document.getElementById('product-modal').classList.remove('active');
