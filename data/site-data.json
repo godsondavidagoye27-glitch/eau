@@ -1,4 +1,38 @@
 {
+  "products": [
+    {
+      "id": 1,
+      "name": "Premium DJ Services",
+      "category": "service",
+      "price": 500,
+      "description": "Professional DJ services for events",
+      "buttonText": "BOOK"
+    },
+    {
+      "id": 2,
+      "name": "Photography & Videography",
+      "category": "service",
+      "price": 500,
+      "description": "Professional photography and videography packages",
+      "buttonText": "BOOK"
+    },
+    {
+      "id": 3,
+      "name": "Event Planning",
+      "category": "service",
+      "price": 12000,
+      "description": "Complete event planning and coordination",
+      "buttonText": "BOOK"
+    },
+    {
+      "id": 4,
+      "name": "Sports Solutions",
+      "category": "service",
+      "price": 500,
+      "description": "Sports event management and coverage",
+      "buttonText": "BOOK"
+    }
+  ],
   "settings": [
     {
       "id": "afro-pulse",
