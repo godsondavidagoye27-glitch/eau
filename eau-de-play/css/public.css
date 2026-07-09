@@ -29,7 +29,7 @@
 
 .hero {
   background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
-              url("https://cdn.phototourl.com/free/2026-07-06-e5d57e0d-120a-407a-85f6-9d5e4f8dba0f.jpg");
+              url("../assets/images/IMG_3177.JPG");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -339,6 +339,17 @@
   .gallery-grid-section,
   .newsletter-section {
     padding: var(--spacing-2xl) var(--spacing-md);
+  }
+}
+
+/* Reduce footer height on small screens */
+@media (max-width: 680px) {
+  footer.site-footer {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  footer.site-footer .footer-inner {
+    gap: 8px;
   }
 }
 

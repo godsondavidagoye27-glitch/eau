@@ -43,7 +43,7 @@ export class Database {
             category: "service",
             price: 500,
             description: "Professional DJ services for events",
-            image: "assets/images/IMG_1566.JPG",
+            image: "assets/images/IMG_3347.jpg",
             buttonText: "BOOK"
           },
           {
@@ -52,7 +52,7 @@ export class Database {
             category: "service",
             price: 800,
             description: "Professional photography and videography packages",
-            image: "assets/images/IMG_1521.JPG",
+            image: "assets/images/IMG_4699.JPG",
             buttonText: "BOOK"
           },
           {
@@ -61,7 +61,7 @@ export class Database {
             category: "service",
             price: 1200,
             description: "Complete event planning and coordination",
-            image: "assets/images/IMG_1081.JPG",
+            image: "assets/images/IMG_4703.jpg",
             buttonText: "BOOK"
           },
           {
