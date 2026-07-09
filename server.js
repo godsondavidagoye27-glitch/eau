@@ -30,71 +30,15 @@ const MIME_TYPES = {
 
 const DEFAULT_SITE_DATA = {
   products: [
-    {
-      id: 1,
-      name: 'Premium DJ Services',
-      category: 'service',
-      price: 500,
-      description: 'Professional DJ services for events',
-      image: "",
-      buttonText: 'BOOK'
-    },
-    {
-      id: 2,
-      name: 'Photography & Videography',
-      category: 'service',
-      price: 500,
-      description: 'Professional photography and videography packages',
-      image: "",
-      buttonText: 'BOOK'
-    },
-    {
-      id: 3,
-      name: 'Event Planning',
-      category: 'service',
-      price: 12000,
-      description: 'Complete event planning and coordination',
-      image: "",
-      buttonText: 'BOOK'
-    },
-    {
-      id: 4,
-      name: 'Sports Solutions',
-      category: 'service',
-      price: 500,
-      description: 'Sports event management and coverage',
-      image: "",
-      buttonText: 'BOOK'
-    }
+    { id: 1, name: 'Premium DJ Services', category: 'service', price: 500, description: 'Professional DJ services for events', image: '', buttonText: 'BOOK' },
+    { id: 2, name: 'Photography & Videography', category: 'service', price: 500, description: 'Professional photography and videography packages', image: '', buttonText: 'BOOK' },
+    { id: 3, name: 'Event Planning', category: 'service', price: 12000, description: 'Complete event planning and coordination', image: '', buttonText: 'BOOK' },
+    { id: 4, name: 'Sports Solutions', category: 'service', price: 500, description: 'Sports event management and coverage', image: '', buttonText: 'BOOK' }
   ],
   merchandise: [
-    {
-      id: 101,
-      name: 'Eau de Kack T-Shirt',
-      category: 'merchandise',
-      price: 25,
-      description: 'Premium cotton t-shirt with logo',
-      image: "",
-      buttonText: 'ADD TO CART'
-    },
-    {
-      id: 102,
-      name: 'Eau de Play Cap',
-      category: 'merchandise',
-      price: 20,
-      description: 'Adjustable cap with embroidered logo',
-      image: "",
-      buttonText: 'ADD TO CART'
-    },
-    {
-      id: 103,
-      name: 'Brand Hoodie',
-      category: 'merchandise',
-      price: 60,
-      description: 'Comfortable pullover hoodie',
-      image: "",
-      buttonText: 'ADD TO CART'
-    }
+    { id: 101, name: 'Eau de Kack T-Shirt', category: 'merchandise', price: 25, description: 'Premium cotton t-shirt with logo', image: '', buttonText: 'ADD TO CART' },
+    { id: 102, name: 'Eau de Play Cap', category: 'merchandise', price: 20, description: 'Adjustable cap with embroidered logo', image: '', buttonText: 'ADD TO CART' },
+    { id: 103, name: 'Brand Hoodie', category: 'merchandise', price: 60, description: 'Comfortable pullover hoodie', image: '', buttonText: 'ADD TO CART' }
   ],
   settings: [
     {
@@ -119,16 +63,13 @@ const DEFAULT_SITE_DATA = {
     }
   ],
   orders: [],
-  users: [
-    { id: 1, email: 'admin@eaudeplay.com', password: 'admin123', role: 'admin' }
-  ],
+  users: [ { id: 1, email: 'admin@eaudeplay.com', password: 'admin123', role: 'admin' } ],
   bookings: []
 };
 
 function normalizeSiteData(data) {
   const baseData = JSON.parse(JSON.stringify(DEFAULT_SITE_DATA));
   if (!data || typeof data !== 'object') return baseData;
-
   return {
     ...baseData,
     ...data,
@@ -173,24 +114,11 @@ function getRuntimeConfigScript() {
   const stripePublicKey = process.env.VITE_STRIPE_PUBLIC_KEY || process.env.STRIPE_PUBLIC_KEY || '';
   const apiUrl = process.env.VITE_API_URL || process.env.API_URL || '';
 
-  return `
-    <script>
-      window.__APP_CONFIG__ = {
-        supabaseUrl: ${JSON.stringify(supabaseUrl)},
-        supabaseAnonKey: ${JSON.stringify(supabaseAnonKey)},
-        stripePublicKey: ${JSON.stringify(stripePublicKey)},
-        apiUrl: ${JSON.stringify(apiUrl)}
-      };
-      window.__SUPABASE_CONFIG__ = {
-        url: ${JSON.stringify(supabaseUrl)},
-        anonKey: ${JSON.stringify(supabaseAnonKey)}
-      };
-    </script>
-  `;
+  return `\n    <script>\n      window.__APP_CONFIG__ = {\n        supabaseUrl: ${JSON.stringify(supabaseUrl)},\n        supabaseAnonKey: ${JSON.stringify(supabaseAnonKey)},\n        stripePublicKey: ${JSON.stringify(stripePublicKey)},\n        apiUrl: ${JSON.stringify(apiUrl)}\n      };\n      window.__SUPABASE_CONFIG__ = {\n        url: ${JSON.stringify(supabaseUrl)},\n        anonKey: ${JSON.stringify(supabaseAnonKey)}\n      };\n    </script>\n  `;
 }
 
 function getSiteDataScript(siteData) {
-  const json = JSON.stringify(siteData).replace(/<\/script/gi, '<\\/script').replace(/<!--/g, '<\\!--');
+  const json = JSON.stringify(siteData).replace(/<\\/script/gi, '<\\\\/script').replace(/<!--/g, '<\\!--');
   return `<script>window.__SITE_DATA__ = ${json};</script>`;
 }
 
@@ -222,6 +150,50 @@ async function ensureSupabaseBucketExists(bucket, url, serviceKey) {
       apikey: serviceKey
     }
   });
+
+  if (checkRes.ok) {
+    let bucketInfo = null;
+    try { bucketInfo = await checkRes.json(); } catch (err) { /* ignore */ }
+    if (bucketInfo?.public !== true) {
+      const patchRes = await fetch(`${url}/storage/v1/bucket/${encodeURIComponent(bucket)}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${serviceKey}`,
+          apikey: serviceKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ public: true })
+      });
+      if (!patchRes.ok) {
+        let detail = 'Unable to make Supabase bucket public';
+        try { const errJson = await patchRes.json(); detail = errJson?.message || errJson?.error || detail; } catch (err) { /* ignore */ }
+        throw new Error(detail);
+      }
+    }
+    return;
+  }
+
+  if (checkRes.status !== 404) {
+    let detail = 'Unable to verify Supabase bucket';
+    try { const errJson = await checkRes.json(); detail = errJson?.message || errJson?.error || detail; } catch (err) { /* ignore */ }
+    throw new Error(detail);
+  }
+
+  const createRes = await fetch(`${url}/storage/v1/bucket`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${serviceKey}`,
+      apikey: serviceKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ name: bucket, public: true })
+  });
+
+  if (!createRes.ok) {
+    let detail = 'Unable to create Supabase bucket';
+    try { const errJson = await createRes.json(); detail = errJson?.message || errJson?.error || detail; } catch (err) { /* ignore */ }
+    throw new Error(detail);
+  }
 }
 
 async function uploadToSupabaseStorage(filename, buffer) {
@@ -240,4 +212,143 @@ async function uploadToSupabaseStorage(filename, buffer) {
       Authorization: `Bearer ${serviceKey}`,
       apikey: serviceKey,
       'Content-Type': getContentTypeFromFilename(filename),
-The file was created.
+      'x-upsert': 'true'
+    },
+    body: buffer
+  });
+
+  if (!response.ok) {
+    let detail = 'Cloud upload failed';
+    try { const errJson = await response.json(); detail = errJson?.message || errJson?.error || detail; } catch (err) { /* ignore */ }
+    throw new Error(detail);
+  }
+
+  return `${url}/storage/v1/object/public/${bucket}/${encodedPath}`;
+}
+
+function getLocalUploadPath(filename) {
+  const ext = path.extname(filename).toLowerCase() || '.bin';
+  const safeBase = path.basename(filename, ext).replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 40) || 'file';
+  const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeBase}${ext}`;
+  return path.join(ROOT_DIR, 'assets', 'uploads', uniqueName);
+}
+
+async function uploadToLocalStorage(filename, buffer) {
+  const uploadDir = path.join(ROOT_DIR, 'assets', 'uploads');
+  fs.mkdirSync(uploadDir, { recursive: true });
+  const dest = getLocalUploadPath(filename);
+  fs.writeFileSync(dest, buffer);
+  const rel = path.relative(ROOT_DIR, dest).replace(/\\/g, '/');
+  return `/${rel}`;
+}
+
+function readRequestBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk;
+      if (body.length > 1e7) {
+        req.destroy();
+        reject(new Error('Payload too large'));
+      }
+    });
+    req.on('end', () => resolve(body));
+    req.on('error', reject);
+  });
+}
+
+// Minimal API handlers (site-data and bookings)
+const server = http.createServer(async (req, res) => {
+  try {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+
+    // API: GET /api/site-data
+    if (req.method === 'GET' && url.pathname === '/api/site-data') {
+      const data = loadSiteData();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(data));
+      return;
+    }
+
+    // API: POST /api/site-data
+    if (req.method === 'POST' && url.pathname === '/api/site-data') {
+      const body = await readRequestBody(req);
+      const parsed = JSON.parse(body || '{}');
+      saveSiteData(parsed);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(loadSiteData()));
+      return;
+    }
+
+    // API: GET /api/bookings
+    if (req.method === 'GET' && url.pathname === '/api/bookings') {
+      const data = loadSiteData();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ bookings: data.bookings || [] }));
+      return;
+    }
+
+    // API: POST /api/bookings
+    if (req.method === 'POST' && url.pathname === '/api/bookings') {
+      const body = await readRequestBody(req);
+      const payload = JSON.parse(body || '{}');
+
+      const site = loadSiteData();
+      site.bookings = site.bookings || [];
+
+      // Determine total from product price if not provided
+      let total = payload.total;
+      if (!total) {
+        const prod = (site.products || []).find(p => p.id === payload.serviceId);
+        total = prod ? prod.price : 0;
+      }
+
+      const booking = {
+        id: payload.id || `bk-${Date.now()}`,
+        serviceId: payload.serviceId,
+        serviceName: payload.serviceName || '',
+        where: payload.where,
+        start: payload.start,
+        total: total,
+        payment: payload.payment || {},
+        createdAt: new Date().toISOString()
+      };
+
+      site.bookings.push(booking);
+      saveSiteData(site);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, booking }));
+      return;
+    }
+
+    // Serve static files from ROOT_DIR
+    let filePath = path.join(ROOT_DIR, url.pathname === '/' ? 'index.html' : decodeURIComponent(url.pathname));
+    if (!filePath.startsWith(ROOT_DIR)) {
+      res.writeHead(403);
+      res.end('Forbidden');
+      return;
+    }
+
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
+      filePath = path.join(filePath, 'index.html');
+    }
+
+    if (fs.existsSync(filePath)) {
+      const ext = path.extname(filePath).toLowerCase();
+      const content = fs.readFileSync(filePath);
+      res.writeHead(200, { 'Content-Type': MIME_TYPES[ext] || 'application/octet-stream' });
+      res.end(content);
+      return;
+    }
+
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Not found');
+
+  } catch (err) {
+    console.error('Server error:', err);
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: err.message }));
+  }
+});
+
+server.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
