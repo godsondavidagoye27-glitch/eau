@@ -1,19 +1,23 @@
 {
   "settings": [
     {
-      "galleryImages": [
-        {
-          "id": "img-verify",
-          "src": "assets/images/IMG_1566.JPG"
-        }
-      ],
       "id": "afro-pulse",
-      "subtitle": "Verified",
-      "newsletterConfirmation": "",
+      "title": "AFRO PULSE '27",
+      "subtitle": "Every edition set to spark up summer seasons in Iceland. Sign up for the next experience, join our community to stay updated on newsletters and reserve your tickets for AFRO PULSE '27.",
+      "ticketUrl": "",
       "ticketButtonText": "Get Tickets",
       "newsletterEndpoint": "",
-      "ticketUrl": "",
-      "title": "AFRO PULSE TEST",
+      "newsletterConfirmation": "Thanks for subscribing! We’ll keep you updated.",
+      "galleryImages": [
+        { "id": "img-1", "src": "assets/images/IMG_1566.JPG" },
+        { "id": "img-2", "src": "assets/images/IMG_1521.JPG" },
+        { "id": "img-3", "src": "assets/images/IMG_1427.JPG" },
+        { "id": "img-4", "src": "assets/images/IMG_1081.JPG" },
+        { "id": "img-5", "src": "assets/images/IMG_1027.JPG" },
+        { "id": "img-6", "src": "assets/images/IMG_0971.JPG" },
+        { "id": "img-7", "src": "assets/images/IMG_2128.JPG" },
+        { "id": "img-8", "src": "assets/images/IMG_2060.JPG" }
+      ],
       "galleryVideos": []
     }
   ]

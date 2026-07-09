@@ -171,13 +171,30 @@ const DEFAULT_SITE_DATA = {
   ]
 };
 
+function normalizeSiteData(data) {
+  const baseData = JSON.parse(JSON.stringify(DEFAULT_SITE_DATA));
+  if (!data || typeof data !== 'object') {
+    return baseData;
+  }
+
+  return {
+    ...baseData,
+    ...data,
+    products: Array.isArray(data.products) ? data.products : baseData.products,
+    merchandise: Array.isArray(data.merchandise) ? data.merchandise : baseData.merchandise,
+    settings: Array.isArray(data.settings) ? data.settings : baseData.settings,
+    orders: Array.isArray(data.orders) ? data.orders : baseData.orders,
+    users: Array.isArray(data.users) ? data.users : baseData.users
+  };
+}
+
 function loadSiteData() {
   try {
     if (fs.existsSync(DATA_FILE)) {
       const raw = fs.readFileSync(DATA_FILE, 'utf8');
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
-        return parsed;
+        return normalizeSiteData(parsed);
       }
     }
   } catch (err) {
@@ -185,13 +202,14 @@ function loadSiteData() {
   }
 
   saveSiteData(DEFAULT_SITE_DATA);
-  return DEFAULT_SITE_DATA;
+  return normalizeSiteData(DEFAULT_SITE_DATA);
 }
 
 function saveSiteData(data) {
   try {
+    const normalizedData = normalizeSiteData(data);
     fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+    fs.writeFileSync(DATA_FILE, JSON.stringify(normalizedData, null, 2));
     return true;
   } catch (err) {
     console.error('Failed to save shared site data:', err);
@@ -541,9 +559,10 @@ const server = http.createServer((req, res) => {
         try {
           const payload = JSON.parse(body || '{}');
           if (payload.data && typeof payload.data === 'object') {
-            saveSiteData(payload.data);
+            const normalizedData = normalizeSiteData(payload.data);
+            saveSiteData(normalizedData);
             res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ success: true, data: payload.data }));
+            res.end(JSON.stringify({ success: true, data: normalizedData }));
             return;
           }
 

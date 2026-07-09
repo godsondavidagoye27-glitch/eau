@@ -87,8 +87,34 @@ export class PublicApp {
     this.setupAfroPulseInteractions(eventConfig);
   }
 
+  normalizeMediaSrc(value) {
+    if (typeof value !== 'string') return '';
+
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+      return trimmed;
+    }
+
+    if (trimmed.startsWith('/')) {
+      return trimmed;
+    }
+
+    if (trimmed.startsWith('./') || trimmed.startsWith('../')) {
+      return trimmed;
+    }
+
+    if (trimmed.startsWith('assets/') || trimmed.startsWith('images/') || trimmed.startsWith('uploads/')) {
+      return `/${trimmed}`;
+    }
+
+    return trimmed;
+  }
+
   isRenderableMediaValue(value) {
-    const trimmed = String(value || '').trim();
+    const normalized = this.normalizeMediaSrc(value);
+    const trimmed = String(normalized || '').trim();
     if (!trimmed) return false;
 
     const lowerValue = trimmed.toLowerCase();
@@ -129,7 +155,7 @@ export class PublicApp {
     const normalizedGalleryImages = existingImages
       .map((existingItem, index) => ({
         id: existingItem?.id || `img-${index + 1}`,
-        src: this.isRenderableMediaValue(existingItem?.src) ? existingItem.src.trim() : ''
+        src: this.isRenderableMediaValue(existingItem?.src) ? this.normalizeMediaSrc(existingItem.src) : ''
       }))
       .filter((image) => this.isRenderableMediaValue(image.src));
 
@@ -137,7 +163,7 @@ export class PublicApp {
     const normalizedGalleryVideos = existingVideos
       .map((video, index) => ({
         id: video?.id || `vid-${index + 1}`,
-        embedUrl: this.isRenderableMediaValue(video?.embedUrl) ? video.embedUrl.trim() : ''
+        embedUrl: this.isRenderableMediaValue(video?.embedUrl) ? this.normalizeMediaSrc(video.embedUrl) : ''
       }))
       .filter((video) => this.isRenderableMediaValue(video.embedUrl));
 
