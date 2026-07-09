@@ -77,6 +77,11 @@ export function createFooter() {
 }
 
 export function injectNavbarAndFooter(showFooter = false) {
+  const body = document.body;
+  if (body && body.dataset.navInjected === 'true') {
+    return;
+  }
+
   // Inject Navbar
   const navbarPlaceholder = document.getElementById('navbar-placeholder');
   if (navbarPlaceholder) {
@@ -96,6 +101,10 @@ export function injectNavbarAndFooter(showFooter = false) {
       div.innerHTML = footerHtml;
       document.body.appendChild(div.firstElementChild);
     }
+  }
+
+  if (body) {
+    body.dataset.navInjected = 'true';
   }
   
   // Add navbar toggle behavior for mobile

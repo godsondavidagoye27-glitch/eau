@@ -14,7 +14,6 @@ export class PublicApp {
 
   init() {
     injectNavbarAndFooter();
-    this.setupPageSpecificLogic();
     this.startSharedDataSync();
 
     if (typeof window !== 'undefined') {
@@ -22,6 +21,10 @@ export class PublicApp {
         this.syncSharedData();
       });
     }
+
+    this.syncSharedData().catch(() => {
+      this.setupPageSpecificLogic();
+    });
   }
 
   setupPageSpecificLogic() {
@@ -203,7 +206,6 @@ export class PublicApp {
       </section>
     `;
 
-    injectNavbarAndFooter();
     this.renderGalleryPreviewCarousel(config.galleryImages);
   }
 
@@ -366,7 +368,6 @@ export class PublicApp {
       </section>
     `;
 
-    injectNavbarAndFooter();
   }
 
   // HOME PAGE SETUP
