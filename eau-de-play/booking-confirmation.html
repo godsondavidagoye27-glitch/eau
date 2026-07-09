@@ -46,9 +46,7 @@
           <p><strong>Service:</strong> ${bk.serviceName}</p>
           <p><strong>Where:</strong> ${bk.where}</p>
           <p><strong>Start:</strong> ${bk.start}</p>
-          <p><strong>Hours:</strong> ${bk.hours}</p>
-          <p><strong>Rate:</strong> $${bk.ratePerHour} / hour</p>
-          <p><strong>Total:</strong> $${bk.total}</p>
+          <p><strong>Total:</strong> €${bk.total}</p>
           <p><strong>Payment System:</strong> ${bk.payment && bk.payment.system ? bk.payment.system : 'N/A'}</p>
           <p><strong>Card (last4):</strong> ${bk.payment && bk.payment.cardLast4 ? bk.payment.cardLast4 : 'N/A'}</p>
         </div>

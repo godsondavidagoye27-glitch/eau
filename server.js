@@ -17,73 +17,79 @@ function loadEnvFile(filePath) {
     if (!trimmed || trimmed.startsWith('#')) return;
 
     const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
-    if (!match) return;
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', (chunk) => {
+        body += chunk;
+        if (body.length > 1e6) req.destroy();
+      });
 
-    const [, key, rawValue] = match;
-    let value = rawValue.trim();
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-      value = value.slice(1, -1);
+      req.on('end', async () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          const required = ['serviceId', 'where', 'start'];
+          for (const r of required) {
+            if (payload[r] === undefined || payload[r] === null) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: `Missing required field: ${r}` }));
+              return;
+            }
+          }
+
+          const site = loadSiteData();
+          site.bookings = site.bookings || [];
+
+          // Determine total from product price if not provided
+          let total = payload.total;
+          if (!total) {
+            const prod = (site.products || []).find(p => p.id === payload.serviceId);
+            total = prod ? prod.price : 0;
+          }
+
+          const booking = {
+            id: payload.id || `bk-${Date.now()}`,
+            serviceId: payload.serviceId,
+            serviceName: payload.serviceName || '',
+            where: payload.where,
+            start: payload.start,
+            total: total,
+            payment: payload.payment || {},
+            createdAt: new Date().toISOString()
+          };
+
+          // If Stripe secret is present and a paymentIntentId was provided,
+          // attempt to fetch limited card details (last4) for display only.
+          const stripeSecret = process.env.STRIPE_SECRET_KEY || process.env.VITE_STRIPE_SECRET_KEY || '';
+          if (stripeSecret && booking.payment && booking.payment.paymentIntentId) {
+            try {
+              const Stripe = require('stripe');
+              const stripe = Stripe(stripeSecret);
+              const pi = await stripe.paymentIntents.retrieve(booking.payment.paymentIntentId);
+              const card = pi.charges && pi.charges.data && pi.charges.data[0] && pi.charges.data[0].payment_method_details && pi.charges.data[0].payment_method_details.card;
+              if (card && card.last4) {
+                booking.payment.cardLast4 = card.last4;
+                booking.payment.paymentStatus = pi.status;
+              }
+            } catch (err) {
+              console.warn('Failed to fetch payment intent details:', err && err.message);
+            }
+          }
+
+          site.bookings.push(booking);
+          saveSiteData(site);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, booking }));
+        } catch (err) {
+          console.error('Bookings endpoint error:', err);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Server error' }));
+        }
+      });
+      return;
     }
-
-    if (!process.env[key]) {
-      process.env[key] = value;
-    }
-  });
-}
-
-[
-  path.join(__dirname, '.env'),
-  path.join(__dirname, '.env.local'),
-  path.join(__dirname, 'eau-de-play', '.env'),
-  path.join(__dirname, 'eau-de-play', '.env.local')
-].forEach(loadEnvFile);
-
-const MIME_TYPES = {
-  '.html': 'text/html; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.txt': 'text/plain; charset=utf-8',
-  '.map': 'application/json; charset=utf-8',
-  '.mp4': 'video/mp4',
-  '.mov': 'video/quicktime',
-  '.webm': 'video/webm',
-  '.avi': 'video/x-msvideo',
-  '.webp': 'image/webp'
-};
-
-
-const DEFAULT_SITE_DATA = {
-  products: [
-    {
-      id: 1,
-      name: 'Premium DJ Services',
-      category: 'service',
-      price: 500,
-      description: 'Professional DJ services for events',
-      image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f5f5f5' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%23999'%3EDIJ Service%3C/text%3E%3C/svg%3E",
-      buttonText: 'BOOK'
-    },
-    {
-      id: 2,
-      name: 'Photography & Videography',
-      category: 'service',
-      price: 800,
-      description: 'Professional photography and videography packages',
-      image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f5f5f5' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%23999'%3EPhoto/Video%3C/text%3E%3C/svg%3E",
-      buttonText: 'BOOK'
-    },
-    {
-      id: 3,
       name: 'Event Planning',
       category: 'service',
-      price: 1200,
+      price: 12000,
       description: 'Complete event planning and coordination',
       image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f5f5f5' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%23999'%3EEvent Planning%3C/text%3E%3C/svg%3E",
       buttonText: 'BOOK'
@@ -92,7 +98,7 @@ const DEFAULT_SITE_DATA = {
       id: 4,
       name: 'Sports Solutions',
       category: 'service',
-      price: 600,
+      price: 500,
       description: 'Sports event management and coverage',
       image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%23f5f5f5' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='%23999'%3ESports%3C/text%3E%3C/svg%3E",
       buttonText: 'BOOK'

@@ -32,8 +32,8 @@ async function init() {
     return;
   }
 
-  const service = db.getById('products', serviceId) || { name: 'Unknown Service', description: '' };
-  const ratePerHour = 75; // fixed per requirements
+  const service = db.getById('products', serviceId) || { name: 'Unknown Service', description: '', price: 0 };
+  const flatPrice = Number(service.price || 0);
 
   root.innerHTML = `
     <h1>Book: ${service.name}</h1>
@@ -48,12 +48,8 @@ async function init() {
         <input id="start" name="start" type="datetime-local" required />
       </div>
       <div class="product-form-group">
-        <label for="hours">Hours needed</label>
-        <input id="hours" name="hours" type="number" min="1" value="1" required />
-      </div>
-      <div class="product-form-group">
         <label>Price</label>
-        <div id="price-display">$${ratePerHour} per hour — <span id="total-display">$${ratePerHour}</span> total</div>
+        <div id="price-display">€${flatPrice.toFixed(2)} — <span id="total-display">€${flatPrice.toFixed(2)}</span></div>
       </div>
 
       <h3>Payment</h3>
@@ -73,14 +69,8 @@ async function init() {
     </form>
   `;
 
-  const hoursEl = document.getElementById('hours');
   const totalDisplay = document.getElementById('total-display');
-  function updateTotal() {
-    const hours = parseFloat(hoursEl.value) || 1;
-    totalDisplay.textContent = `$${(ratePerHour * hours).toFixed(2)}`;
-  }
-  hoursEl.addEventListener('input', updateTotal);
-  updateTotal();
+  totalDisplay.textContent = `€${flatPrice.toFixed(2)}`;
 
   const stripeKey = window.__APP_CONFIG__ && window.__APP_CONFIG__.stripePublicKey;
   let stripe = null;
@@ -99,9 +89,8 @@ async function init() {
     e.preventDefault();
     const where = document.getElementById('where').value.trim();
     const start = document.getElementById('start').value;
-    const hours = parseFloat(document.getElementById('hours').value) || 1;
     const cardName = document.getElementById('card-name').value.trim();
-    const total = ratePerHour * hours;
+    const total = flatPrice;
 
     if (!where) { alert('Please enter where the service is needed'); return; }
     if (!start) { alert('Please select start date/time'); return; }
@@ -134,8 +123,6 @@ async function init() {
             serviceName: service.name,
             where,
             start,
-            hours,
-            ratePerHour,
             total,
             payment: {
               system: 'stripe',
@@ -161,8 +148,6 @@ async function init() {
           serviceName: service.name,
           where,
           start,
-          hours,
-          ratePerHour,
           total,
           payment: { system: 'demo' },
           createdAt: new Date().toISOString()

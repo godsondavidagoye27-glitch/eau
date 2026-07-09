@@ -17,8 +17,7 @@ function renderBookings(list) {
       <td>${b.serviceName || ''}</td>
       <td>${b.where || ''}</td>
       <td>${b.start || ''}</td>
-      <td>${b.hours || ''}</td>
-      <td>$${b.total || ''}</td>
+      <td>€${(b.total || 0)}</td>
       <td>${(b.payment && b.payment.paymentStatus) || 'N/A'}</td>
       <td>
         <button class="btn small" data-id="${b.id}" data-action="set-paid">Paid</button>
@@ -29,7 +28,7 @@ function renderBookings(list) {
 
   root.innerHTML = `
     <table style="width:100%; border-collapse:collapse;">
-      <thead><tr><th>ID</th><th>Service</th><th>Where</th><th>Start</th><th>Hours</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+      <thead><tr><th>ID</th><th>Service</th><th>Where</th><th>Start</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
   `;
