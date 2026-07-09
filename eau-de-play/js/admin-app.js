@@ -263,13 +263,20 @@ export class AdminApp {
       galleryVideos: Array.isArray(config.galleryVideos) ? config.galleryVideos : []
     };
 
-    const savedConfig = this.db.update('settings', 'afro-pulse', normalizedConfig);
-    if (savedConfig) {
-      Object.assign(config, savedConfig);
+    const data = this.db.getData();
+    const settings = Array.isArray(data.settings) ? data.settings : [];
+    const updatedSettings = settings.map((item) => item.id === 'afro-pulse' ? normalizedConfig : item);
+
+    if (!updatedSettings.some((item) => item.id === 'afro-pulse')) {
+      updatedSettings.push(normalizedConfig);
     }
+
+    const nextData = { ...data, settings: updatedSettings };
+    this.db.saveData(nextData);
+    Object.assign(config, normalizedConfig);
     this.refreshSharedDataFromServer();
-    window.dispatchEvent(new CustomEvent('siteDataUpdated', { detail: this.db.getData() }));
-    return savedConfig || normalizedConfig;
+    window.dispatchEvent(new CustomEvent('siteDataUpdated', { detail: nextData }));
+    return normalizedConfig;
   }
 
   bindEventSettingsListeners(config) {
