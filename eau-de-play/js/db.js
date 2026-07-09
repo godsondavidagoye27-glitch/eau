@@ -8,6 +8,24 @@ export class Database {
     this.initializeDB();
   }
 
+  async initializeFromServer() {
+    if (typeof window === 'undefined' || typeof window.fetch !== 'function') {
+      return this.getData();
+    }
+
+    try {
+      const response = await window.fetch('/api/site-data');
+      if (!response.ok) {
+        return this.getData();
+      }
+      const data = await response.json();
+      return this.syncFromServerData(data);
+    } catch (err) {
+      console.warn('Initial server sync failed', err);
+      return this.getData();
+    }
+  }
+
   initializeDB() {
     const sharedData = this.getSharedData();
     if (sharedData && typeof sharedData === 'object') {
@@ -254,6 +272,24 @@ export class Database {
       this.syncToSupabase(data).catch((err) => {
         console.warn('Supabase sync failed', err);
       });
+    }
+  }
+
+  async refreshFromServer() {
+    if (typeof window === 'undefined' || typeof window.fetch !== 'function') {
+      return this.getData();
+    }
+
+    try {
+      const response = await window.fetch('/api/site-data');
+      if (!response.ok) {
+        return this.getData();
+      }
+      const data = await response.json();
+      return this.syncFromServerData(data);
+    } catch (err) {
+      console.warn('Failed to refresh shared site data', err);
+      return this.getData();
     }
   }
 

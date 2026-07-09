@@ -14,7 +14,7 @@ export class AdminApp {
     this.init();
   }
 
-  init() {
+  async init() {
     const currentUser = this.auth.getCurrentUser();
 
     // Check if user is logged in and has admin role
@@ -23,9 +23,9 @@ export class AdminApp {
       return;
     }
 
+    await this.refreshSharedDataFromServer();
     this.setupSidebar();
     this.setupModal();
-    this.refreshSharedDataFromServer();
     this.showDashboard();
   }
 

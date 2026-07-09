@@ -12,8 +12,9 @@ export class PublicApp {
     this.init();
   }
 
-  init() {
+  async init() {
     injectNavbarAndFooter();
+    await this.syncSharedData();
     this.startSharedDataSync();
 
     if (typeof window !== 'undefined') {
@@ -225,6 +226,12 @@ export class PublicApp {
   formatVideoEmbed(url) {
     const trimmed = url.trim();
     if (!trimmed) return '';
+
+    const lowerUrl = trimmed.toLowerCase();
+    if (lowerUrl.endsWith('.mp4') || lowerUrl.endsWith('.webm') || lowerUrl.endsWith('.ogg') || lowerUrl.endsWith('.mov')) {
+      return `<div class="video-embed"><video controls preload="metadata" playsinline><source src="${trimmed}"></video></div>`;
+    }
+
     if (trimmed.includes('youtube.com') || trimmed.includes('youtu.be')) {
       const videoIdMatch = trimmed.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]+)/);
       const videoId = videoIdMatch ? videoIdMatch[1] : null;
