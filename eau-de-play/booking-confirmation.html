@@ -20,10 +20,26 @@
     function qs(name){const p=new URLSearchParams(location.search);return p.get(name)}
     const id = qs('bookingId');
     const root = document.getElementById('confirmation-root');
-    const bookings = JSON.parse(localStorage.getItem('eau-bookings')||'[]');
-    const bk = bookings.find(b=>b.id===id);
-    if(!bk){root.innerHTML='<h2>Booking not found.</h2>';}
-    else{
+
+    async function fetchBooking(id){
+      try{
+        const res = await fetch(`/api/bookings?id=${encodeURIComponent(id)}`);
+        if(!res.ok) return null;
+        const json = await res.json();
+        return json && json.success ? json.booking : null;
+      }catch(e){return null}
+    }
+
+    (async ()=>{
+      let bk = await fetchBooking(id);
+      if(!bk){
+        // fallback to localStorage
+        const bookings = JSON.parse(localStorage.getItem('eau-bookings')||'[]');
+        bk = bookings.find(b=>b.id===id) || null;
+      }
+
+      if(!bk){ root.innerHTML = '<h2>Booking not found.</h2>'; return; }
+
       root.innerHTML = `
         <h1>Booking Confirmed</h1>
         <div class="booking-summary">
@@ -33,8 +49,8 @@
           <p><strong>Hours:</strong> ${bk.hours}</p>
           <p><strong>Rate:</strong> $${bk.ratePerHour} / hour</p>
           <p><strong>Total:</strong> $${bk.total}</p>
-          <p><strong>Payment System:</strong> ${bk.payment.system}</p>
-          <p><strong>Card:</strong> ${bk.payment.cardNumber}</p>
+          <p><strong>Payment System:</strong> ${bk.payment && bk.payment.system ? bk.payment.system : 'N/A'}</p>
+          <p><strong>Card (last4):</strong> ${bk.payment && bk.payment.cardLast4 ? bk.payment.cardLast4 : 'N/A'}</p>
         </div>
         <div style="margin-top:16px; display:flex; gap:12px;">
           <button class="btn" id="print">Print Summary</button>
@@ -42,17 +58,24 @@
         </div>
       `;
 
-      document.getElementById('print').addEventListener('click', ()=>{
-        window.print();
-      });
+      document.getElementById('print').addEventListener('click', ()=>{ window.print(); });
 
-      document.getElementById('cancel').addEventListener('click', ()=>{
+      document.getElementById('cancel').addEventListener('click', async ()=>{
         if(!confirm('Cancel this booking?')) return;
-        const remaining = bookings.filter(b=>b.id!==id);
-        localStorage.setItem('eau-bookings', JSON.stringify(remaining));
+        // Attempt server-side update
+        try{
+          const res = await fetch('/api/site-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ collection: 'bookings', id: bk.id, updates: { status: 'Canceled' } })
+          });
+          // ignore response, redirect
+        }catch(e){}
+        // Also remove local fallback
+        try{ const remaining = (JSON.parse(localStorage.getItem('eau-bookings')||'[]')).filter(b=>b.id!==id); localStorage.setItem('eau-bookings', JSON.stringify(remaining)); }catch(e){}
         window.location.href = 'index.html';
       });
-    }
+    })();
   </script>
 </body>
 </html>

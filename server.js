@@ -169,6 +169,8 @@ const DEFAULT_SITE_DATA = {
       role: 'admin'
     }
   ]
+  ,
+  bookings: []
 };
 
 function normalizeSiteData(data) {
@@ -184,7 +186,8 @@ function normalizeSiteData(data) {
     merchandise: Array.isArray(data.merchandise) ? data.merchandise : baseData.merchandise,
     settings: Array.isArray(data.settings) ? data.settings : baseData.settings,
     orders: Array.isArray(data.orders) ? data.orders : baseData.orders,
-    users: Array.isArray(data.users) ? data.users : baseData.users
+    users: Array.isArray(data.users) ? data.users : baseData.users,
+    bookings: Array.isArray(data.bookings) ? data.bookings : baseData.bookings
   };
 }
 
@@ -421,6 +424,133 @@ async function uploadMedia(filename, buffer, requestUrl) {
 const server = http.createServer((req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   let pathname = decodeURIComponent(requestUrl.pathname);
+
+  // Bookings API
+  if (pathname === '/api/bookings') {
+    if (req.method === 'GET') {
+      const id = requestUrl.searchParams.get('id');
+      const data = loadSiteData();
+      const items = data.bookings || [];
+      if (id) {
+        const item = items.find(b => b.id === id);
+        if (item) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, booking: item }));
+          return;
+        }
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Booking not found' }));
+        return;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, bookings: items }));
+      return;
+    }
+
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', (chunk) => {
+        body += chunk;
+        if (body.length > 1e6) req.destroy();
+      });
+      req.on('end', async () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          const required = ['serviceId', 'where', 'start', 'hours', 'total'];
+          for (const r of required) {
+            if (payload[r] === undefined || payload[r] === null) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: `Missing required field: ${r}` }));
+              return;
+            }
+          }
+
+          const site = loadSiteData();
+          site.bookings = site.bookings || [];
+          const booking = {
+            id: payload.id || `bk-${Date.now()}`,
+            serviceId: payload.serviceId,
+            serviceName: payload.serviceName || '',
+            where: payload.where,
+            start: payload.start,
+            hours: payload.hours,
+            ratePerHour: payload.ratePerHour || 0,
+            total: payload.total,
+            payment: payload.payment || {},
+            createdAt: new Date().toISOString()
+          };
+
+          // If Stripe secret is present and a paymentIntentId was provided,
+          // attempt to fetch limited card details (last4) for display only.
+          const stripeSecret = process.env.STRIPE_SECRET_KEY || process.env.VITE_STRIPE_SECRET_KEY || '';
+          if (stripeSecret && booking.payment && booking.payment.paymentIntentId) {
+            try {
+              const Stripe = require('stripe');
+              const stripe = Stripe(stripeSecret);
+              const pi = await stripe.paymentIntents.retrieve(booking.payment.paymentIntentId);
+              const card = pi.charges && pi.charges.data && pi.charges.data[0] && pi.charges.data[0].payment_method_details && pi.charges.data[0].payment_method_details.card;
+              if (card && card.last4) {
+                booking.payment.cardLast4 = card.last4;
+                booking.payment.paymentStatus = pi.status;
+              }
+            } catch (err) {
+              console.warn('Failed to fetch payment intent details:', err && err.message);
+            }
+          }
+
+          site.bookings.push(booking);
+          saveSiteData(site);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, booking }));
+        } catch (err) {
+          console.error('Bookings endpoint error:', err);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Server error' }));
+        }
+      });
+      return;
+    }
+  }
+
+  if (pathname === '/api/create-payment-intent' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (chunk) => { body += chunk; if (body.length > 1e6) req.destroy(); });
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const amount = parseInt(payload.amount, 10);
+        if (!amount || amount <= 0) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid amount' }));
+          return;
+        }
+
+        const stripeSecret = process.env.STRIPE_SECRET_KEY || process.env.VITE_STRIPE_SECRET_KEY || '';
+        if (!stripeSecret) {
+          res.writeHead(501, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Stripe not configured on server' }));
+          return;
+        }
+
+        const Stripe = require('stripe');
+        const stripe = Stripe(stripeSecret);
+        const pi = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: payload.currency || 'usd',
+          metadata: payload.metadata || {}
+        });
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, clientSecret: pi.client_secret, id: pi.id }));
+      } catch (err) {
+        console.error('Create Payment Intent error:', err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Server error' }));
+      }
+    });
+    return;
+  }
 
   if (pathname === '/api/newsletter' && req.method === 'POST') {
     let body = '';
