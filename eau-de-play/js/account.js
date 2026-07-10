@@ -37,12 +37,30 @@ function renderDashboardSummary(bookings, purchases) {
   const upcomingCount = document.getElementById('summary-upcoming-count');
   const purchaseCount = document.getElementById('summary-purchases-count');
 
-  if (bookingCount) bookingCount.textContent = String(bookings.length);
-  if (purchaseCount) purchaseCount.textContent = String(purchases.length);
-
   const now = new Date();
   const upcoming = bookings.filter((booking) => new Date(booking.start_date) > now);
-  if (upcomingCount) upcomingCount.textContent = String(upcoming.length);
+
+  // Animate counts so the dashboard feels alive
+  if (bookingCount) animateCount(bookingCount, bookings.length);
+  if (purchaseCount) animateCount(purchaseCount, purchases.length);
+  if (upcomingCount) animateCount(upcomingCount, upcoming.length);
+}
+
+function animateCount(element, target) {
+  if (!element) return;
+  const start = 0;
+  const duration = 650;
+  let rafId = null;
+  const startTime = performance.now();
+  function step(now) {
+    const t = Math.min(1, (now - startTime) / duration);
+    const value = Math.floor(t * target);
+    element.textContent = String(value);
+    if (t < 1) rafId = requestAnimationFrame(step);
+    else element.textContent = String(target);
+  }
+  if (rafId) cancelAnimationFrame(rafId);
+  requestAnimationFrame(step);
 }
 
 function renderBookings(bookings) {

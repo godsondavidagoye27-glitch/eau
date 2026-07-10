@@ -19,17 +19,33 @@
         <h2>My Account</h2>
 
         <div class="dashboard-summary">
-          <div class="summary-card">
-            <span class="summary-label">Bookings</span>
-            <strong id="summary-bookings-count">0</strong>
-          </div>
-          <div class="summary-card">
-            <span class="summary-label">Upcoming</span>
-            <strong id="summary-upcoming-count">0</strong>
-          </div>
-          <div class="summary-card">
-            <span class="summary-label">Purchases</span>
-            <strong id="summary-purchases-count">0</strong>
+          <div class="dashboard-grid">
+            <div class="summary-card summary-card-large" id="card-bookings">
+              <div class="summary-icon">📅</div>
+              <div class="summary-body">
+                <div class="summary-label">Bookings</div>
+                <div class="summary-count" id="summary-bookings-count">0</div>
+                <div class="summary-desc">Total bookings made</div>
+              </div>
+            </div>
+
+            <div class="summary-card summary-card-large" id="card-upcoming">
+              <div class="summary-icon">⏰</div>
+              <div class="summary-body">
+                <div class="summary-label">Upcoming</div>
+                <div class="summary-count" id="summary-upcoming-count">0</div>
+                <div class="summary-desc">Scheduled services</div>
+              </div>
+            </div>
+
+            <div class="summary-card summary-card-large" id="card-purchases">
+              <div class="summary-icon">🛍️</div>
+              <div class="summary-body">
+                <div class="summary-label">Purchases</div>
+                <div class="summary-count" id="summary-purchases-count">0</div>
+                <div class="summary-desc">Items purchased</div>
+              </div>
+            </div>
           </div>
         </div>
 
