@@ -153,6 +153,14 @@ function renderBookings(bookings) {
       e.stopPropagation();
       const action = btn.dataset.action;
       const id = btn.dataset.bookingId;
+
+      // Prevent attempts to cancel when button is disabled for paid bookings
+      if (action === 'cancel' && (btn.dataset.disabled === 'true' || btn.classList.contains('disabled'))) {
+        alert('This booking has been paid. To cancel a paid booking, please contact admin via the contact page.');
+        window.location.href = 'contact.html';
+        return;
+      }
+
       if (action === 'cancel') {
         if (!confirm('Cancel this booking? This action can be undone by admin. Proceed?')) return;
         try {
@@ -207,9 +215,16 @@ function showBookingInfo(booking) {
       <div class="detail-row"><span>Status:</span><strong class="booking-status ${String(booking.status || 'confirmed').toLowerCase()}">${booking.status || 'Confirmed'}</strong></div>
       ${booking.transaction_id ? `<div class="detail-row"><span>Transaction ID:</span><strong>${booking.transaction_id}</strong></div>` : ''}
       <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--color-border);">
-        <p style="font-size:0.85rem; color:var(--color-text-secondary);">
-          To cancel or modify this booking, please <a href="contact.html">contact our admin</a>.
-        </p>
+        ${booking.transaction_id ? `
+          <p style="font-size:0.85rem; color:var(--color-text-secondary);">
+            This booking has been paid. To cancel a paid booking, please <a href="contact.html">contact our admin</a>.
+            You may still reschedule this booking using the "Reschedule" action on the card.
+          </p>
+        ` : `
+          <p style="font-size:0.85rem; color:var(--color-text-secondary);">
+            To cancel or modify this booking, you can use the controls on the card or <a href="contact.html">contact our admin</a>.
+          </p>
+        `}
       </div>
     </div>
   `;
