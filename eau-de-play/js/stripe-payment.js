@@ -1,245 +1,52 @@
-// ============================================
-// STRIPE PAYMENT INTEGRATION
-// ============================================
-
-import { loadStripe } from 'https://js.stripe.com/v3/';
+// Compatibility shim: replace Stripe client usage with a Flutterwave-friendly shim.
+// The original `stripe-payment.js` provided a heavy Stripe Card Element integration.
+// For the Flutterwave migration we keep a compatible API surface but make the
+// operations no-ops that intentionally fall back to the Flutterwave Checkout
+// flow implemented elsewhere in the app.
 
 function getRuntimeConfig() {
   const runtimeConfig = typeof window !== 'undefined' ? (window.__APP_CONFIG__ || null) : null;
   const envConfig = typeof import.meta !== 'undefined' ? import.meta.env : null;
 
   return {
-    stripePublicKey: runtimeConfig?.stripePublicKey || runtimeConfig?.stripePublishableKey || envConfig?.VITE_STRIPE_PUBLIC_KEY || '',
+    flutterwavePublicKey: runtimeConfig?.flutterwavePublicKey || envConfig?.VITE_FLW_PUBLIC_KEY || '',
     apiUrl: runtimeConfig?.apiUrl || envConfig?.VITE_API_URL || '/api'
   };
 }
 
-const { stripePublicKey: STRIPE_PUBLIC_KEY, apiUrl: API_URL } = getRuntimeConfig();
-
-if (!STRIPE_PUBLIC_KEY) {
-  console.error('❌ MISSING STRIPE PUBLIC KEY');
-  console.error('Add to .env.local: VITE_STRIPE_PUBLIC_KEY=pk_test_...');
-}
-
-let stripeInstance = null;
-
-// Load Stripe instance
-async function getStripe() {
-  if (!stripeInstance) {
-    stripeInstance = await loadStripe(STRIPE_PUBLIC_KEY);
-  }
-  return stripeInstance;
-}
+const { flutterwavePublicKey: FLW_PUBLIC_KEY, apiUrl: API_URL } = getRuntimeConfig();
 
 export class StripePayment {
   constructor() {
+    // keep the same properties used by the rest of the codebase
     this.stripe = null;
     this.elements = null;
     this.cardElement = null;
   }
 
-  // INITIALIZE STRIPE
+  // Initialization is a no-op (we don't load Stripe)
   async init() {
-    this.stripe = await getStripe();
-    if (!this.stripe) {
-      throw new Error('Failed to initialize Stripe');
-    }
-    return this.stripe;
+    console.warn('Stripe has been deprecated in this build. Using Flutterwave instead.');
+    return null;
   }
 
-  // CREATE PAYMENT INTENT
-  async createPaymentIntent(amount, metadata = {}) {
-    try {
-      const response = await fetch(`${API_URL}/payments/create-intent`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: Math.round(amount * 100), // Convert to cents
-          metadata
-        })
-      });
-
-      if (!response.ok) throw new Error('Failed to create payment intent');
-      
-      const { clientSecret } = await response.json();
-      return clientSecret;
-    } catch (error) {
-      console.error('❌ Error creating payment intent:', error);
-      throw error;
-    }
+  // Legacy API: return null to indicate there is no server-side PaymentIntent
+  async createPaymentIntent() {
+    return null;
   }
 
-  // MOUNT CARD ELEMENT
-  async mountCardElement(containerId) {
-    await this.init();
-    
-    this.elements = this.stripe.elements();
-    this.cardElement = this.elements.create('card', {
-      style: {
-        base: {
-          fontSize: '16px',
-          color: '#333',
-          fontFamily: '"Arial", sans-serif'
-        },
-        invalid: {
-          color: '#fa755a',
-          iconColor: '#fa755a'
-        }
-      }
-    });
-
-    const container = document.getElementById(containerId);
-    if (container) {
-      this.cardElement.mount(`#${containerId}`);
-    }
-
-    return this.cardElement;
+  // Process payment: always return failure so callers fall back to Flutterwave Checkout
+  async processPayment() {
+    return { success: false, error: 'Stripe disabled — use Flutterwave Checkout' };
   }
 
-  // PROCESS PAYMENT
-  async processPayment(clientSecret, billingDetails) {
-    try {
-      if (!this.stripe) await this.init();
+  // Setup intent / saved cards are not supported with Flutterwave in this codebase
+  async createSetupIntent() { return null; }
+  async confirmSetup() { return { success: false, error: 'Not supported' }; }
 
-      const result = await this.stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: this.cardElement,
-          billing_details: {
-            name: billingDetails.name,
-            email: billingDetails.email,
-            address: {
-              line1: billingDetails.address,
-              city: billingDetails.city,
-              state: billingDetails.state,
-              postal_code: billingDetails.zip,
-              country: billingDetails.country
-            }
-          }
-        }
-      });
-
-      if (result.error) {
-        return { 
-          success: false, 
-          error: result.error.message 
-        };
-      }
-
-      // Payment successful
-      const paymentIntent = result.paymentIntent;
-      return {
-        success: true,
-        paymentIntent,
-        transactionId: paymentIntent.id
-      };
-    } catch (error) {
-      console.error('❌ Payment processing error:', error);
-      return { 
-        success: false, 
-        error: error.message 
-      };
-    }
-  }
-
-  // HANDLE PAYMENT METHOD
-  async handlePaymentMethod(clientSecret, billingDetails) {
-    try {
-      if (!this.stripe) await this.init();
-
-      const result = await this.stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: this.cardElement,
-          billing_details: billingDetails
-        }
-      });
-
-      return result;
-    } catch (error) {
-      console.error('❌ Payment method error:', error);
-      throw error;
-    }
-  }
-
-  // CREATE SETUP INTENT (For saved cards)
-  async createSetupIntent(metadata = {}) {
-    try {
-      const response = await fetch(`${API_URL}/payments/setup-intent`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ metadata })
-      });
-
-      if (!response.ok) throw new Error('Failed to create setup intent');
-      
-      const { clientSecret } = await response.json();
-      return clientSecret;
-    } catch (error) {
-      console.error('❌ Error creating setup intent:', error);
-      throw error;
-    }
-  }
-
-  // CONFIRM SETUP (For saved cards)
-  async confirmSetup(clientSecret, paymentMethod) {
-    try {
-      if (!this.stripe) await this.init();
-
-      const result = await this.stripe.confirmCardSetup(clientSecret, {
-        payment_method: paymentMethod
-      });
-
-      if (result.error) {
-        return { success: false, error: result.error.message };
-      }
-
-      return { 
-        success: true, 
-        setupIntent: result.setupIntent 
-      };
-    } catch (error) {
-      console.error('❌ Setup confirmation error:', error);
-      return { success: false, error: error.message };
-    }
-  }
-
-  // RETRIEVE PAYMENT STATUS
-  async getPaymentStatus(paymentIntentId) {
-    try {
-      const response = await fetch(
-        `${API_URL}/payments/status/${paymentIntentId}`
-      );
-
-      if (!response.ok) throw new Error('Failed to retrieve payment status');
-      
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('❌ Error retrieving payment status:', error);
-      throw error;
-    }
-  }
-
-  // CLEAR CARD ELEMENT
-  clearCard() {
-    if (this.cardElement) {
-      this.cardElement.clear();
-    }
-  }
-
-  // DESTROY ELEMENTS
-  destroy() {
-    if (this.cardElement) {
-      this.cardElement.unmount();
-      this.cardElement = null;
-    }
-    if (this.elements) {
-      this.elements = null;
-    }
-  }
+  // Helpers to satisfy callers
+  clearCard() {}
+  destroy() {}
 }
 
 export const stripePayment = new StripePayment();

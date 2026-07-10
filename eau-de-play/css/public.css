@@ -1002,9 +1002,8 @@ body.home-background {
 .booking-cta { display:flex; gap:12px; align-items:center; }
 .price-badge { font-weight:700; font-size:1.2rem; color:var(--color-primary); }
 
-/* Card element styling (Stripe) */
-#card-element { padding:12px; border-radius:8px; background:#fff; box-shadow: inset 0 1px 4px rgba(0,0,0,0.04); border:1px solid rgba(0,0,0,0.06); }
-#card-element.focus { box-shadow: 0 6px 24px rgba(45,96,250,0.12); transform: translateY(-2px); transition: all 0.18s ease; }
+/* Card element styling (deprecated - Stripe removed) */
+/* Flutterwave Checkout uses a modal, no in-page card element required. */
 
 /* Submit animation */
 .booking-form.submitting { opacity: 0.6; transform: scale(0.995); }

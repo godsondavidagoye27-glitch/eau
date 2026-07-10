@@ -3,115 +3,72 @@
 // Deploy to: supabase/functions/payments/index.ts
 // ============================================
 
-import Stripe from 'https://esm.sh/stripe@14.7.0';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function handlePaymentIntent(req) {
-  const { amount, metadata } = await req.json();
+// For Flutterwave we provide minimal server-side helpers:
+// - /functions/v1/payments/verify : verify a transaction_id with Flutterwave
+// The previous Stripe PaymentIntent endpoints are intentionally deprecated.
 
+async function handleVerify(req) {
   try {
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
-      currency: 'usd',
-      metadata,
-      automatic_payment_methods: {
-        enabled: true,
-      },
+    const { transaction_id } = await req.json();
+    if (!transaction_id) {
+      return new Response(JSON.stringify({ error: 'transaction_id required' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    const FLW_SECRET = Deno.env.get('FLW_SECRET_KEY') || Deno.env.get('VITE_FLW_SECRET_KEY');
+    if (!FLW_SECRET) {
+      return new Response(JSON.stringify({ error: 'FLW_SECRET_KEY not configured' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    const verifyRes = await fetch(`https://api.flutterwave.com/v3/transactions/${encodeURIComponent(transaction_id)}/verify`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${FLW_SECRET}`
+      }
     });
 
-    return new Response(
-      JSON.stringify({ clientSecret: paymentIntent.client_secret }),
-      { headers: { 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-}
+    if (!verifyRes.ok) {
+      const text = await verifyRes.text();
+      return new Response(JSON.stringify({ error: 'Verification failed', details: text }), { status: 502, headers: { 'Content-Type': 'application/json' } });
+    }
 
-async function handleSetupIntent(req) {
-  const { metadata } = await req.json();
+    const payload = await verifyRes.json();
 
-  try {
-    const setupIntent = await stripe.setupIntents.create({
-      payment_method_types: ['card'],
-      metadata,
-    });
+    // If verification is successful and transaction is successful, update order
+    try {
+      const tx = payload.data;
+      // tx.meta or tx.tx_ref may contain orderId depending on how the client set tx_ref.
+      const tx_ref = tx.tx_ref || null;
+      // attempt to extract order id from tx_ref if it contains 'order-<id>'
+      let orderId = null;
+      if (tx_ref) {
+        const m = tx_ref.match(/order-(\d+)/);
+        if (m) orderId = parseInt(m[1], 10);
+      }
 
-    return new Response(
-      JSON.stringify({ clientSecret: setupIntent.client_secret }),
-      { headers: { 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-}
+      if (tx.status === 'successful' && orderId) {
+        const { error } = await supabase
+          .from('orders')
+          .update({ status: 'paid', payment_id: tx.id, paid_at: new Date().toISOString(), payment_method: 'flutterwave' })
+          .eq('id', orderId);
 
-async function handleWebhook(req) {
-  const body = await req.text();
-  const sig = req.headers.get('stripe-signature');
+        if (error) console.error('Error updating order after verification:', error);
+      }
 
-  let event;
+    } catch (err) {
+      console.error('Error updating order during verification:', err);
+    }
 
-  try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      sig,
-      Deno.env.get('STRIPE_WEBHOOK_SECRET')
-    );
+    return new Response(JSON.stringify({ success: true, data: payload.data }), { headers: { 'Content-Type': 'application/json' } });
+
   } catch (err) {
-    return new Response(
-      JSON.stringify({ error: err.message }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
-
-  // Handle payment intent succeeded
-  if (event.type === 'payment_intent.succeeded') {
-    const paymentIntent = event.data.object;
-    const orderId = paymentIntent.metadata.orderId;
-
-    // Update order in Supabase
-    const { error } = await supabase
-      .from('orders')
-      .update({
-        status: 'paid',
-        payment_id: paymentIntent.id,
-        paid_at: new Date().toISOString(),
-      })
-      .eq('id', orderId);
-
-    if (error) console.error('Error updating order:', error);
-  }
-
-  // Handle payment intent failed
-  if (event.type === 'payment_intent.payment_failed') {
-    const paymentIntent = event.data.object;
-    const orderId = paymentIntent.metadata.orderId;
-
-    // Update order in Supabase
-    await supabase
-      .from('orders')
-      .update({
-        status: 'failed',
-        payment_id: paymentIntent.id,
-      })
-      .eq('id', orderId);
-  }
-
-  return new Response(JSON.stringify({ received: true }), {
-    headers: { 'Content-Type': 'application/json' },
-  });
 }
 
 Deno.serve(async (req) => {
