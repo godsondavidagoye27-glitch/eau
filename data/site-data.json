@@ -46,16 +46,55 @@
       "newsletterEndpoint": "",
       "newsletterConfirmation": "Thanks for subscribing! We’ll keep you updated.",
       "galleryImages": [
-        { "id": "img-1", "src": "assets/images/IMG_1566.JPG" },
-        { "id": "img-2", "src": "assets/images/IMG_1521.JPG" },
-        { "id": "img-3", "src": "assets/images/IMG_1427.JPG" },
-        { "id": "img-4", "src": "assets/images/IMG_1081.JPG" },
-        { "id": "img-5", "src": "assets/images/IMG_1027.JPG" },
-        { "id": "img-6", "src": "assets/images/IMG_0971.JPG" },
-        { "id": "img-7", "src": "assets/images/IMG_2128.JPG" },
-        { "id": "img-8", "src": "assets/images/IMG_2060.JPG" }
+        {
+          "id": "img-1",
+          "src": "assets/images/IMG_1566.JPG"
+        },
+        {
+          "id": "img-2",
+          "src": "assets/images/IMG_1521.JPG"
+        },
+        {
+          "id": "img-3",
+          "src": "assets/images/IMG_1427.JPG"
+        },
+        {
+          "id": "img-4",
+          "src": "assets/images/IMG_1081.JPG"
+        },
+        {
+          "id": "img-5",
+          "src": "assets/images/IMG_1027.JPG"
+        },
+        {
+          "id": "img-6",
+          "src": "assets/images/IMG_0971.JPG"
+        },
+        {
+          "id": "img-7",
+          "src": "assets/images/IMG_2128.JPG"
+        },
+        {
+          "id": "img-8",
+          "src": "assets/images/IMG_2060.JPG"
+        }
       ],
       "galleryVideos": []
+    }
+  ],
+  "bookings": [
+    {
+      "id": "bk-local-1",
+      "serviceId": 1,
+      "serviceName": "Premium DJ Services",
+      "where": "Reykjavik",
+      "start": "2026-08-01T18:00:00Z",
+      "total": 500,
+      "payment": {
+        "method": "flutterwave",
+        "status": "pending"
+      },
+      "createdAt": "2026-07-10T12:00:00Z"
     }
   ]
 }
