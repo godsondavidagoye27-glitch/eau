@@ -11,17 +11,56 @@ try {
   createClient = null;
 }
 
-function getSupabaseConfig() {
-  const runtimeConfig = typeof window !== 'undefined' ? (window.__SUPABASE_CONFIG__ || window.__APP_CONFIG__ || null) : null;
-  const envConfig = typeof import.meta !== 'undefined' ? import.meta.env : null;
-  const envUrl = envConfig?.VITE_SUPABASE_URL || '';
-  const envKey = envConfig?.VITE_SUPABASE_ANON_KEY || '';
-  const appConfig = typeof window !== 'undefined' ? window.__APP_CONFIG__ : null;
+function getEnvValue(source, keys) {
+  if (!source || typeof source !== 'object') return '';
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return '';
+}
 
-  return {
-    url: runtimeConfig?.url || runtimeConfig?.supabaseUrl || appConfig?.supabaseUrl || envUrl || '',
-    key: runtimeConfig?.anonKey || runtimeConfig?.supabaseAnonKey || appConfig?.supabaseAnonKey || envKey || ''
-  };
+function getSupabaseConfigFromWindow() {
+  const runtimeConfig = typeof window !== 'undefined' ? (window.__SUPABASE_CONFIG__ || window.__APP_CONFIG__ || window.__RUNTIME_CONFIG__ || null) : null;
+  const appConfig = typeof window !== 'undefined' ? window.__APP_CONFIG__ : null;
+  const browserConfig = typeof window !== 'undefined' ? window.__SUPABASE_CONFIG__ : null;
+
+  const url = getEnvValue(runtimeConfig, ['url', 'supabaseUrl', 'projectUrl']) || getEnvValue(appConfig, ['supabaseUrl', 'url']) || getEnvValue(browserConfig, ['url']) || '';
+  const key = getEnvValue(runtimeConfig, ['anonKey', 'supabaseAnonKey', 'serviceRoleKey', 'anon_key']) || getEnvValue(appConfig, ['supabaseAnonKey', 'anonKey']) || getEnvValue(browserConfig, ['anonKey']) || '';
+
+  return { url, key };
+}
+
+function getSupabaseConfigFromMetaEnv() {
+  const envConfig = typeof import.meta !== 'undefined' ? import.meta.env : null;
+  const url = getEnvValue(envConfig, ['VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL']);
+  const key = getEnvValue(envConfig, ['VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY']);
+  return { url, key };
+}
+
+async function getSupabaseConfig() {
+  const windowConfig = getSupabaseConfigFromWindow();
+  if (windowConfig.url && windowConfig.key) {
+    return windowConfig;
+  }
+
+  try {
+    const response = await fetch('/api/config', { cache: 'no-store' });
+    if (response.ok) {
+      const data = await response.json();
+      const config = {
+        url: getEnvValue(data, ['supabaseUrl', 'url', 'projectUrl']) || getEnvValue(data, ['SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL']),
+        key: getEnvValue(data, ['supabaseAnonKey', 'anonKey', 'key']) || getEnvValue(data, ['SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'])
+      };
+      if (config.url && config.key) {
+        return config;
+      }
+    }
+  } catch (err) {
+    console.warn('Unable to load runtime Supabase config from /api/config', err);
+  }
+
+  return getSupabaseConfigFromMetaEnv();
 }
 
 function createFallbackClient() {
@@ -71,47 +110,89 @@ function createFallbackClient() {
   };
 }
 
-const { url: SUPABASE_URL, key: SUPABASE_KEY } = getSupabaseConfig();
 const fallbackClient = createFallbackClient();
 let supabaseClient = fallbackClient;
 
-if (createClient && SUPABASE_URL && SUPABASE_KEY) {
-  try {
-    supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
-      }
-    });
-  } catch (error) {
-    console.warn('Supabase client initialization failed, using fallback client:', error);
-    supabaseClient = fallbackClient;
+async function initializeSupabaseClient() {
+  const { url, key } = await getSupabaseConfig();
+
+  if (createClient && url && key) {
+    try {
+      supabaseClient = createClient(url, key, {
+        auth: {
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: true
+        }
+      });
+      return supabaseClient;
+    } catch (error) {
+      console.warn('Supabase client initialization failed, using fallback client:', error);
+      supabaseClient = fallbackClient;
+      return supabaseClient;
+    }
   }
-} else if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.warn('Supabase credentials are missing; continuing with local-only mode.');
+
+  if (!url || !key) {
+    console.warn('Supabase credentials are missing; continuing with local-only mode.');
+  }
+
+  return supabaseClient;
 }
 
-export const supabase = supabaseClient;
+const supabaseProxy = new Proxy({}, {
+  get(_target, prop) {
+    const client = supabaseClient;
+    const value = client?.[prop];
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
+  },
+  set(_target, prop, value) {
+    if (supabaseClient) {
+      supabaseClient[prop] = value;
+    }
+    return true;
+  }
+});
+
+export const supabase = supabaseProxy;
+
+initializeSupabaseClient().catch((error) => {
+  console.warn('Supabase initialization failed:', error);
+});
 
 // realtime subscription helpers
 export function subscribeToTable(table, handler) {
-  if (!supabaseClient || typeof supabaseClient.channel !== 'function') {
-    return { unsubscribe() {} };
-  }
+  const channelWrapper = {
+    unsubscribe() {}
+  };
 
-  try {
-    const channel = supabaseClient.channel(`public:${table}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table }, (payload) => {
-        if (typeof handler === 'function') handler(payload);
-      })
-      .subscribe();
+  (async () => {
+    const client = await initializeSupabaseClient();
+    if (!client || typeof client.channel !== 'function') {
+      return;
+    }
 
-    return channel;
-  } catch (err) {
-    console.warn('Realtime subscription failed', err);
-    return { unsubscribe() {} };
-  }
+    try {
+      const channel = client.channel(`public:${table}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table }, (payload) => {
+          if (typeof handler === 'function') handler(payload);
+        })
+        .subscribe();
+
+      channelWrapper.unsubscribe = () => {
+        try { channel?.unsubscribe?.(); } catch (err) { console.warn('Failed to unsubscribe from realtime channel', err); }
+      };
+    } catch (err) {
+      console.warn('Realtime subscription failed', err);
+    }
+  })().catch((err) => {
+    console.warn('Realtime initialization failed', err);
+  });
+
+  return channelWrapper;
 }
 
 // ============================================
