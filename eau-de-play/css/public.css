@@ -56,16 +56,21 @@
 
 @media (max-width: 768px) {
   .hero {
-    min-height: 40vh;
-    padding: var(--spacing-2xl) var(--spacing-lg);
+    min-height: 60vh;
+    padding: var(--spacing-3xl) var(--spacing-md);
+  }
+
+  .hero .container {
+    padding: var(--spacing-3xl) var(--spacing-md);
   }
 
   .hero h1 {
-    font-size: var(--font-size-2xl);
+    font-size: clamp(2rem, 8vw, 3rem);
   }
 
   .hero p {
     font-size: var(--font-size-base);
+    max-width: 100%;
   }
 }
 
@@ -126,6 +131,23 @@
 
 .hero-cta-group .btn.btn-secondary:hover {
   background: rgba(255,255,255,0.16);
+}
+
+@media (max-width: 768px) {
+  .hero-cta-group {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .hero-cta-group .btn {
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .hero-cta-group .btn + .btn {
+    margin-left: 0;
+  }
 }
 
 .afro-page-hero,
@@ -375,11 +397,17 @@
 /* Reduce footer height on small screens */
 @media (max-width: 680px) {
   footer.site-footer {
-    padding-top: 12px;
-    padding-bottom: 12px;
+    padding-top: 16px;
+    padding-bottom: 16px;
   }
   footer.site-footer .footer-inner {
-    gap: 8px;
+    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  footer.site-footer .footer-links {
+    justify-content: center;
+    width: 100%;
   }
 }
 
@@ -1299,6 +1327,35 @@ body.home-background {
   .booking-form-panel,
   .booking-preview {
     padding: 22px;
+  }
+
+  .booking-grid {
+    gap: 20px;
+  }
+
+  .field-row {
+    gap: 14px;
+  }
+
+  .booking-summary-line {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .card-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .card-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .signature-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .card-viz {
