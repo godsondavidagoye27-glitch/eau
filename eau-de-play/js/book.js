@@ -4,15 +4,6 @@ function qs(name) {
   return params.get(name);
 }
 
-async function createPaymentIntent(amount) {
-  const res = await fetch('/api/create-payment-intent', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amount })
-  });
-  return res.json();
-}
-
 async function postBooking(payload) {
   const res = await fetch('/api/bookings', {
     method: 'POST',
