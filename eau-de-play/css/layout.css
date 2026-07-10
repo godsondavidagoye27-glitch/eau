@@ -7,10 +7,11 @@
   position: sticky;
   top: 0;
   z-index: var(--z-index-sticky);
-  background-color: var(--color-background);
-  border-bottom: 1px solid var(--color-border);
+  background: rgba(9, 7, 18, 0.92);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
   padding: calc(var(--spacing-lg) + 0.5rem) 0;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16);
 }
 
 .navbar-container {
@@ -56,6 +57,7 @@
 
 .navbar-brand .brand-play {
   font-size: 1.05em;
+  color: var(--color-primary-light);
 }
 
 .desktop-nav {
@@ -242,8 +244,8 @@
 
 /* FOOTER */
 footer {
-  background-color: var(--color-background-light);
-  border-top: 1px solid var(--color-border);
+  background-color: rgba(10, 8, 18, 0.98);
+  border-top: 1px solid rgba(255,255,255,0.08);
   padding: var(--spacing-3xl) 0 var(--spacing-lg);
   margin-top: auto;
 }
