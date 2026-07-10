@@ -107,7 +107,7 @@ function renderBookings(bookings) {
               <div>Booked by: ${booking.user_email || '—'}</div>
               <div class="booking-back-actions">
                 <div class="booking-action" data-action="reschedule" data-booking-id="${booking.id}">Reschedule</div>
-                <div class="booking-action secondary" data-action="cancel" data-booking-id="${booking.id}">Cancel</div>
+                <div class="booking-action secondary ${booking.transaction_id || String(booking.status || '').toLowerCase() === 'paid' ? 'disabled' : ''}" data-action="cancel" data-booking-id="${booking.id}" ${booking.transaction_id || String(booking.status || '').toLowerCase() === 'paid' ? 'data-disabled="true" title="This booking has been paid — contact admin to cancel"' : ''}>Cancel</div>
                 <div class="booking-action" data-action="details" data-booking-id="${booking.id}">View Details</div>
               </div>
             </div>
@@ -316,9 +316,14 @@ async function init() {
   const bookingsContainer = document.getElementById('bookings-list');
   const purchasesContainer = document.getElementById('purchases-list');
   const upcomingContainer = document.getElementById('upcoming-services');
-  if (bookingsContainer) bookingsContainer.innerHTML = `<div class="skeleton-list"><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div></div>`;
-  if (purchasesContainer) purchasesContainer.innerHTML = `<div class="skeleton-list"><div class="skeleton-card"></div></div>`;
-  if (upcomingContainer) upcomingContainer.innerHTML = `<div class="skeleton-list"><div class="skeleton-card"></div></div>`;
+  if (bookingsContainer) bookingsContainer.innerHTML = `
+    <div class="skeleton-list">
+      <div class="skeleton-card"><div class="skeleton-avatar"></div><div class="skeleton-body"><div class="skeleton-line large"></div><div class="skeleton-line mid"></div></div><div class="skeleton-badge"></div></div>
+      <div class="skeleton-card"><div class="skeleton-avatar"></div><div class="skeleton-body"><div class="skeleton-line mid"></div><div class="skeleton-line mid"></div></div><div class="skeleton-badge"></div></div>
+      <div class="skeleton-card"><div class="skeleton-avatar"></div><div class="skeleton-body"><div class="skeleton-line large"></div><div class="skeleton-line small"></div></div><div class="skeleton-badge"></div></div>
+    </div>`;
+  if (purchasesContainer) purchasesContainer.innerHTML = `<div class="skeleton-list"><div class="skeleton-card"><div class="skeleton-avatar"></div><div class="skeleton-body"><div class="skeleton-line mid"></div></div></div></div>`;
+  if (upcomingContainer) upcomingContainer.innerHTML = `<div class="skeleton-list"><div class="skeleton-card"><div class="skeleton-avatar"></div><div class="skeleton-body"><div class="skeleton-line mid"></div></div></div></div>`;
 
   const bookings = await fetchBookings(user.email || user.id);
   // cache bookings for local diffs
@@ -381,6 +386,15 @@ async function init() {
 
 async function cancelBooking(id) {
   try {
+    // fetch current booking to verify payment status
+    const { data: current, error: fetchErr } = await supabase.from('bookings').select('id,status,transaction_id').eq('id', id).single();
+    if (fetchErr) throw fetchErr;
+    if (current?.transaction_id || String(current?.status || '').toLowerCase() === 'paid') {
+      alert('This booking has already been paid. To cancel a paid booking, please contact admin via the contact page.');
+      window.location.href = 'contact.html';
+      return null;
+    }
+
     const { data, error } = await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', id).select();
     if (error) throw error;
     // apply to local cache
