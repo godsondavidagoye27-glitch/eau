@@ -160,10 +160,10 @@ async function init() {
 
   function formatExpiry(value) {
     if (!value) return '12/26';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '12/26';
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = String(date.getFullYear()).slice(-2);
+    const cleaned = value.replace(/[^0-9]/g, '');
+    if (cleaned.length < 2) return '12/26';
+    const month = cleaned.slice(0, 2);
+    const year = cleaned.length >= 4 ? cleaned.slice(2, 4) : '26';
     return `${month}/${year}`;
   }
 
@@ -172,15 +172,6 @@ async function init() {
       .replace(/\D/g, '')
       .match(/.{1,4}/g)
       ?.join(' ') || '';
-  }
-
-  function formatExpiry(value) {
-    if (!value) return '12/26';
-    const cleaned = value.replace(/[^0-9]/g, '');
-    if (cleaned.length < 3) return '12/26';
-    const month = cleaned.slice(0, 2);
-    const year = cleaned.slice(2, 4);
-    return `${month}/${year}`;
   }
 
   function updatePreview() {
