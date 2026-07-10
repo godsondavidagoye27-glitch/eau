@@ -4,6 +4,7 @@
 
 import Database from './db.js';
 import { injectNavbarAndFooter } from './components.js';
+import { subscribeToTable } from './supabase.js';
 
 export class PublicApp {
   constructor() {
@@ -33,6 +34,37 @@ export class PublicApp {
     
     // Fetch latest data in background (non-blocking)
     this.fetchLatestData();
+
+    // Realtime subscription to site_data (if Supabase is configured)
+    this.setupRealtimeSiteData();
+  }
+
+  setupRealtimeSiteData() {
+    if (typeof subscribeToTable !== 'function') return;
+    try {
+      const channel = subscribeToTable('site_data', (payload) => {
+        try {
+          console.debug('[public-app] realtime site_data payload', payload);
+          const newRec = payload?.new;
+          if (newRec && newRec.content) {
+            // Accept object content or JSON string
+            const content = typeof newRec.content === 'string' ? JSON.parse(newRec.content) : newRec.content;
+            this.db.syncFromServerData(content);
+          } else {
+            // fallback: trigger fetch
+            this.fetchLatestData();
+          }
+        } catch (e) {
+          console.warn('Failed to apply realtime site_data payload', e);
+          this.fetchLatestData();
+        }
+      });
+
+      window.addEventListener('beforeunload', () => { try { channel?.unsubscribe?.(); } catch (e) { } });
+      this._siteDataChannel = channel;
+    } catch (err) {
+      console.warn('Failed to setup realtime site_data subscription', err);
+    }
   }
 
   async fetchLatestData() {

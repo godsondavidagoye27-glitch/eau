@@ -129,9 +129,59 @@ export class AdminApp {
       this.showProducts();
     } else if (view === 'event') {
       this.showEventSettings();
+    } else if (view === 'content') {
+      this.showSiteContentEditor();
     } else if (view === 'orders') {
       this.showOrders();
     }
+  }
+
+  showSiteContentEditor() {
+    const contentArea = document.getElementById('admin-content');
+    const allData = this.db.getData();
+
+    contentArea.innerHTML = `
+      <div class="content-editor">
+        <h2>Site Content Editor</h2>
+        <p>Edit the global site data as JSON. Changes are saved to the server and will sync to all clients instantly.</p>
+        <textarea id="site-data-json" style="width:100%;min-height:480px;font-family:monospace;">${JSON.stringify(allData, null, 2)}</textarea>
+        <div style="margin-top:12px;display:flex;gap:12px;align-items:center;">
+          <button class="btn" id="save-site-data">Save</button>
+          <button class="btn btn-secondary" id="reload-site-data">Reload</button>
+          <span id="site-data-status" style="color:#9aa; font-size:0.95rem;"></span>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('save-site-data').addEventListener('click', async () => {
+      const txt = document.getElementById('site-data-json').value;
+      let parsed;
+      try {
+        parsed = JSON.parse(txt);
+      } catch (err) {
+        alert('Invalid JSON: ' + err.message);
+        return;
+      }
+
+      try {
+        await this.db.saveData(parsed);
+        document.getElementById('site-data-status').textContent = 'Saved.';
+        setTimeout(() => { document.getElementById('site-data-status').textContent = ''; }, 2000);
+      } catch (err) {
+        document.getElementById('site-data-status').textContent = 'Save failed.';
+        console.warn('Save site data failed', err);
+      }
+    });
+
+    document.getElementById('reload-site-data').addEventListener('click', async () => {
+      try {
+        await this.db.refreshFromServer();
+        const refreshed = this.db.getData();
+        document.getElementById('site-data-json').value = JSON.stringify(refreshed, null, 2);
+      } catch (err) {
+        console.warn('Reload failed', err);
+      }
+    });
   }
 
   showEventSettings() {
