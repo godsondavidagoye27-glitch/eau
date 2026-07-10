@@ -62,7 +62,18 @@ async function init() {
 
             <div class="field-group">
               <label for="card-number">Card number</label>
-              <input id="card-number" name="cardNumber" inputmode="numeric" placeholder="1234 5678 9012 3456" maxlength="19" />
+              <input id="card-number" name="cardNumber" inputmode="numeric" placeholder="1234 5678 9012 3456" maxlength="19" required />
+            </div>
+
+            <div class="field-row">
+              <div class="field-group">
+                <label for="card-expiry">Expiry date</label>
+                <input id="card-expiry" name="cardExpiry" inputmode="numeric" placeholder="MM/YY" maxlength="5" required />
+              </div>
+              <div class="field-group">
+                <label for="card-cvv">CVV</label>
+                <input id="card-cvv" name="cardCvv" inputmode="numeric" placeholder="123" maxlength="4" required />
+              </div>
             </div>
 
             <div class="field-group booking-summary-line">
@@ -136,6 +147,8 @@ async function init() {
   const inputStart = document.getElementById('start');
   const inputCardName = document.getElementById('card-name');
   const inputCardNumber = document.getElementById('card-number');
+  const inputCardExpiry = document.getElementById('card-expiry');
+  const inputCardCvv = document.getElementById('card-cvv');
   const cardViz = document.querySelector('.card-viz');
 
   function formatDate(value) {
@@ -161,15 +174,25 @@ async function init() {
       ?.join(' ') || '';
   }
 
+  function formatExpiry(value) {
+    if (!value) return '12/26';
+    const cleaned = value.replace(/[^0-9]/g, '');
+    if (cleaned.length < 3) return '12/26';
+    const month = cleaned.slice(0, 2);
+    const year = cleaned.slice(2, 4);
+    return `${month}/${year}`;
+  }
+
   function updatePreview() {
     previewName.textContent = inputCardName.value.trim() || 'CARDHOLDER NAME';
     previewNumber.textContent = inputCardNumber.value.trim() ? formatCardNumber(inputCardNumber.value) : '•••• •••• •••• 4242';
     summaryWhere.textContent = inputWhere.value.trim() || 'Not set';
     summaryStart.textContent = formatDate(inputStart.value);
-    previewExpiry.textContent = formatExpiry(inputStart.value);
+    previewExpiry.textContent = formatExpiry(inputCardExpiry.value);
+    document.querySelector('#card-back .cvv-block div').textContent = inputCardCvv.value.trim().padEnd(3, '•').slice(0, 3);
   }
 
-  [inputWhere, inputStart, inputCardName, inputCardNumber].forEach((field) => {
+  [inputWhere, inputStart, inputCardName, inputCardNumber, inputCardExpiry, inputCardCvv].forEach((field) => {
     field.addEventListener('input', updatePreview);
     field.addEventListener('focus', () => cardFront.classList.add('card-focus'));
     field.addEventListener('blur', () => cardFront.classList.remove('card-focus'));
