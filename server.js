@@ -112,9 +112,10 @@ function getRuntimeConfigScript() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
   const stripePublicKey = process.env.VITE_STRIPE_PUBLIC_KEY || process.env.STRIPE_PUBLIC_KEY || '';
+  const flutterwavePublicKey = process.env.VITE_FLW_PUBLIC_KEY || process.env.FLW_PUBLIC_KEY || '';
   const apiUrl = process.env.VITE_API_URL || process.env.API_URL || '';
 
-  return `\n    <script>\n      window.__APP_CONFIG__ = {\n        supabaseUrl: ${JSON.stringify(supabaseUrl)},\n        supabaseAnonKey: ${JSON.stringify(supabaseAnonKey)},\n        stripePublicKey: ${JSON.stringify(stripePublicKey)},\n        apiUrl: ${JSON.stringify(apiUrl)}\n      };\n      window.__SUPABASE_CONFIG__ = {\n        url: ${JSON.stringify(supabaseUrl)},\n        anonKey: ${JSON.stringify(supabaseAnonKey)}\n      };\n    </script>\n  `;
+  return `\n    <script>\n      window.__APP_CONFIG__ = {\n        supabaseUrl: ${JSON.stringify(supabaseUrl)},\n        supabaseAnonKey: ${JSON.stringify(supabaseAnonKey)},\n        stripePublicKey: ${JSON.stringify(stripePublicKey)},\n        flutterwavePublicKey: ${JSON.stringify(flutterwavePublicKey)},\n        apiUrl: ${JSON.stringify(apiUrl)}\n      };\n      window.__SUPABASE_CONFIG__ = {\n        url: ${JSON.stringify(supabaseUrl)},\n        anonKey: ${JSON.stringify(supabaseAnonKey)}\n      };\n    </script>\n  `;
 }
 
 function getSiteDataScript(siteData) {
@@ -320,6 +321,33 @@ const server = http.createServer(async (req, res) => {
       saveSiteData(site);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true, booking }));
+      return;
+    }
+
+    // API: POST /api/flutterwave/verify
+    if (req.method === 'POST' && url.pathname === '/api/flutterwave/verify') {
+      try {
+        const body = await readRequestBody(req);
+        const parsed = JSON.parse(body || '{}');
+        const transactionId = parsed.transaction_id;
+        const flwSecret = process.env.FLW_SECRET_KEY || process.env.VITE_FLW_SECRET_KEY || '';
+        if (!transactionId || !flwSecret) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Missing transaction_id or server not configured' }));
+          return;
+        }
+
+        const verifyRes = await fetch(`https://api.flutterwave.com/v3/transactions/${encodeURIComponent(transactionId)}/verify`, {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${flwSecret}`, 'Content-Type': 'application/json' }
+        });
+        const verifyJson = await verifyRes.json();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: verifyRes.ok, data: verifyJson.data || verifyJson }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
       return;
     }
 

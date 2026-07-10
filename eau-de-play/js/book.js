@@ -79,14 +79,11 @@ async function init() {
   const totalDisplay = document.getElementById('total-display');
   totalDisplay.textContent = `€${flatPrice.toFixed(2)}`;
 
-  const stripeKey = window.__APP_CONFIG__ && window.__APP_CONFIG__.stripePublicKey;
-  let stripe = null;
-  let cardElement = null;
-  if (stripeKey && window.Stripe) {
-    stripe = Stripe(stripeKey);
-    const elements = stripe.elements();
-    cardElement = elements.create('card', { hidePostalCode: true });
-    cardElement.mount('#card-element');
+  // Use Flutterwave if configured, otherwise show demo fallback
+  const flwKey = window.__APP_CONFIG__ && window.__APP_CONFIG__.flutterwavePublicKey;
+  let usingFlutterwave = false;
+  if (flwKey && window.FlutterwaveCheckout) {
+    usingFlutterwave = true;
   } else {
     document.getElementById('card-errors').textContent = 'Payment not configured — falling back to demo mode.';
   }
@@ -103,50 +100,55 @@ async function init() {
     if (!start) { alert('Please select start date/time'); return; }
 
     try {
-      if (stripe && cardElement) {
-        // Create payment intent on server
-        const intentRes = await createPaymentIntent(Math.round(total * 100));
-        if (!intentRes || !intentRes.success || !intentRes.clientSecret) {
-          throw new Error((intentRes && intentRes.error) || 'Failed to create payment intent');
-        }
+      if (usingFlutterwave) {
+        const tx_ref = `tx-${Date.now()}`;
+        const customer = { name: cardName || 'Guest', email: (window.__SITE_DATA__ && window.__SITE_DATA__.settings && window.__SITE_DATA__.settings[0] && window.__SITE_DATA__.settings[0].newsletterEndpoint) ? '' : '' };
 
-        const clientSecret = intentRes.clientSecret;
-        const result = await stripe.confirmCardPayment(clientSecret, {
-          payment_method: {
-            card: cardElement,
-            billing_details: { name: cardName || 'Guest' }
+        FlutterwaveCheckout({
+          public_key: flwKey,
+          tx_ref,
+          amount: total,
+          currency: 'EUR',
+          payment_options: 'card',
+          customer: { name: cardName || 'Guest' },
+          callback: async function (data) {
+            // data contains transaction_id and tx_ref
+            try {
+              const verifyRes = await fetch('/api/flutterwave/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ transaction_id: data.transaction_id })
+              });
+              const vr = await verifyRes.json();
+              if (vr && vr.success && vr.data && vr.data.status === 'successful') {
+                // Persist booking with payment info
+                const payload = {
+                  serviceId,
+                  serviceName: service.name,
+                  where,
+                  start,
+                  total,
+                  payment: { system: 'flutterwave', transaction_id: data.transaction_id }
+                };
+                const saveRes = await postBooking(payload);
+                if (saveRes && saveRes.success && saveRes.booking) {
+                  window.location.href = `booking-confirmation.html?bookingId=${saveRes.booking.id}`;
+                  return;
+                }
+                alert('Booking saved failed after payment verification.');
+              } else {
+                alert('Payment verification failed');
+              }
+            } catch (err) {
+              console.error('Verification error:', err);
+              alert('Payment verification error');
+            }
+          },
+          onclose: function() {
+            // user closed payment modal
           }
         });
-
-        if (result.error) {
-          document.getElementById('card-errors').textContent = result.error.message || 'Payment failed';
-          return;
-        }
-
-        if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-          // Persist booking to server with paymentIntentId
-          const payload = {
-              serviceId,
-              serviceName: service.name,
-              where,
-              start,
-              total,
-              payment: {
-                system: 'stripe',
-                paymentIntentId: result.paymentIntent.id
-              }
-            };
-
-          const saveRes = await postBooking(payload);
-          if (saveRes && saveRes.success && saveRes.booking) {
-            window.location.href = `booking-confirmation.html?bookingId=${saveRes.booking.id}`;
-            return;
-          }
-
-          throw new Error('Failed to save booking');
-        }
-
-        throw new Error('Payment did not succeed');
+        return;
       } else {
         // Fallback demo: save locally and redirect
         const booking = {
