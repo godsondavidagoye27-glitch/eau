@@ -337,8 +337,18 @@ const server = http.createServer(async (req, res) => {
 
     if (fs.existsSync(filePath)) {
       const ext = path.extname(filePath).toLowerCase();
-      const content = fs.readFileSync(filePath);
+      let content = fs.readFileSync(filePath);
       res.writeHead(200, { 'Content-Type': MIME_TYPES[ext] || 'application/octet-stream' });
+      if (ext === '.html' || ext === '.htm') {
+        try {
+          const html = content.toString('utf8');
+          const injected = injectRuntimeConfig(html, loadSiteData());
+          res.end(injected);
+          return;
+        } catch (err) {
+          // fallback to raw content
+        }
+      }
       res.end(content);
       return;
     }
