@@ -94,6 +94,18 @@
   backdrop-filter: blur(14px);
 }
 
+@media (max-width: 768px) {
+  .afro-home-banner .afro-home-banner-content {
+    padding: var(--spacing-2xl) var(--spacing-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .afro-home-banner .afro-home-banner-content {
+    padding: var(--spacing-xl) var(--spacing-md);
+  }
+}
+
 .afro-home-banner-content {
   max-width: 860px;
   margin: 0 auto;
@@ -111,42 +123,96 @@
   margin: var(--spacing-md) 0;
 }
 
+.afro-home-banner p {
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+  line-height: 1.6;
+  opacity: 0.95;
+}
+
+@media (max-width: 480px) {
+  .afro-home-banner h2 {
+    font-size: 1.6rem;
+    margin: 12px 0;
+  }
+
+  .afro-home-banner p {
+    font-size: 0.9rem;
+  }
+}
+
 .hero-cta-group {
   display: flex;
   justify-content: center;
   gap: var(--spacing-md);
   flex-wrap: wrap;
+  margin-top: var(--spacing-2xl);
 }
 
 .hero-cta-group .btn {
-  min-width: 170px;
+  min-width: 140px;
+  padding: 12px 24px;
+  font-size: 0.95rem;
   box-shadow: 0 20px 50px rgba(255, 138, 0, 0.22);
 }
 
-.hero-cta-group .btn.btn-secondary {
-  background: rgba(255,255,255,0.08);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.16);
+/* Get Tickets button - black background, white text */
+.afro-home-banner .hero-cta-group .btn:first-child {
+  background: #1a1a1a;
+  color: #ffffff;
+  border: 1px solid #1a1a1a;
 }
 
-.hero-cta-group .btn.btn-secondary:hover {
-  background: rgba(255,255,255,0.16);
+.afro-home-banner .hero-cta-group .btn:first-child:hover {
+  background: #000000;
+  border-color: #000000;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Learn More button - white background, black text */
+.afro-home-banner .hero-cta-group .btn.btn-secondary {
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #ffffff;
+  box-shadow: 0 20px 50px rgba(255, 255, 255, 0.2);
+}
+
+.afro-home-banner .hero-cta-group .btn.btn-secondary:hover {
+  background: #f5f5f5;
+  border-color: #f5f5f5;
+  box-shadow: 0 20px 50px rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
 }
 
 @media (max-width: 768px) {
   .hero-cta-group {
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
+    gap: 12px;
+    margin-top: var(--spacing-lg);
   }
 
   .hero-cta-group .btn {
-    width: 100%;
-    max-width: 340px;
+    min-width: 120px;
+    padding: 10px 18px;
+    font-size: 0.9rem;
+    flex: 0 1 auto;
   }
 
   .hero-cta-group .btn + .btn {
     margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-cta-group {
+    gap: 10px;
+    margin-top: var(--spacing-md);
+  }
+
+  .hero-cta-group .btn {
+    min-width: 110px;
+    padding: 9px 16px;
+    font-size: 0.85rem;
+    border-radius: 8px;
   }
 }
 
