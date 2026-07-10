@@ -29,6 +29,28 @@
 <body>
   <div class="account-page-shell">
     <div id="navbar-placeholder"></div>
+    <!-- Static navbar fallback (visible if JS injection fails) -->
+    <nav class="site-nav-fallback">
+      <div class="nav-inner">
+        <a class="nav-brand" href="index.html">EAU DEY PLAY</a>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="services.html">Services</a></li>
+          <li><a href="shop.html">Shop</a></li>
+          <li><a href="account.html">Account</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
+    <style>
+      .site-nav-fallback{background:linear-gradient(90deg,#0f0f13,#08060a);padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.03);}
+      .site-nav-fallback .nav-inner{display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto}
+      .site-nav-fallback .nav-brand{color:#fff;font-weight:700;text-decoration:none;font-size:1.1rem}
+      .site-nav-fallback .nav-links{list-style:none;margin:0;padding:0;display:flex;gap:12px}
+      .site-nav-fallback .nav-links a{color:rgba(255,255,255,0.9);text-decoration:none;padding:8px 10px;border-radius:6px}
+      .site-nav-fallback .nav-links a:hover{background:rgba(255,255,255,0.03)}
+      @media(max-width:700px){.site-nav-fallback .nav-links{display:none}}
+    </style>
 
     <section class="account-section">
       <div class="account-container">
