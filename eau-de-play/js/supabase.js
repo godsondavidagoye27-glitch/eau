@@ -7,8 +7,8 @@ let createClient;
 try {
   ({ createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'));
 } catch (error) {
-  console.error('Supabase module failed to load from CDN:', error);
-  throw error;
+  console.warn('Supabase module failed to load from CDN, using fallback client:', error);
+  createClient = null;
 }
 
 function getSupabaseConfig() {
@@ -24,34 +24,93 @@ function getSupabaseConfig() {
   };
 }
 
-const { url: SUPABASE_URL, key: SUPABASE_KEY } = getSupabaseConfig();
+function createFallbackClient() {
+  const createQueryBuilder = () => {
+    const builder = {
+      select() { return builder; },
+      insert() { return builder; },
+      update() { return builder; },
+      delete() { return builder; },
+      eq() { return builder; },
+      order() { return builder; },
+      limit() { return builder; },
+      single: async () => ({ data: null, error: new Error('Supabase is not configured') }),
+      maybeSingle: async () => ({ data: null, error: new Error('Supabase is not configured') })
+    };
+    return builder;
+  };
 
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  throw new Error('MISSING SUPABASE CREDENTIALS - set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY or provide window.__APP_CONFIG__ before loading the app.');
+  return {
+    from() { return createQueryBuilder(); },
+    channel() {
+      return {
+        on() { return this; },
+        subscribe() { return { unsubscribe() {} }; }
+      };
+    },
+    auth: {
+      onAuthStateChange() {},
+      getSession: async () => ({ data: { session: null }, error: null }),
+      getUser: async () => ({ data: { user: null }, error: null }),
+      signInWithPassword: async () => ({ data: { user: null, session: null }, error: new Error('Supabase is not configured') }),
+      signUp: async () => ({ data: { user: null, session: null }, error: new Error('Supabase is not configured') }),
+      signOut: async () => ({ error: null }),
+      updateUser: async () => ({ data: { user: null }, error: new Error('Supabase is not configured') }),
+      resetPasswordForEmail: async () => ({ error: new Error('Supabase is not configured') })
+    },
+    storage: {
+      from() {
+        return {
+          upload: async () => ({ data: null, error: new Error('Supabase storage is not configured') }),
+          getPublicUrl: () => ({ data: { publicUrl: '' } }),
+          remove: async () => ({ data: null, error: new Error('Supabase storage is not configured') })
+        };
+      }
+    },
+    rpc: async () => ({ data: null, error: new Error('Supabase is not configured') })
+  };
 }
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
+const { url: SUPABASE_URL, key: SUPABASE_KEY } = getSupabaseConfig();
+const fallbackClient = createFallbackClient();
+let supabaseClient = fallbackClient;
+
+if (createClient && SUPABASE_URL && SUPABASE_KEY) {
+  try {
+    supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    });
+  } catch (error) {
+    console.warn('Supabase client initialization failed, using fallback client:', error);
+    supabaseClient = fallbackClient;
   }
-});
+} else if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.warn('Supabase credentials are missing; continuing with local-only mode.');
+}
+
+export const supabase = supabaseClient;
 
 // realtime subscription helpers
 export function subscribeToTable(table, handler) {
-  if (!supabase) throw new Error('Supabase client not initialized');
+  if (!supabaseClient || typeof supabaseClient.channel !== 'function') {
+    return { unsubscribe() {} };
+  }
+
   try {
-    const channel = supabase.channel(`public:${table}`)
+    const channel = supabaseClient.channel(`public:${table}`)
       .on('postgres_changes', { event: '*', schema: 'public', table }, (payload) => {
-        handler(payload);
+        if (typeof handler === 'function') handler(payload);
       })
       .subscribe();
 
     return channel;
   } catch (err) {
-    console.error('Realtime subscription failed', err);
-    return null;
+    console.warn('Realtime subscription failed', err);
+    return { unsubscribe() {} };
   }
 }
 
