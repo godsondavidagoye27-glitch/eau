@@ -9,23 +9,25 @@ export class PublicApp {
   constructor() {
     this.db = new Database();
     this.syncInterval = null;
-    this.pageInitialized = false;
+    this.lastDataHash = null;
     this.init();
   }
 
   async init() {
+    // Inject navbar/footer first without awaiting to improve visual load
     injectNavbarAndFooter();
-    this.setupPageSpecificLogic();
-    this.startSharedDataSync();
-    this.syncSharedData().catch(() => {
-      // fallback to current local data already rendered
-    });
-
+    
+    // Then setup page-specific logic
+    await this.syncSharedData();
+    
     if (typeof window !== 'undefined') {
       window.addEventListener('siteDataUpdated', () => {
         this.syncSharedData();
       });
     }
+
+    // Start sync after initial load (reduced frequency)
+    this.startSharedDataSync();
   }
 
   setupPageSpecificLogic() {
@@ -51,8 +53,6 @@ export class PublicApp {
     } else if (currentPage === 'contact.html') {
       this.setupContactPage();
     }
-
-    this.pageInitialized = true;
   }
 
   startSharedDataSync() {
@@ -60,9 +60,11 @@ export class PublicApp {
       window.clearInterval(this.syncInterval);
     }
 
+    // Reduce sync frequency from 5s to 30s and only sync on first load
+    // This prevents excessive API calls and re-renders
     this.syncInterval = window.setInterval(() => {
       this.syncSharedData();
-    }, 30000);
+    }, 30000); // Changed from 5000ms to 30000ms (30 seconds)
   }
 
   async syncSharedData() {
@@ -70,13 +72,19 @@ export class PublicApp {
       const response = await fetch('/api/site-data');
       if (!response.ok) return;
       const data = await response.json();
+      
+      // Only update if data has actually changed to prevent unnecessary re-renders
+      const oldData = JSON.stringify(this.db.getData());
       this.db.syncFromServerData(data);
-      if (!this.pageInitialized) {
+      const newData = JSON.stringify(this.db.getData());
+      
+      if (oldData !== newData) {
         this.setupPageSpecificLogic();
       }
     } catch (err) {
       console.warn('Failed to sync shared site data', err);
-      if (!this.pageInitialized) {
+      const fallbackData = this.db.getData();
+      if (fallbackData && typeof fallbackData === 'object') {
         this.setupPageSpecificLogic();
       }
     }
@@ -616,7 +624,7 @@ export class PublicApp {
             <input type="number" value="1" min="1" class="qty-input qty-input-${product.id}" readonly>
             <button class="btn btn-small" onclick="document.querySelector('.qty-input-${product.id}').value = parseInt(document.querySelector('.qty-input-${product.id}').value) + 1">+</button>
           </div>
-            <button class="btn" onclick="var qty = parseInt(document.querySelector('.qty-input-${product.id}').value) || 1; if (window.cartManager) { window.cartManager.addToCart(${product.id}, qty, {name: '${product.name.replace(/'/g, "\\'")}', price: ${product.price}, image: '${product.image}'}); window.cartManager.updateCartBadge(); alert('Added to cart!'); } else { alert('Cart is still loading. Please try again in a moment.'); }">
+            <button class="btn" onclick="window.cartManager.addToCart(${product.id}, parseInt(document.querySelector('.qty-input-${product.id}').value), {name: '${product.name.replace(/'/g, "\\'")}', price: ${product.price}, image: '${product.image}'}); alert('Added to cart!'); window.cartManager.updateCartBadge();">
             ${product.buttonText}
           </button>
         </div>

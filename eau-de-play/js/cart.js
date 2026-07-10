@@ -173,9 +173,32 @@ export class CartManager {
   }
 }
 
-// Initialize immediately so add-to-cart buttons can use it as soon as scripts load
-window.cartManager = new CartManager();
-window.cartManager.updateCartBadge();
-window.dispatchEvent(new Event('cartManagerReady'));
+// Initialize on page load and immediately
+let cartManagerInstance = null;
+
+function initializeCartManager() {
+  if (!cartManagerInstance) {
+    cartManagerInstance = new CartManager();
+    if (typeof window !== 'undefined') {
+      window.cartManager = cartManagerInstance;
+      cartManagerInstance.updateCartBadge();
+    }
+  }
+  return cartManagerInstance;
+}
+
+// Initialize immediately when module loads (before DOM is ready)
+if (typeof window !== 'undefined') {
+  window.cartManager = initializeCartManager();
+}
+
+// Also initialize on DOMContentLoaded as a fallback
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCartManager);
+  } else {
+    initializeCartManager();
+  }
+}
 
 export default CartManager;
