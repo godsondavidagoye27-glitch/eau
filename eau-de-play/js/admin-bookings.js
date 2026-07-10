@@ -1,3 +1,5 @@
+import { subscribeToTable } from './supabase.js';
+
 async function fetchBookings() {
   const res = await fetch('/api/bookings');
   if (!res.ok) throw new Error('Failed to load bookings');
@@ -108,3 +110,25 @@ document.getElementById('refresh').addEventListener('click', loadAndRender);
 document.getElementById('migrate').addEventListener('click', migrateLocalBookings);
 
 loadAndRender();
+
+// Realtime: subscribe to bookings changes and refresh the table on updates
+if (typeof subscribeToTable === 'function') {
+  try {
+    const channel = subscribeToTable('bookings', (payload) => {
+      console.debug('[admin-bookings] realtime payload', payload);
+      // simple refresh strategy: reload the list (debounced)
+      if (window.__admin_bookings_debounce) clearTimeout(window.__admin_bookings_debounce);
+      window.__admin_bookings_debounce = setTimeout(() => {
+        loadAndRender();
+      }, 350);
+    });
+    window.__admin_bookings_channel = channel;
+
+    // cleanup on unload
+    window.addEventListener('beforeunload', () => {
+      try { channel?.unsubscribe?.(); } catch (e) { /* ignore */ }
+    });
+  } catch (err) {
+    console.warn('Failed to setup admin bookings realtime subscription', err);
+  }
+}

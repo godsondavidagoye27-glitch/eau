@@ -4,6 +4,7 @@
 
 import Database from './db.js';
 import Auth from './auth.js';
+import { subscribeToTable } from './supabase.js';
 
 export class AdminApp {
   constructor() {
@@ -27,6 +28,29 @@ export class AdminApp {
     this.setupSidebar();
     this.setupModal();
     this.showDashboard();
+    this.setupRealtimeSubscriptions();
+  }
+
+  setupRealtimeSubscriptions() {
+    if (typeof subscribeToTable !== 'function') return;
+    try {
+      const channel = subscribeToTable('bookings', (payload) => {
+        console.debug('[admin-app] realtime bookings payload', payload);
+        // Debounce refresh to avoid rapid re-renders
+        if (this._realtimeTimer) clearTimeout(this._realtimeTimer);
+        this._realtimeTimer = setTimeout(async () => {
+          try {
+            await this.refreshSharedDataFromServer();
+            // re-render current view
+            this.switchView(this.currentView);
+          } catch (e) { console.warn('Realtime refresh failed', e); }
+        }, 450);
+      });
+      this._realtimeChannel = channel;
+      window.addEventListener('beforeunload', () => { try { channel?.unsubscribe?.(); } catch (e) {/*ignore*/} });
+    } catch (err) {
+      console.warn('Failed to initialize admin realtime subscriptions', err);
+    }
   }
 
   async refreshSharedDataFromServer() {
