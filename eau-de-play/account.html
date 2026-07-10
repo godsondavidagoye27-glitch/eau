@@ -24,6 +24,12 @@
     .booking-card .card-back{position:absolute;inset:0;transform:rotateY(180deg)}
     .booking-card.is-flipped .card-inner{transform:rotateY(180deg);box-shadow:0 30px 80px rgba(0,0,0,0.48)}
     .booking-card:hover{transform:translateY(-6px) rotateX(3deg) rotateY(-4deg)}
+    @media (max-width: 680px) {
+      .dashboard-grid{grid-template-columns:1fr !important;gap:12px}
+      .account-grid{grid-template-columns:1fr !important;gap:12px}
+      .summary-card-large{flex-direction:row;gap:12px}
+      .summary-icon{width:48px;height:48px;font-size:20px}
+    }
   </style>
 </head>
 <body>

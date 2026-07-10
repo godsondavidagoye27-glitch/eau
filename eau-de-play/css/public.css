@@ -519,6 +519,37 @@
   }
 }
 
+/* ==============================
+   MOBILE UX UTILITIES
+   General mobile-first adjustments to improve touch targets,
+   collapse complex grids, and reduce heavy shadows on phones.
+   ============================== */
+
+@media (max-width: 680px) {
+  .container { padding-left: var(--spacing-md); padding-right: var(--spacing-md); }
+  .grid, .grid-4, .dashboard-grid { grid-template-columns: 1fr !important; }
+  .account-grid { grid-template-columns: 1fr !important; }
+  .hero { min-height: 50vh; }
+  .btn { width: 100%; padding: 14px 18px; font-size: 1rem; border-radius: 12px; }
+  .btn + .btn { margin-top: 12px; }
+  .preview-card { width: 100%; height: auto; min-height: 160px; }
+  img, .preview-card img, .gallery-card img, .video-card iframe { max-width: 100%; height: auto; display: block; }
+  .carousel-control { width: 44px; height: 44px; }
+  .booking-card .card-inner { box-shadow: none; }
+  .mobile-nav a { padding: 14px 8px; font-size: 1.05rem; }
+  .navbar-toggle { width: 54px; height: 54px; font-size: 1.25rem; }
+  .mobile-menu-panel { width: calc(100% - 32px); max-width: 520px; padding: var(--spacing-lg); border-radius: 14px; }
+  body { -webkit-tap-highlight-color: rgba(0,0,0,0.02); }
+  .card-front, .card-back, .summary-card-large { box-shadow: none; }
+}
+
+/* Slightly reduce heavy motion on small devices */
+@media (max-width: 480px) {
+  * { transition-duration: 180ms !important; }
+  .booking-card:hover { transform: none; }
+}
+
+
 /* ABOUT TEASER */
 .about-teaser {
   padding: var(--spacing-3xl) var(--spacing-lg);
