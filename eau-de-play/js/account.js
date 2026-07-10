@@ -1,5 +1,5 @@
 import { supabaseAuth } from './supabase-auth.js';
-import { supabase } from './supabase.js';
+import { supabase, subscribeToTable } from './supabase.js';
 
 function getStoredUser() {
   try {
@@ -186,6 +186,28 @@ async function init() {
   renderBookings(bookings);
   renderPurchases(cartHistory);
 
+  // Realtime: subscribe to bookings changes and refresh the list when updates occur
+  if (typeof subscribeToTable === 'function') {
+    try {
+      const channel = subscribeToTable('bookings', (payload) => {
+        console.debug('[realtime] bookings payload:', payload);
+        // For simplicity, re-fetch the user's bookings on any table change
+        fetchBookings(user.email || user.id).then((fresh) => {
+          renderDashboardSummary(fresh, cartHistory);
+          renderBookings(fresh);
+        }).catch((err) => console.error('Realtime refresh error', err));
+      });
+
+      // store channel for cleanup
+      window.__bookings_realtime_channel = channel;
+      window.addEventListener('beforeunload', () => {
+        try { channel?.unsubscribe?.(); } catch (e) { /* ignore */ }
+      });
+    } catch (err) {
+      console.warn('Realtime subscription setup failed:', err);
+    }
+  }
+
   const signoutBtn = document.getElementById('signout-btn');
   if (signoutBtn) {
     signoutBtn.addEventListener('click', async () => {
@@ -196,113 +218,3 @@ async function init() {
 }
 
 init();
-      <div class="tracking-number">Tracking: <strong>${tracking}</strong></div>
-      <div class="tracking-steps">${html}</div>
-    `;
-  } catch (err) {
-    console.error('Error fetching delivery status', err);
-    tracker.innerHTML = '<p>Unable to fetch delivery status.</p>';
-  }
-}
-
-async function showOrderDetail(orderId) {
-  const modal = document.getElementById('order-modal');
-  const body = document.getElementById('modal-body');
-  const title = document.getElementById('modal-title');
-  if (!modal || !body) return;
-
-  title.textContent = `Order ${orderId}`;
-  body.innerHTML = '<p>Loading...</p>';
-
-  try {
-    const data = await SupabaseDB.getOrderById(orderId);
-    if (!data) {
-      body.innerHTML = '<p>Order not found.</p>';
-      return;
-    }
-
-    const items = JSON.parse(data.items || '[]');
-    const itemsHtml = items.map(it => `
-      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--color-border);">
-        <div>${it.name}</div>
-        <div>${it.quantity} × $${parseFloat(it.price).toFixed(2)}</div>
-      </div>
-    `).join('');
-
-    const history = data.tracking_history || data.checkpoints || [];
-    const historyHtml = history.length > 0 ? history.map(h => `
-      <div style="padding:8px 0;border-bottom:1px solid var(--color-border);">
-        <div style="font-weight:600">${h.location || h.city || ''} ${h.status || h.tag || ''}</div>
-        <div style="font-size:12px;color:var(--color-text-light)">${h.created_at || h.time || h.datetime || ''}</div>
-        <div style="font-size:13px">${h.message || h.description || ''}</div>
-      </div>
-    `).join('') : '<div>No tracking checkpoints yet.</div>';
-
-    const trackingHtml = data.tracking_number ? `
-      <div><strong>Carrier:</strong> ${data.carrier || 'N/A'}</div>
-      <div><strong>Tracking:</strong> ${data.tracking_number}</div>
-      <div><strong>Shipped At:</strong> ${data.shipped_at ? new Date(data.shipped_at).toLocaleString() : '—'}</div>
-      <div style="margin-top:10px"><strong>History</strong>${historyHtml}</div>
-    ` : '<div>No tracking information yet.</div>';
-
-    body.innerHTML = `
-      <div>
-        <h4>Items</h4>
-        ${itemsHtml}
-        <h4 style="margin-top:12px">Summary</h4>
-        <div>Subtotal: $${parseFloat(data.subtotal||0).toFixed(2)}</div>
-        <div>Tax: $${parseFloat(data.tax||0).toFixed(2)}</div>
-        <div>Shipping: $${parseFloat(data.shipping||0).toFixed(2)}</div>
-        <div><strong>Total: $${parseFloat(data.total||0).toFixed(2)}</strong></div>
-        <h4 style="margin-top:12px">Tracking</h4>
-        ${trackingHtml}
-      </div>
-    `;
-
-    // show modal
-    modal.classList.add('active');
-    document.getElementById('modal-close').addEventListener('click', () => modal.classList.remove('active'));
-  } catch (err) {
-    console.error('Order detail error', err);
-    body.innerHTML = '<p>Unable to load order details.</p>';
-  }
-}
-
-function mapStatusToStage(status) {
-  const map = {
-    pending: 'Order Received',
-    confirmed: 'Processing',
-    paid: 'Processing',
-    shipped: 'Shipped',
-    out_for_delivery: 'Out for Delivery',
-    delivered: 'Delivered',
-    failed: 'Processing'
-  };
-  return map[status] || 'Order Received';
-}
-
-async function initAccountPage() {
-  const user = await supabaseAuth.getCurrentUser();
-  if (!user) {
-    window.location.href = 'auth.html?redirect=account.html';
-    return;
-  }
-
-  document.getElementById('profile-email').textContent = user.email;
-
-  document.getElementById('signout-btn').addEventListener('click', async () => {
-    await supabaseAuth.signOut();
-    window.location.href = 'index.html';
-  });
-
-  const orders = await fetchOrders();
-  renderOrders(orders);
-
-  // Poll for updates every 60 seconds
-  setInterval(async () => {
-    const updatedOrders = await fetchOrders();
-    renderOrders(updatedOrders);
-  }, 60000);
-}
-
-document.addEventListener('DOMContentLoaded', initAccountPage);

@@ -7,8 +7,8 @@ let createClient;
 try {
   ({ createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'));
 } catch (error) {
-  console.warn('Supabase module failed to load from CDN, continuing without client.', error);
-  createClient = null;
+  console.error('Supabase module failed to load from CDN:', error);
+  throw error;
 }
 
 function getSupabaseConfig() {
@@ -27,19 +27,33 @@ function getSupabaseConfig() {
 const { url: SUPABASE_URL, key: SUPABASE_KEY } = getSupabaseConfig();
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error('❌ MISSING SUPABASE CREDENTIALS');
-  console.error('Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, or add window.__SUPABASE_CONFIG__ before loading the app.');
+  throw new Error('MISSING SUPABASE CREDENTIALS - set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY or provide window.__APP_CONFIG__ before loading the app.');
 }
 
-export const supabase = createClient && SUPABASE_URL && SUPABASE_KEY
-  ? createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
-      }
-    })
-  : null;
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+});
+
+// realtime subscription helpers
+export function subscribeToTable(table, handler) {
+  if (!supabase) throw new Error('Supabase client not initialized');
+  try {
+    const channel = supabase.channel(`public:${table}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table }, (payload) => {
+        handler(payload);
+      })
+      .subscribe();
+
+    return channel;
+  } catch (err) {
+    console.error('Realtime subscription failed', err);
+    return null;
+  }
+}
 
 // ============================================
 // SUPABASE DATABASE MODULE
