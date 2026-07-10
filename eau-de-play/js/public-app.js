@@ -13,11 +13,29 @@ export class PublicApp {
     this.init();
   }
 
-  async init() {
-    // Inject navbar/footer first without awaiting to improve visual load
+  init() {
+    // Inject navbar/footer first
     injectNavbarAndFooter();
     
-    // Perform initial sync and render
+    // Render immediately with cached/fallback data (non-blocking)
+    this.setupPageSpecificLogic();
+    this.hasInitialRender = true;
+
+    // Setup event listeners
+    if (typeof window !== 'undefined') {
+      window.addEventListener('siteDataUpdated', () => {
+        this.syncSharedData();
+      });
+    }
+
+    // Start periodic sync
+    this.startSharedDataSync();
+    
+    // Fetch latest data in background (non-blocking)
+    this.fetchLatestData();
+  }
+
+  async fetchLatestData() {
     try {
       const response = await fetch('/api/site-data');
       if (response.ok) {
@@ -27,19 +45,6 @@ export class PublicApp {
     } catch (err) {
       console.warn('Failed to fetch initial site data', err);
     }
-    
-    // Always render on first load
-    this.setupPageSpecificLogic();
-    this.hasInitialRender = true;
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('siteDataUpdated', () => {
-        this.syncSharedData();
-      });
-    }
-
-    // Start periodic sync after initial load (reduced frequency)
-    this.startSharedDataSync();
   }
 
   setupPageSpecificLogic() {
@@ -72,11 +77,10 @@ export class PublicApp {
       window.clearInterval(this.syncInterval);
     }
 
-    // Sync every 60 seconds to check for updates
-    // Don't re-render unless data actually changes
+    // Sync every 120 seconds (2 minutes) - very infrequent
     this.syncInterval = window.setInterval(() => {
       this.syncSharedData();
-    }, 60000); // 60 seconds - much less frequent than before
+    }, 120000);
   }
 
   async syncSharedData() {
@@ -85,11 +89,8 @@ export class PublicApp {
       if (!response.ok) return;
       const data = await response.json();
       
-      // Sync without triggering re-render - let page handle updates if needed
+      // Sync silently without triggering re-renders
       this.db.syncFromServerData(data);
-      
-      // Only re-render if explicitly needed (user actions, not periodic sync)
-      // This prevents the twitching and slowness from constant re-renders
     } catch (err) {
       console.warn('Failed to sync shared site data', err);
     }
