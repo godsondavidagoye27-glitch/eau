@@ -1796,6 +1796,36 @@ body.home-background {
   display:flex; align-items:center; gap:12px; color:rgba(255,255,255,0.9);
 }
 
+/* Skeleton card */
+.skeleton-list { display: grid; gap:12px; }
+.skeleton-card {
+  height: 86px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.01) 50%, rgba(255,255,255,0.03) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.2s linear infinite;
+}
+@keyframes skeleton-shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+
+/* Booking card flip */
+.booking-card { perspective: 1200px; }
+.booking-card .card-inner { transition: transform 420ms cubic-bezier(.22,.9,.36,1); transform-style: preserve-3d; position: relative; }
+.booking-card .card-front, .booking-card .card-back { backface-visibility: hidden; position: relative; }
+.booking-card .card-back { position: absolute; inset: 0; transform: rotateY(180deg); }
+.booking-card.is-flipped .card-inner { transform: rotateY(180deg); }
+
+.booking-back-content { padding: 12px; color: rgba(255,255,255,0.95); }
+.booking-action { margin-top:10px; display:inline-block; padding:6px 10px; border-radius:8px; background:rgba(255,138,0,0.12); color: #fff; cursor:pointer; }
+
+/* Dashboard card expanded area */
+.summary-card-large .expanded-list { margin-top:12px; max-height:0; overflow:hidden; transition: max-height 360ms ease, opacity 240ms ease; opacity:0; }
+.summary-card-large.expanded .expanded-list { max-height: 320px; opacity:1; }
+.expanded-item { padding:8px 0; border-bottom:1px dashed rgba(255,255,255,0.04); font-size:0.9rem; color:rgba(255,255,255,0.9); }
+
+/* small highlight pulse when booking updated */
+.highlight-pulse { animation: pulse-highlight 900ms ease; }
+@keyframes pulse-highlight { 0% { box-shadow: 0 0 0 0 rgba(255,138,0,0.28);} 70% { box-shadow: 0 0 0 12px rgba(255,138,0,0);} 100% { box-shadow: none; } }
+
 .service-date {
   font-size: 0.85rem;
   color: rgba(255, 180, 100, 0.8);

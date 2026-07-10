@@ -82,24 +82,33 @@ function renderBookings(bookings) {
 
   container.innerHTML = past.map((booking) => `
     <div class="booking-card card-enter" data-booking-id="${booking.id}">
-      <div class="booking-row">
-        <strong>${booking.service_name || 'Service'}</strong>
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="booking-row">
+            <strong>${booking.service_name || 'Service'}</strong>
+          </div>
+          <div class="booking-row">
+            <span>Date:</span> ${new Date(booking.start_date).toLocaleString()}
+          </div>
+          <div class="booking-row">
+            <span>Location:</span> ${booking.location || 'N/A'}
+          </div>
+          <div class="booking-row">
+            <span>Total:</span> €${parseFloat(booking.total || 0).toFixed(2)}
+          </div>
+          <div class="booking-row">
+            <span>Status:</span> <span class="booking-status ${String(booking.status || 'confirmed').toLowerCase()}">${booking.status || 'Confirmed'}</span>
+          </div>
+        </div>
+        <div class="card-back">
+          <div class="booking-back-content">
+            <div><strong>${booking.service_name || 'Service'}</strong></div>
+            <div>Transaction: ${booking.transaction_id || '—'}</div>
+            <div>Booked by: ${booking.user_email || '—'}</div>
+            <div class="booking-action" data-action="details" data-booking-id="${booking.id}">View Details</div>
+          </div>
+        </div>
       </div>
-      <div class="booking-row">
-        <span>Date:</span> ${new Date(booking.start_date).toLocaleString()}
-      </div>
-      <div class="booking-row">
-        <span>Location:</span> ${booking.location || 'N/A'}
-      </div>
-      <div class="booking-row">
-        <span>Total:</span> €${parseFloat(booking.total || 0).toFixed(2)}
-      </div>
-      <div class="booking-row">
-        <span>Status:</span> <span class="booking-status ${String(booking.status || 'confirmed').toLowerCase()}">${booking.status || 'Confirmed'}</span>
-      </div>
-      <p style="font-size:0.85rem; color:var(--color-text-secondary); margin-top:8px;">
-        To cancel or modify, please <a href="contact.html">contact our admin</a>.
-      </p>
     </div>
   `).join('');
 
@@ -114,11 +123,20 @@ function renderBookings(bookings) {
       </div>
     `).join('');
 
+  // Click interactions: flip card on click; back button shows details
   document.querySelectorAll('.booking-card').forEach((card) => {
-    card.addEventListener('click', () => {
-      const bookingId = card.dataset.bookingId;
-      const booking = bookings.find((item) => item.id === bookingId);
-      if (booking) showBookingInfo(booking);
+    card.addEventListener('click', (e) => {
+      // If user clicked the back 'View Details' action, open the detail pane
+      const action = e.target?.dataset?.action;
+      if (action === 'details') {
+        const bid = e.target.dataset.bookingId;
+        const booking = bookings.find((b) => String(b.id) === String(bid));
+        if (booking) showBookingInfo(booking);
+        return;
+      }
+
+      // flip
+      card.classList.toggle('is-flipped');
     });
   });
 
@@ -183,6 +201,69 @@ function renderPurchases(purchases) {
   `).join('');
 }
 
+// Apply a realtime diff payload to the local bookings cache.
+// Returns true if applied, false if not applicable (caller may fallback to full refetch).
+function applyBookingDiff(payload, userEmail) {
+  if (!payload) return false;
+  // normalize event type and record payloads
+  const eventType = payload.eventType || payload.type || payload.event || (payload?.commit_timestamp ? 'INSERT' : null);
+  const newRec = payload.new || payload.record || payload.payload?.new || payload.payload?.record || null;
+  const oldRec = payload.old || payload.old_record || payload.payload?.old || payload.payload?.old_record || null;
+
+  // If no record found, cannot apply locally
+  if (!newRec && !oldRec) return false;
+
+  // Determine target id and email
+  const targetEmail = (newRec && newRec.user_email) || (oldRec && oldRec.user_email) || null;
+  if (!targetEmail || String(targetEmail).toLowerCase() !== String(userEmail).toLowerCase()) return false;
+
+  // ensure cache exists
+  window.__bookings_cache = window.__bookings_cache || [];
+
+  const id = (newRec && newRec.id) || (oldRec && oldRec.id);
+  if (eventType === 'INSERT' || (newRec && !oldRec)) {
+    // prepend
+    window.__bookings_cache.unshift(newRec);
+    // update UI
+    renderDashboardSummary(window.__bookings_cache, JSON.parse(localStorage.getItem('eau-de-play-cart')||'[]'));
+    renderBookings(window.__bookings_cache);
+    // highlight new item
+    const el = document.querySelector(`.booking-card[data-booking-id="${id}"]`);
+    if (el) el.classList.add('highlight-pulse');
+    return true;
+  }
+
+  if (eventType === 'UPDATE' || (newRec && oldRec)) {
+    const idx = window.__bookings_cache.findIndex(b => String(b.id) === String(id));
+    if (idx !== -1) {
+      window.__bookings_cache[idx] = newRec;
+      renderDashboardSummary(window.__bookings_cache, JSON.parse(localStorage.getItem('eau-de-play-cart')||'[]'));
+      renderBookings(window.__bookings_cache);
+      const el = document.querySelector(`.booking-card[data-booking-id="${id}"]`);
+      if (el) el.classList.add('highlight-pulse');
+      return true;
+    }
+    // if not found, insert
+    window.__bookings_cache.unshift(newRec);
+    renderDashboardSummary(window.__bookings_cache, JSON.parse(localStorage.getItem('eau-de-play-cart')||'[]'));
+    renderBookings(window.__bookings_cache);
+    return true;
+  }
+
+  if (eventType === 'DELETE' || (!newRec && oldRec)) {
+    const beforeLen = window.__bookings_cache.length;
+    window.__bookings_cache = window.__bookings_cache.filter(b => String(b.id) !== String(id));
+    if (window.__bookings_cache.length !== beforeLen) {
+      renderDashboardSummary(window.__bookings_cache, JSON.parse(localStorage.getItem('eau-de-play-cart')||'[]'));
+      renderBookings(window.__bookings_cache);
+      return true;
+    }
+    return false;
+  }
+
+  return false;
+}
+
 async function init() {
   const storedUser = getStoredUser();
   const user = (await supabaseAuth.getCurrentUser()) || storedUser;
@@ -199,15 +280,17 @@ async function init() {
     profileEmail.textContent = user.email || user.id || 'Account user';
   }
 
-  // show loading spinners while we fetch
+  // show skeleton loaders while we fetch
   const bookingsContainer = document.getElementById('bookings-list');
   const purchasesContainer = document.getElementById('purchases-list');
   const upcomingContainer = document.getElementById('upcoming-services');
-  if (bookingsContainer) bookingsContainer.innerHTML = `<div class="loading-row"><div class="spinner"><span></span></div><div>Loading bookings…</div></div>`;
-  if (purchasesContainer) purchasesContainer.innerHTML = `<div class="loading-row"><div class="spinner"><span></span></div><div>Loading purchases…</div></div>`;
-  if (upcomingContainer) upcomingContainer.innerHTML = `<div class="loading-row"><div class="spinner"><span></span></div><div>Loading upcoming services…</div></div>`;
+  if (bookingsContainer) bookingsContainer.innerHTML = `<div class="skeleton-list"><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div></div>`;
+  if (purchasesContainer) purchasesContainer.innerHTML = `<div class="skeleton-list"><div class="skeleton-card"></div></div>`;
+  if (upcomingContainer) upcomingContainer.innerHTML = `<div class="skeleton-list"><div class="skeleton-card"></div></div>`;
 
   const bookings = await fetchBookings(user.email || user.id);
+  // cache bookings for local diffs
+  window.__bookings_cache = Array.isArray(bookings) ? bookings.slice() : [];
   console.debug('[account] fetched bookings count:', bookings.length, bookings);
   const cartHistory = (() => {
     try { return JSON.parse(localStorage.getItem('eau-de-play-cart') || '[]'); }
@@ -215,8 +298,8 @@ async function init() {
   })();
   console.debug('[account] cart history items:', cartHistory.length, cartHistory);
 
-  renderDashboardSummary(bookings, cartHistory);
-  renderBookings(bookings);
+  renderDashboardSummary(window.__bookings_cache, cartHistory);
+  renderBookings(window.__bookings_cache);
   renderPurchases(cartHistory);
 
   // Realtime: subscribe to bookings changes and refresh the list when updates occur
@@ -224,14 +307,22 @@ async function init() {
     try {
       const channel = subscribeToTable('bookings', (payload) => {
         console.debug('[realtime] bookings payload:', payload);
-        // small UI hint while refreshing
-        if (bookingsContainer) bookingsContainer.style.opacity = '0.6';
-        // For simplicity, re-fetch the user's bookings on any table change
-        fetchBookings(user.email || user.id).then((fresh) => {
-          renderDashboardSummary(fresh, cartHistory);
-          renderBookings(fresh);
-        }).catch((err) => console.error('Realtime refresh error', err))
-        .finally(() => { if (bookingsContainer) bookingsContainer.style.opacity = ''; });
+        // Attempt to apply diff locally to avoid full refetch
+        try {
+          const applied = applyBookingDiff(payload, user.email || user.id);
+          if (!applied) {
+            // fallback to full refetch if diff unsupported
+            if (bookingsContainer) bookingsContainer.style.opacity = '0.6';
+            fetchBookings(user.email || user.id).then((fresh) => {
+              window.__bookings_cache = Array.isArray(fresh) ? fresh.slice() : [];
+              renderDashboardSummary(window.__bookings_cache, cartHistory);
+              renderBookings(window.__bookings_cache);
+            }).catch((err) => console.error('Realtime full refresh error', err))
+            .finally(() => { if (bookingsContainer) bookingsContainer.style.opacity = ''; });
+          }
+        } catch (err) {
+          console.error('Realtime diff application error', err);
+        }
       });
 
       // store channel for cleanup
