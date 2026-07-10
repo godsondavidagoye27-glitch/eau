@@ -27,6 +27,14 @@ async function init() {
     }
   }
   const root = document.getElementById('booking-root');
+  // Require authentication to book
+  const currentUser = await supabaseAuth.getCurrentUser();
+  if (!currentUser) {
+    if (root) {
+      root.innerHTML = `<div class="notice"><h2>Please sign in</h2><p>You must be signed in to make a booking. <a href="auth.html">Sign in / Register</a></p></div>`;
+    }
+    return;
+  }
   if (!serviceId) {
     root.innerHTML = '<h2>Please select a service to book.</h2><p><a href="services.html" class="btn">Choose a service</a></p>';
     return;

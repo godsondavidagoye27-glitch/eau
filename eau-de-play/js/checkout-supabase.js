@@ -144,8 +144,10 @@ export class Checkout {
   // CREATE ORDER IN SUPABASE
   async createOrder(formData) {
     try {
+      const user = await supabaseAuth.getCurrentUser();
+      if (!user) throw new Error('User must be logged in to create an order');
       const order = {
-        user_id: this.userId,
+        user_id: user.id,
         status: 'pending',
         carrier: null,
         tracking_number: null,
