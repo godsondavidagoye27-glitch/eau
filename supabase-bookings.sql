@@ -48,3 +48,17 @@ CREATE POLICY "Admins can update bookings"
   FOR UPDATE
   USING (auth.jwt() ->> 'app_role' = 'admin')
   WITH CHECK (auth.jwt() ->> 'app_role' = 'admin');
+
+-- Create RLS policy: authenticated users may update their own bookings,
+-- but they must not set `status` = 'cancelled' when the booking has been paid
+CREATE POLICY "Users can update their bookings but not cancel paid ones"
+  ON public.bookings
+  FOR UPDATE
+  USING (auth.jwt() ->> 'email' = user_email)
+  WITH CHECK (
+    auth.jwt() ->> 'email' = user_email
+    AND NOT (
+      (coalesce(transaction_id, '') <> '' OR lower(coalesce(status, '')) = 'paid')
+      AND (new.status = 'cancelled')
+    )
+  );

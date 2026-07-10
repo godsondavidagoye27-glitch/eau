@@ -39,11 +39,11 @@ async function handleVerify(req) {
 
     const payload = await verifyRes.json();
 
-    // If verification is successful and transaction is successful, update order
+    // If verification is successful and transaction is successful, update order or booking
     try {
       const tx = payload.data;
-      // tx.meta or tx.tx_ref may contain orderId depending on how the client set tx_ref.
-      const tx_ref = tx.tx_ref || null;
+      const tx_ref = tx.tx_ref || tx.meta?.tx_ref || null;
+
       // attempt to extract order id from tx_ref if it contains 'order-<id>'
       let orderId = null;
       if (tx_ref) {
@@ -58,6 +58,24 @@ async function handleVerify(req) {
           .eq('id', orderId);
 
         if (error) console.error('Error updating order after verification:', error);
+      }
+
+      // attempt to extract booking id if tx_ref contains a booking reference like 'bk-<ts>' or 'booking-<id>'
+      if (tx_ref) {
+        let bookingId = null;
+        const mb = tx_ref.match(/bk-\d+/) || tx_ref.match(/booking-(.+)/);
+        if (mb) bookingId = mb[0];
+        if (bookingId) {
+          try {
+            const { error: bErr } = await supabase
+              .from('bookings')
+              .update({ transaction_id: String(tx.id || tx.transaction_id || tx_ref), status: 'paid', updated_at: new Date().toISOString() })
+              .eq('id', bookingId);
+            if (bErr) console.error('Error updating booking after verification:', bErr);
+          } catch (err) {
+            console.error('Failed to update booking for tx_ref', tx_ref, err);
+          }
+        }
       }
 
     } catch (err) {
@@ -96,6 +114,29 @@ Deno.serve(async (req) => {
   }
 
   if (path === '/functions/v1/payments/webhook' && req.method === 'POST') {
+    // handle Flutterwave webhook events to update bookings/orders in real time
+    try {
+      const body = await req.json();
+      const event = body?.event || body?.type || null;
+      const data = body?.data || body?.payload || null;
+      // Flutterwave sends a 'charge.completed' or similar event when payment completes
+      if (data && (data.status === 'successful' || data.status === 'success' || event === 'charge.completed')) {
+        const tx = data;
+        const tx_ref = tx.tx_ref || tx.meta?.tx_ref || null;
+        if (tx_ref) {
+          // attempt to update booking if tx_ref references a booking id
+          const mb = tx_ref.match(/bk-\d+/) || tx_ref.match(/booking-(.+)/);
+          const bookingId = mb ? mb[0] : null;
+          if (bookingId) {
+            try {
+              await supabase.from('bookings').update({ transaction_id: String(tx.id || tx.transaction_id || tx_ref), status: 'paid', updated_at: new Date().toISOString() }).eq('id', bookingId);
+            } catch (err) { console.error('Webhook booking update failed', err); }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Webhook processing error', err);
+    }
     return handleWebhook(req);
   }
 
