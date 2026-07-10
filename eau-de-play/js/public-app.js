@@ -9,23 +9,23 @@ export class PublicApp {
   constructor() {
     this.db = new Database();
     this.syncInterval = null;
+    this.pageInitialized = false;
     this.init();
   }
 
   async init() {
     injectNavbarAndFooter();
-    await this.syncSharedData();
+    this.setupPageSpecificLogic();
     this.startSharedDataSync();
+    this.syncSharedData().catch(() => {
+      // fallback to current local data already rendered
+    });
 
     if (typeof window !== 'undefined') {
       window.addEventListener('siteDataUpdated', () => {
         this.syncSharedData();
       });
     }
-
-    this.syncSharedData().catch(() => {
-      this.setupPageSpecificLogic();
-    });
   }
 
   setupPageSpecificLogic() {
@@ -51,6 +51,8 @@ export class PublicApp {
     } else if (currentPage === 'contact.html') {
       this.setupContactPage();
     }
+
+    this.pageInitialized = true;
   }
 
   startSharedDataSync() {
@@ -60,7 +62,7 @@ export class PublicApp {
 
     this.syncInterval = window.setInterval(() => {
       this.syncSharedData();
-    }, 5000);
+    }, 30000);
   }
 
   async syncSharedData() {
@@ -69,11 +71,12 @@ export class PublicApp {
       if (!response.ok) return;
       const data = await response.json();
       this.db.syncFromServerData(data);
-      this.setupPageSpecificLogic();
+      if (!this.pageInitialized) {
+        this.setupPageSpecificLogic();
+      }
     } catch (err) {
       console.warn('Failed to sync shared site data', err);
-      const fallbackData = this.db.getData();
-      if (fallbackData && typeof fallbackData === 'object') {
+      if (!this.pageInitialized) {
         this.setupPageSpecificLogic();
       }
     }
@@ -613,7 +616,7 @@ export class PublicApp {
             <input type="number" value="1" min="1" class="qty-input qty-input-${product.id}" readonly>
             <button class="btn btn-small" onclick="document.querySelector('.qty-input-${product.id}').value = parseInt(document.querySelector('.qty-input-${product.id}').value) + 1">+</button>
           </div>
-            <button class="btn" onclick="window.cartManager.addToCart(${product.id}, parseInt(document.querySelector('.qty-input-${product.id}').value), {name: '${product.name.replace(/'/g, "\\'")}', price: ${product.price}, image: '${product.image}'}); alert('Added to cart!'); window.cartManager.updateCartBadge();">
+            <button class="btn" onclick="var qty = parseInt(document.querySelector('.qty-input-${product.id}').value) || 1; if (window.cartManager) { window.cartManager.addToCart(${product.id}, qty, {name: '${product.name.replace(/'/g, "\\'")}', price: ${product.price}, image: '${product.image}'}); window.cartManager.updateCartBadge(); alert('Added to cart!'); } else { alert('Cart is still loading. Please try again in a moment.'); }">
             ${product.buttonText}
           </button>
         </div>

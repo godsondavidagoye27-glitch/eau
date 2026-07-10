@@ -173,10 +173,9 @@ export class CartManager {
   }
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
-  window.cartManager = new CartManager();
-  window.cartManager.updateCartBadge();
-});
+// Initialize immediately so add-to-cart buttons can use it as soon as scripts load
+window.cartManager = new CartManager();
+window.cartManager.updateCartBadge();
+window.dispatchEvent(new Event('cartManagerReady'));
 
 export default CartManager;
