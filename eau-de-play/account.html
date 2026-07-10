@@ -125,16 +125,66 @@
 
         <script type="module">
           (async function(){
+            function ensureCss(href){
+              return new Promise((resolve) => {
+                try {
+                  const links = Array.from(document.getElementsByTagName('link'));
+                  let found = links.find(l => l.href && l.href.indexOf(href) !== -1);
+                  if (!found) {
+                    found = document.createElement('link');
+                    found.rel = 'stylesheet';
+                    found.href = href;
+                    found.onload = () => resolve(true);
+                    found.onerror = () => resolve(false);
+                    document.head.appendChild(found);
+                    // small timeout fallback
+                    setTimeout(() => { if (!found.sheet) resolve(true); }, 1500);
+                  } else {
+                    if (found.sheet) return resolve(true);
+                    found.addEventListener('load', () => resolve(true));
+                    found.addEventListener('error', () => resolve(false));
+                    setTimeout(() => { resolve(true); }, 800);
+                  }
+                } catch (e) { resolve(false); }
+              });
+            }
+
+            function showDiag(msg) {
+              let el = document.getElementById('account-diag');
+              if (!el) {
+                el = document.createElement('div');
+                el.id = 'account-diag';
+                el.style.position = 'fixed';
+                el.style.right = '16px';
+                el.style.bottom = '16px';
+                el.style.background = 'rgba(0,0,0,0.6)';
+                el.style.color = '#fff';
+                el.style.padding = '8px 12px';
+                el.style.borderRadius = '8px';
+                el.style.zIndex = '99999';
+                document.body.appendChild(el);
+              }
+              el.textContent = msg;
+            }
+
+            const cssOk = await ensureCss('css/public.css');
+            if (!cssOk) {
+              console.warn('Failed to load css/public.css');
+              showDiag('Warning: public.css failed to load. Some visuals may be degraded.');
+            }
+
             try {
               await import('./js/public-app.js');
             } catch (err) {
               console.error('public-app failed to load', err);
+              showDiag('Error: public-app failed to load (see console)');
             }
 
             try {
               await import('./js/account.js');
             } catch (err) {
               console.error('account.js failed to load', err);
+              showDiag('Error: account module failed to load (see console)');
               const list = document.getElementById('bookings-list');
               const purchases = document.getElementById('purchases-list');
               const upcoming = document.getElementById('upcoming-services');
