@@ -94,7 +94,7 @@ async function init() {
             <div class="card-face card-front" id="card-front">
               <div class="card-top">
                 <div class="card-chip"></div>
-                <div class="card-brand">FLW</div>
+                <div class="card-brand" id="preview-brand">FLW</div>
               </div>
               <div class="card-number" id="preview-number">•••• •••• •••• 4242</div>
               <div class="card-meta">
@@ -139,6 +139,7 @@ async function init() {
   const previewNumber = document.getElementById('preview-number');
   const previewName = document.getElementById('preview-name');
   const previewExpiry = document.getElementById('preview-expiry');
+  const previewBrand = document.getElementById('preview-brand');
   const summaryWhere = document.getElementById('summary-where');
   const summaryStart = document.getElementById('summary-start');
   const cardFront = document.getElementById('card-front');
@@ -156,6 +157,18 @@ async function init() {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return 'Invalid date';
     return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function detectCardNetwork(value) {
+    const number = (value || '').replace(/\D/g, '');
+    if (number.startsWith('4')) return 'Visa';
+    if (/^5[1-5]/.test(number) || /^2(?:2[2-9]|[3-6]\d|7[01]|720)/.test(number)) return 'Mastercard';
+    if (/^3[47]/.test(number)) return 'American Express';
+    if (/^6(?:011|5|4[4-9]|22)/.test(number)) return 'Discover';
+    if (/^35/.test(number)) return 'JCB';
+    if (/^62/.test(number)) return 'UnionPay';
+    if (/^3(?:0[0-5]|[68])/.test(number)) return 'Diners';
+    return '';
   }
 
   function formatExpiry(value) {
@@ -177,6 +190,9 @@ async function init() {
   function updatePreview() {
     previewName.textContent = inputCardName.value.trim() || 'CARDHOLDER NAME';
     previewNumber.textContent = inputCardNumber.value.trim() ? formatCardNumber(inputCardNumber.value) : '•••• •••• •••• 4242';
+    const cardNetwork = detectCardNetwork(inputCardNumber.value);
+    previewBrand.textContent = cardNetwork || 'FLW';
+    previewBrand.dataset.network = cardNetwork.toLowerCase().replace(/[^a-z]+/g, '-') || 'flw';
     summaryWhere.textContent = inputWhere.value.trim() || 'Not set';
     summaryStart.textContent = formatDate(inputStart.value);
     previewExpiry.textContent = formatExpiry(inputCardExpiry.value);
