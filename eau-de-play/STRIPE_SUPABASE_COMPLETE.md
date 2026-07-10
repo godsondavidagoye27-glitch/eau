@@ -1,15 +1,14 @@
-# 🎉 STRIPE + SUPABASE INTEGRATION - COMPLETE
+# 🎉 FLUTTERWAVE + SUPABASE INTEGRATION - COMPLETE
 
 ## ✨ What's New
 
 Your EAU DEY PLAY website has been upgraded with **real payment processing** and **professional backend infrastructure**!
 
-### 💳 Stripe Integration
+### 💳 Flutterwave Integration
 - ✅ Real credit card payments (test mode ready)
-- ✅ PCI-compliant payment processing
-- ✅ Secure card element (hosted by Stripe)
-- ✅ Payment confirmation & webhooks
-- ✅ Save cards for future purchases
+- ✅ PCI-compliant checkout via Flutterwave modal
+- ✅ Payment confirmation & webhook verification
+- ✅ One-click hosted payment experience
 - ✅ Automatic order status updates
 
 ### 🔐 Supabase Authentication
@@ -48,14 +47,14 @@ Your EAU DEY PLAY website has been upgraded with **real payment processing** and
 |------|---------|
 | `js/supabase.js` | Supabase database & storage operations |
 | `js/supabase-auth.js` | User authentication with Supabase Auth |
-| `js/stripe-payment.js` | Stripe payment processing |
+| `js/stripe-payment.js` | Flutterwave compatibility shim |
 | `js/cart-supabase.js` | Cart manager with Supabase sync |
-| `js/checkout-supabase.js` | Checkout flow with Stripe payment |
+| `js/checkout-supabase.js` | Checkout flow with Flutterwave payment |
 
 ### HTML Pages
 | File | Purpose |
 |------|---------|
-| `checkout-stripe.html` | NEW checkout page with Stripe card element |
+| `checkout-flutterwave.html` | NEW checkout page with Flutterwave checkout |
 
 ### Configuration & Setup
 | File | Purpose |
@@ -75,7 +74,7 @@ Your EAU DEY PLAY website has been upgraded with **real payment processing** and
 ## 🚀 Quick Start (5 Minutes)
 
 ### Step 1: Get API Keys
-1. **Stripe**: https://dashboard.stripe.com/apikeys
+1. **Flutterwave**: https://dashboard.flutterwave.com/#/settings/api-keys
    - Copy **Publishable key** (starts with `pk_test_`)
 2. **Supabase**: https://app.supabase.com → Settings → API
    - Copy **Project URL**
@@ -86,7 +85,8 @@ Create file in project root:
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
-VITE_STRIPE_PUBLIC_KEY=pk_test_...
+VITE_FLW_PUBLIC_KEY=FLWPUBK-...
+FLW_SECRET_KEY=FLWSECK-...
 VITE_API_URL=https://your-project.supabase.co/functions/v1
 ```
 
@@ -97,13 +97,10 @@ VITE_API_URL=https://your-project.supabase.co/functions/v1
 4. Paste and run ✅
 
 ### Step 4: Test
-1. Open `checkout-stripe.html` in browser
+1. Open `checkout-flutterwave.html` in browser
 2. Sign up/login with email
 3. Add products to cart
-4. Checkout with Stripe test card:
-   - **Card**: 4242 4242 4242 4242
-   - **Exp**: 12/25
-   - **CVC**: 123
+4. Checkout using Flutterwave test payment flow
 
 ---
 
@@ -113,18 +110,18 @@ VITE_API_URL=https://your-project.supabase.co/functions/v1
 ┌─────────────────────────────────────────────────────────┐
 │                    FRONTEND (Your Site)                  │
 ├─────────────────────────────────────────────────────────┤
-│  HTML (checkout-stripe.html)                            │
+│  HTML (checkout-flutterwave.html)                       │
 │    ↓                                                     │
 │  supabase-auth.js (User Login)                          │
 │    ↓                                                     │
-│  stripe-payment.js (Card Element)                       │
+│  stripe-payment.js (Card Element compatibility shim)    │
 │    ↓                                                     │
-│  Stripe.js (PCI Compliance)                             │
+│  Flutterwave Checkout modal (PCI Compliance)            │
 └─────────────────────────────────────────────────────────┘
                          ↓
             ┌────────────────────────┐
-            │   STRIPE PAYMENT API   │
-            │  (Process Payment)     │
+            │   FLUTTERWAVE CHECKOUT   │
+            │  (Process Payment)       │
             └────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────────┐
@@ -164,23 +161,23 @@ VITE_API_URL=https://your-project.supabase.co/functions/v1
 
 2. USER CLICKS CHECKOUT
    └─ Verify user is logged in
-   └─ Mount Stripe card element
+   └─ Open Flutterwave hosted checkout modal
 
 3. USER FILLS SHIPPING FORM
    └─ Validate address fields
 
-4. USER ENTERS CARD DETAILS
-   └─ Stripe validates (not sent to server)
-   └─ Only token sent to backend
+4. USER ENTERS PAYMENT DETAILS
+   └─ Flutterwave validates securely
+   └─ Only token/reference sent to backend
 
 5. USER CLICKS "PLACE ORDER"
    └─ Create order record (pending status)
-   └─ Call Edge Function to create payment intent
-   └─ Process card payment with Stripe
+   └─ Call Edge Function to create Flutterwave transaction
+   └─ Process payment with Flutterwave
    
 6. PAYMENT PROCESSING
    ├─ SUCCESS:
-   │  └─ Stripe sends webhook to Edge Function
+   │  └─ Flutterwave sends webhook to Edge Function
    │  └─ Edge Function updates order status → "paid"
    │  └─ Cart cleared
    │  └─ Redirect to success page
@@ -201,7 +198,7 @@ VITE_API_URL=https://your-project.supabase.co/functions/v1
 ## 🔐 Security Features
 
 ### Frontend Security
-- ✅ Never handle sensitive card data (Stripe handles it)
+- ✅ Never handle sensitive card data (Flutterwave handles it)
 - ✅ Publishable key only (can't process payments)
 - ✅ Validation on both client & server
 - ✅ HTTPS encryption for all data
@@ -214,10 +211,10 @@ VITE_API_URL=https://your-project.supabase.co/functions/v1
 - ✅ Database encryption at rest
 
 ### Payment Security
-- ✅ PCI DSS Level 1 compliance (Stripe handles)
+- ✅ PCI DSS Level 1 compliance (Flutterwave handles)
 - ✅ 3D Secure support (future feature)
-- ✅ Fraud detection (Stripe Radar)
-- ✅ Payment intent confirmation
+- ✅ Fraud detection through Flutterwave
+- ✅ Transaction confirmation
 - ✅ Webhook authentication
 
 ---
@@ -251,7 +248,7 @@ id, user_id, product_id, name, price, quantity
 
 ### Payment Methods Table
 ```
-id, user_id, stripe_payment_method_id, card_name, is_default
+id, user_id, flw_payment_method_id, card_name, is_default
 ```
 
 ---
@@ -280,8 +277,9 @@ Store in `.env.local` (never commit to git):
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 
-# Stripe
-VITE_STRIPE_PUBLIC_KEY=pk_test_your-key
+# Flutterwave
+VITE_FLW_PUBLIC_KEY=FLWPUBK-your-key
+FLW_SECRET_KEY=FLWSECK-your-key
 
 # API
 VITE_API_URL=https://your-project.supabase.co/functions/v1
@@ -294,14 +292,14 @@ VITE_NODE_ENV=development
 
 **Test Mode** (Development):
 ```
-Stripe Public Key: pk_test_...
+Flutterwave Public Key: FLWPUBK-...
 Test Card: 4242 4242 4242 4242
 No real charges
 ```
 
 **Live Mode** (Production):
 ```
-Stripe Public Key: pk_live_...
+Flutterwave Public Key: FLWPUBK-...
 Real credit cards
 Real charges
 ```
@@ -327,7 +325,7 @@ Real charges
 2. **Add products**: Browse shop, click "ADD TO CART"
 3. **Checkout**: Fill form, use test card above
 4. **Verify**: Check Supabase for order record
-5. **Check Stripe**: View payment in dashboard
+5. **Check Flutterwave**: View payment in dashboard
 
 ---
 
@@ -339,7 +337,7 @@ Real charges
 - [ ] Edge Function deployed
 - [ ] `.env.local` configured
 - [ ] Test payment successful
-- [ ] Stripe webhook configured
+- [ ] Flutterwave webhook configured
 - [ ] Email notifications set up (optional)
 - [ ] Order tracking enabled (optional)
 - [ ] Switch to live keys (when ready)
@@ -359,7 +357,7 @@ Real charges
    - Check browser console for errors
 
 2. **Payment Issues**
-   - Check Stripe Dashboard for payment status
+   - Check Flutterwave Dashboard for payment status
    - Verify webhook configuration
    - Check Supabase Edge Function logs
 
@@ -378,7 +376,7 @@ Real charges
 ## 🎯 Next Steps
 
 ### Immediate
-1. ✅ Get Stripe & Supabase accounts
+1. ✅ Get Flutterwave & Supabase accounts
 2. ✅ Follow setup guide (Step 1-5)
 3. ✅ Test with sample data
 4. ✅ Verify payments work
@@ -410,7 +408,7 @@ Real charges
 - Auto-scaling, backups, monitoring
 
 ✅ **Secure by Default**
-- PCI compliance (Stripe handles cards)
+- PCI compliance (Flutterwave handles cards)
 - Row-level security (Supabase)
 - HTTPS encryption
 
@@ -436,7 +434,7 @@ Real charges
 ### ✅ Complete (Phase 1)
 - Shopping cart
 - Checkout form
-- Stripe integration
+- Flutterwave integration
 - Supabase database
 - User authentication
 

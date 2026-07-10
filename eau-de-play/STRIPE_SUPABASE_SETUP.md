@@ -1,11 +1,11 @@
-# ✨ STRIPE + SUPABASE INTEGRATION GUIDE
+# ✨ FLUTTERWAVE + SUPABASE INTEGRATION GUIDE
 
 ## 🎯 Overview
 
-This guide walks you through integrating **Stripe** for payments and **Supabase** for authentication and database storage with your EAU DEY PLAY website.
+This guide walks you through integrating **Flutterwave** for payments and **Supabase** for authentication and database storage with your EAU DEY PLAY website.
 
 **What You'll Get:**
-- ✅ Stripe payment processing (real payments)
+- ✅ Flutterwave payment processing (real payments)
 - ✅ Supabase authentication (secure user accounts)
 - ✅ Supabase database (products, orders, users)
 - ✅ Supabase storage (product images, avatars)
@@ -15,7 +15,7 @@ This guide walks you through integrating **Stripe** for payments and **Supabase*
 
 ## 📋 Prerequisites
 
-1. **Stripe Account** - https://stripe.com
+1. **Flutterwave Account** - https://flutterwave.com
 2. **Supabase Account** - https://supabase.com
 3. **Node.js** (optional, for local testing) - https://nodejs.org
 
@@ -68,19 +68,19 @@ This guide walks you through integrating **Stripe** for payments and **Supabase*
 
 ---
 
-## 💳 STEP 2: Set Up Stripe
+## 💳 STEP 2: Set Up Flutterwave
 
-### 2.1 Create Stripe Account
+### 2.1 Create Flutterwave Account
 
-1. Go to https://dashboard.stripe.com
+1. Go to https://dashboard.flutterwave.com
 2. Sign up and verify email
 3. Complete account setup
 
-### 2.2 Get Stripe Keys
+### 2.2 Get Flutterwave Keys
 
 1. Go to **Developers → API keys**
 2. Copy (save in safe places):
-   - **Publishable key** → `VITE_STRIPE_PUBLIC_KEY` (.env.local)
+   - **Public key** → `VITE_FLW_PUBLIC_KEY` (.env.local)
    - **Secret key** → Save for Edge Function setup
    - **Webhook signing secret** → Save for Edge Function setup
 
@@ -108,8 +108,8 @@ Create file in project root: `.env.local`
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...your-key...
 
-# STRIPE
-VITE_STRIPE_PUBLIC_KEY=pk_test_...your-key...
+# FLUTTERWAVE
+VITE_FLW_PUBLIC_KEY=FLWPUBK-...your-key...
 
 # API
 VITE_API_URL=https://your-project.supabase.co/functions/v1
@@ -151,8 +151,7 @@ Replace contents of `supabase/functions/payments/index.ts` with:
 
 ```bash
 supabase secrets set \
-  STRIPE_SECRET_KEY=sk_test_...your-secret-key... \
-  STRIPE_WEBHOOK_SECRET=whsec_...your-webhook-secret...
+  FLW_SECRET_KEY=FLWSECK-...your-secret-key... \
 ```
 
 ### 4.5 Deploy Function
@@ -170,10 +169,10 @@ supabase functions deploy payments
 - ✅ `.env.example` - Environment template
 - ✅ `js/supabase.js` - Supabase database module
 - ✅ `js/supabase-auth.js` - Supabase authentication
-- ✅ `js/stripe-payment.js` - Stripe payment processing
+- ✅ `js/stripe-payment.js` - Flutterwave payment processing shim
 - ✅ `js/cart-supabase.js` - Cart with Supabase sync
-- ✅ `js/checkout-supabase.js` - Checkout with Stripe
-- ✅ `checkout-stripe.html` - New checkout page (Stripe)
+- ✅ `js/checkout-supabase.js` - Checkout with Flutterwave
+- ✅ `checkout-flutterwave.html` - New checkout page (Flutterwave)
 - ✅ `DATABASE_SCHEMA.sql` - Database structure
 
 ### 5.2 Update HTML Files
@@ -195,7 +194,7 @@ Update checkout link:
 <a href="checkout.html">CHECKOUT</a>
 
 <!-- NEW -->
-<a href="checkout-stripe.html">CHECKOUT</a>
+<a href="checkout-flutterwave.html">CHECKOUT</a>
 ```
 
 ### 5.3 Update Authentication
@@ -233,9 +232,9 @@ if (supabaseAuth.isAuthenticated()) {
 5. Should see success message
 6. Check Supabase Auth in console
 
-### 6.2 Test Payment (Stripe Test Mode)
+### 6.2 Test Payment (Flutterwave Test Mode)
 
-Use Stripe test cards:
+Use Flutterwave test payment details:
 
 ```
 Card Number: 4242 4242 4242 4242
@@ -257,7 +256,7 @@ Steps:
 1. Check **Orders** table → New order created
 2. Check **Cart Items** → Cart cleared
 3. Check **Payment Methods** → Card saved (if selected)
-4. Check **Stripe Dashboard** → Payment appears
+4. Check **Flutterwave Dashboard** → Payment appears
 
 ---
 
@@ -265,11 +264,11 @@ Steps:
 
 ### Frontend (What's OK)
 - ✅ Supabase anon key
-- ✅ Stripe public key
+- ✅ Flutterwave public key
 - ✅ Client-side validation
 
 ### Backend (Never expose!)
-- ❌ Stripe secret key
+- ❌ Flutterwave secret key
 - ❌ Supabase service role key
 - ❌ Database passwords
 - ❌ Webhook secrets
@@ -291,9 +290,9 @@ Steps:
 
 ### Issue: "Payment fails with 'Invalid API Key'"
 **Solution:**
-1. Verify Stripe public key is correct
-2. Check it starts with `pk_test_` (test mode) or `pk_live_` (live)
-3. Copy from https://dashboard.stripe.com/apikeys
+1. Verify Flutterwave public key is correct
+2. Check it starts with `FLWPUBK-` (test mode) or `FLWPUBK-` (live)
+3. Copy from your Flutterwave dashboard settings
 
 ### Issue: "Order not appearing in Supabase"
 **Solution:**
@@ -330,11 +329,11 @@ eau-de-play/
 ├── js/
 │   ├── supabase.js                 # Database module
 │   ├── supabase-auth.js            # Authentication
-│   ├── stripe-payment.js           # Stripe integration
+│   ├── stripe-payment.js           # Flutterwave integration shim
 │   ├── cart-supabase.js            # Cart with Supabase
-│   └── checkout-supabase.js        # Checkout with Stripe
+│   └── checkout-supabase.js        # Checkout with Flutterwave
 │
-├── checkout-stripe.html            # NEW checkout page (Stripe)
+├── checkout-flutterwave.html            # NEW checkout page (Flutterwave)
 │
 └── supabase/                       # Local (created by CLI)
     └── functions/
@@ -349,7 +348,7 @@ eau-de-play/
 ### Before Launch:
 
 1. **Switch to Live Mode**
-   - Go to Stripe Dashboard
+   - Go to Flutterwave Dashboard
    - Switch from Test to Live keys
    - Update `.env.local` with live keys
 
@@ -362,7 +361,7 @@ eau-de-play/
    - Test restoration process
 
 4. **Monitor Payments**
-   - Set up Stripe alerts
+   - Set up Flutterwave alerts
    - Monitor failed payments
    - Check order fulfillment
 
@@ -385,10 +384,10 @@ eau-de-play/
 - Community: https://discord.supabase.io
 - GitHub: https://github.com/supabase/supabase
 
-### Stripe
-- Docs: https://stripe.com/docs
-- API Reference: https://stripe.com/docs/api
-- Help: https://support.stripe.com
+### Flutterwave
+- Docs: https://developer.flutterwave.com/docs
+- API Reference: https://developer.flutterwave.com/docs
+- Help: https://developer.flutterwave.com/support
 
 ### Your Project
 - README.md - Project overview
@@ -402,7 +401,7 @@ eau-de-play/
 1. ✅ Follow setup guide above
 2. ✅ Test everything in development
 3. ✅ Deploy Edge Function
-4. ✅ Test with Stripe test cards
+4. ✅ Test with Flutterwave test cards
 5. ✅ Prepare for launch
 6. ✅ Switch to live keys
 7. ✅ Monitor payments and orders
@@ -424,4 +423,4 @@ eau-de-play/
 
 ---
 
-**You're all set! 🚀 Happy selling with Stripe + Supabase!**
+**You're all set! 🚀 Happy selling with Flutterwave + Supabase!**

@@ -1,18 +1,18 @@
-# ⚡ QUICK START CHECKLIST - Stripe & Supabase
+# ⚡ QUICK START CHECKLIST - Flutterwave & Supabase
 
 ## 🎯 5-Step Setup (20 minutes)
 
 ### ✅ STEP 1: Create Accounts (5 min)
-- [ ] Create Stripe account: https://stripe.com
+- [ ] Create Flutterwave account: https://flutterwave.com
 - [ ] Create Supabase account: https://supabase.com
 - [ ] Verify both emails
 
 ### ✅ STEP 2: Get API Keys (2 min)
-**From Stripe Dashboard** (https://dashboard.stripe.com):
-- [ ] Copy **Publishable Key** (starts with `pk_test_`)
-  - Save as: `VITE_STRIPE_PUBLIC_KEY`
-- [ ] Copy **Secret Key** (starts with `sk_test_`)
-  - Save for later (Edge Function)
+**From Flutterwave Dashboard** (https://dashboard.flutterwave.com):
+- [ ] Copy **Public Key**
+  - Save as: `VITE_FLW_PUBLIC_KEY`
+- [ ] Copy **Secret Key**
+  - Save as: `FLW_SECRET_KEY`
 
 **From Supabase Console** (https://app.supabase.com):
 - [ ] Go to **Settings → API**
@@ -28,12 +28,13 @@ Create file: `eau-de-play/.env.local`
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
-VITE_STRIPE_PUBLIC_KEY=pk_test_...
+VITE_FLW_PUBLIC_KEY=FLWPUBK-...
+FLW_SECRET_KEY=FLWSECK-...
 VITE_API_URL=https://your-project.supabase.co/functions/v1
 VITE_NODE_ENV=development
 ```
 - [ ] File created in project root
-- [ ] All 4 keys filled in
+- [ ] All 5 keys filled in
 - [ ] File is NOT committed to git (.gitignore)
 
 ### ✅ STEP 4: Setup Database (3 min)
@@ -53,7 +54,7 @@ VITE_NODE_ENV=development
 4. [ ] Create bucket: **orders** (Private)
 
 ### ✅ STEP 5: Test Payment (5 min)
-1. [ ] Open `checkout-stripe.html` in browser
+1. [ ] Open `checkout-flutterwave.html` in browser
 2. [ ] Click **Sign Up**
    - Email: `test@example.com`
    - Password: `Test123!@#`
@@ -78,7 +79,7 @@ VITE_NODE_ENV=development
   - [ ] Order appears in Tables → orders
   - [ ] Order shows correct items & total
 
-- [ ] **Stripe Dashboard**
+- [ ] **Flutterwave Dashboard**
   - [ ] Payment appears in Payments
   - [ ] Status is "Succeeded"
   - [ ] Amount is correct ($xxx.xx)
@@ -91,7 +92,6 @@ VITE_NODE_ENV=development
 ```
 Email: test@example.com
 Password: Test123!@#
-Card: 4242 4242 4242 4242
 ```
 
 ---
@@ -114,9 +114,9 @@ netlify deploy
 ```
 
 ### Before Going Live
-1. [ ] Switch Stripe keys to LIVE
-   - Publishable: `pk_live_...`
-   - Secret: `sk_live_...`
+1. [ ] Switch Flutterwave keys to LIVE
+   - Public key: `FLWPUBK-...`
+   - Secret key: `FLWSECK-...`
 2. [ ] Update `.env.local` with live keys
 3. [ ] Test with real card (small amount)
 4. [ ] Enable Supabase backups
@@ -130,7 +130,7 @@ netlify deploy
 |------|---------|--------|
 | `.env.example` | Template | Copy to `.env.local` |
 | `DATABASE_SCHEMA.sql` | Database setup | Run in Supabase SQL |
-| `checkout-stripe.html` | Payment page | Link in shop.html |
+| `checkout-flutterwave.html` | Payment page | Link in shop.html |
 | `STRIPE_SUPABASE_SETUP.md` | Full guide | Read for details |
 | `STRIPE_SUPABASE_REFERENCE.md` | API reference | Use for coding |
 
@@ -142,7 +142,7 @@ netlify deploy
 - **Fix**: `.env.local` not loaded. Restart dev server.
 
 ### "Payment failed - Invalid API Key"
-- **Fix**: Wrong Stripe key. Check starts with `pk_test_` (test mode)
+- **Fix**: Wrong Flutterwave key. Check the public key starts with `FLWPUBK_` and the secret starts with `FLWSECK_`
 
 ### "User not found in Supabase"
 - **Fix**: Run DATABASE_SCHEMA.sql to create auth tables
@@ -159,12 +159,12 @@ netlify deploy
 
 ✅ User authentication (email/password)
 ✅ Product shopping & cart management
-✅ Real Stripe payment processing
+✅ Real Flutterwave payment processing
 ✅ Cloud database for orders
 ✅ Order confirmation & tracking
 ✅ Responsive checkout page
 ✅ Payment webhook handling
-✅ Card storage for future use
+✅ Order persistence in Supabase
 
 ---
 
@@ -172,9 +172,9 @@ netlify deploy
 
 | Resource | Link |
 |----------|------|
-| Stripe Dashboard | https://dashboard.stripe.com |
+| Flutterwave Dashboard | https://dashboard.flutterwave.com |
 | Supabase Console | https://app.supabase.com |
-| Stripe API Keys | https://dashboard.stripe.com/apikeys |
+| Flutterwave API Keys | https://dashboard.flutterwave.com/#/settings/api-keys |
 | Supabase Settings | https://app.supabase.com/project/_/settings/api |
 | Test Cards | See Step 5 above |
 
@@ -182,7 +182,7 @@ netlify deploy
 
 ## 🎓 Learn More
 
-- **Stripe Docs**: https://stripe.com/docs
+- **Flutterwave Docs**: https://developer.flutterwave.com/docs
 - **Supabase Docs**: https://supabase.com/docs
 - **Project README**: `README.md`
 - **Setup Guide**: `STRIPE_SUPABASE_SETUP.md`

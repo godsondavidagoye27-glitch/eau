@@ -151,7 +151,7 @@
         // Check if user is logged in
         const user = await supabaseAuth.getCurrentUser();
         if (!user) {
-          window.location.href = 'admin-login.html?redirect=checkout.html';
+          window.location.href = 'admin-login.html?redirect=checkout-flutterwave.html';
           return;
         }
 
@@ -253,8 +253,7 @@
           state: document.getElementById('state').value,
           zip: document.getElementById('zip').value,
           country: document.getElementById('country').value,
-          notes: document.getElementById('notes').value,
-          saveCard: document.getElementById('saveCard').checked
+          notes: document.getElementById('notes').value
         };
 
         // Process payment
@@ -262,12 +261,9 @@
 
         if (result.success) {
           statusDiv.className = 'payment-status success';
-          statusDiv.textContent = '✅ Payment successful! Redirecting...';
-          
-          // Redirect to success page
-          setTimeout(() => {
-            window.location.href = `checkout-success.html?orderId=${result.orderId}`;
-          }, 2000);
+          statusDiv.textContent = '✅ Payment started. Complete the Flutterwave checkout modal to finish your order.';
+          btn.classList.remove('loading');
+          btn.innerHTML = '<span class="btn-text">Awaiting payment...</span>';
         } else {
           showError(result.error || 'Payment failed. Please try again.');
           btn.disabled = false;

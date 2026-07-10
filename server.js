@@ -111,7 +111,6 @@ function saveSiteData(data) {
 function getRuntimeConfigScript() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
-  const stripePublicKey = process.env.VITE_STRIPE_PUBLIC_KEY || process.env.STRIPE_PUBLIC_KEY || '';
   const flutterwavePublicKey = process.env.VITE_FLW_PUBLIC_KEY || process.env.FLW_PUBLIC_KEY || '';
   const apiUrl = process.env.VITE_API_URL || process.env.API_URL || '';
 

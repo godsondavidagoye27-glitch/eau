@@ -1,4 +1,4 @@
-# STRIPE + SUPABASE QUICK REFERENCE
+# FLUTTERWAVE + SUPABASE QUICK REFERENCE
 
 ## 🔐 Supabase Authentication
 
@@ -138,7 +138,7 @@ const cartItems = await window.cartManager.loadCartFromSupabase();
 
 ---
 
-## 💳 Stripe Payment
+## 💳 Flutterwave Payment
 
 ```javascript
 import { stripePayment } from './js/stripe-payment.js';
@@ -146,7 +146,7 @@ import { stripePayment } from './js/stripe-payment.js';
 // Initialize
 await stripePayment.init();
 
-// Mount card element
+// Mount payment form
 await stripePayment.mountCardElement('card-element');
 
 // Create payment intent (from Edge Function)
@@ -191,7 +191,7 @@ stripePayment.destroy();
 
 ---
 
-## 🛍️ Checkout with Stripe
+## 🛍️ Checkout with Flutterwave
 
 ```javascript
 import { checkout } from './js/checkout-supabase.js';
@@ -280,7 +280,7 @@ window.addEventListener('userLoggedOut', () => {
   "id": "uuid",
   "user_id": "uuid",
   "status": "paid",
-  "payment_method": "stripe",
+  "payment_method": "flutterwave",
   "payment_id": "pi_...",
   "first_name": "John",
   "last_name": "Doe",
@@ -311,19 +311,15 @@ window.addEventListener('userLoggedOut', () => {
 
 ## 🧪 Test Data
 
-### Stripe Test Cards
+### Flutterwave Test Payments
+Use the Flutterwave hosted checkout modal with your Flutterwave test keys. For test card details, see Flutterwave docs.
+
+Example test card from Flutterwave docs:
 ```
-Visa (4242)
-4242 4242 4242 4242 | 12/25 | 123
-
-Visa (No funds)
-4000 0000 0000 0002 | 12/25 | 123
-
-Amex
-3782 822463 10005 | 12/25 | 1234
-
-Declined
-4000 0000 0000 0002 | 12/25 | 123
+Card: 5531886652142950
+Exp: 09/32
+CVV: 564
+PIN: 3310
 ```
 
 ### Test Email Addresses
@@ -357,7 +353,7 @@ try {
 
 ### Common Errors
 - **"User must be logged in"** → Redirect to login
-- **"Invalid API Key"** → Check Stripe keys in .env.local
+- **"Invalid API Key"** → Check Flutterwave keys in .env.local
 - **"Card declined"** → Use valid test card
 - **"Network error"** → Check internet connection
 - **"Webhook not configured"** → Deploy Edge Function
@@ -370,17 +366,18 @@ try {
 ```
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
-VITE_STRIPE_PUBLIC_KEY=pk_test_...
+VITE_FLW_PUBLIC_KEY=FLWPUBK-...
+FLW_SECRET_KEY=FLWSECK-...
 VITE_API_URL=https://your-project.supabase.co/functions/v1
 ```
 
 ### Supabase Settings
 - **RLS Policies**: Enforce row-level security
 - **Auth**: Email + optional OAuth providers
-- **Edge Functions**: Stripe payment processing
+- **Edge Functions**: Flutterwave payment processing via compatibility shim
 - **Storage**: Public buckets for images
 
-### Stripe Settings
+### Flutterwave Settings
 - **Test Mode**: For development
 - **Live Mode**: For production
 - **Webhooks**: Payment confirmations
@@ -399,11 +396,11 @@ VITE_API_URL=https://your-project.supabase.co/functions/v1
 
 ## 🚀 Quick Start
 
-1. Create `.env.local` with Supabase + Stripe keys
+1. Create `.env.local` with Supabase + Flutterwave keys
 2. Run `DATABASE_SCHEMA.sql` in Supabase
 3. Deploy Edge Function: `supabase functions deploy payments`
 4. Update HTML files to use new checkout
-5. Test with Stripe test cards
+5. Test with Flutterwave payment flow
 6. Go live with production keys
 
 ---

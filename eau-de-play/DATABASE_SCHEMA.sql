@@ -131,7 +131,6 @@ CREATE POLICY "Admins can view all orders"
 CREATE TABLE public.payment_methods (
   id BIGSERIAL PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  stripe_payment_method_id TEXT,
   card_name TEXT,
   is_default BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT NOW()
