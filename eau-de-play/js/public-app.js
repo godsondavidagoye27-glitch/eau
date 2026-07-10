@@ -9,7 +9,7 @@ export class PublicApp {
   constructor() {
     this.db = new Database();
     this.syncInterval = null;
-    this.lastDataHash = null;
+    this.hasInitialRender = false;
     this.init();
   }
 
@@ -17,16 +17,28 @@ export class PublicApp {
     // Inject navbar/footer first without awaiting to improve visual load
     injectNavbarAndFooter();
     
-    // Then setup page-specific logic
-    await this.syncSharedData();
+    // Perform initial sync and render
+    try {
+      const response = await fetch('/api/site-data');
+      if (response.ok) {
+        const data = await response.json();
+        this.db.syncFromServerData(data);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch initial site data', err);
+    }
     
+    // Always render on first load
+    this.setupPageSpecificLogic();
+    this.hasInitialRender = true;
+
     if (typeof window !== 'undefined') {
       window.addEventListener('siteDataUpdated', () => {
         this.syncSharedData();
       });
     }
 
-    // Start sync after initial load (reduced frequency)
+    // Start periodic sync after initial load (reduced frequency)
     this.startSharedDataSync();
   }
 
@@ -60,11 +72,11 @@ export class PublicApp {
       window.clearInterval(this.syncInterval);
     }
 
-    // Reduce sync frequency from 5s to 30s and only sync on first load
-    // This prevents excessive API calls and re-renders
+    // Sync every 60 seconds to check for updates
+    // Don't re-render unless data actually changes
     this.syncInterval = window.setInterval(() => {
       this.syncSharedData();
-    }, 30000); // Changed from 5000ms to 30000ms (30 seconds)
+    }, 60000); // 60 seconds - much less frequent than before
   }
 
   async syncSharedData() {
@@ -73,20 +85,13 @@ export class PublicApp {
       if (!response.ok) return;
       const data = await response.json();
       
-      // Only update if data has actually changed to prevent unnecessary re-renders
-      const oldData = JSON.stringify(this.db.getData());
+      // Sync without triggering re-render - let page handle updates if needed
       this.db.syncFromServerData(data);
-      const newData = JSON.stringify(this.db.getData());
       
-      if (oldData !== newData) {
-        this.setupPageSpecificLogic();
-      }
+      // Only re-render if explicitly needed (user actions, not periodic sync)
+      // This prevents the twitching and slowness from constant re-renders
     } catch (err) {
       console.warn('Failed to sync shared site data', err);
-      const fallbackData = this.db.getData();
-      if (fallbackData && typeof fallbackData === 'object') {
-        this.setupPageSpecificLogic();
-      }
     }
   }
 
