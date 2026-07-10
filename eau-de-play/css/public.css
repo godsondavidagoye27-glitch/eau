@@ -101,6 +101,10 @@
 }
 
 @media (max-width: 480px) {
+  .afro-home-banner .afro-banner-inner {
+    border-radius: 0;
+  }
+
   .afro-home-banner .afro-home-banner-content {
     padding: var(--spacing-xl) var(--spacing-md);
   }
