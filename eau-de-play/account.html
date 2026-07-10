@@ -30,7 +30,7 @@
   <div class="account-page-shell">
     <div id="navbar-placeholder"></div>
     <!-- Full static navbar (matches components.createNavbar markup) -->
-    <nav class="navbar" aria-label="Main navigation">
+    <nav id="fallback-navbar" class="navbar" aria-label="Main navigation">
       <div class="navbar-container">
         <div class="navbar-left">
           <div class="navbar-brand">
@@ -101,6 +101,38 @@
             mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { mobileMenu.classList.remove('open'); if (toggle) toggle.setAttribute('aria-expanded','false'); }));
           }
         } catch (e) { /* ignore */ }
+      })();
+
+      // Auto-remove the fallback navbar once the dynamic injector runs
+      (function(){
+        function removeFallbackIfInjected() {
+          try {
+            const body = document.body;
+            const injected = body && body.dataset && body.dataset.navInjected === 'true';
+            const fallback = document.getElementById('fallback-navbar');
+            if (injected && fallback) {
+              fallback.remove();
+              const mobile = document.getElementById('mobile-menu');
+              if (mobile) mobile.remove();
+            }
+            return injected;
+          } catch (e) { return false; }
+        }
+
+        if (!removeFallbackIfInjected()) {
+          // observe body attribute changes
+          const observer = new MutationObserver((mutations) => {
+            for (const m of mutations) {
+              if (m.type === 'attributes' && m.attributeName === 'data-nav-injected') {
+                if (removeFallbackIfInjected()) observer.disconnect();
+              }
+            }
+          });
+          try { observer.observe(document.body, { attributes: true }); } catch (e) { /* ignore */ }
+
+          // final timeout: try removing after 3s in case attribute isn't set
+          setTimeout(() => removeFallbackIfInjected(), 3000);
+        }
       })();
     </script>
 
