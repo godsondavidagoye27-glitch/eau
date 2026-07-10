@@ -246,6 +246,14 @@ async function init() {
       return;
     }
 
+    // Ensure user is still signed in
+    const currentUser = await supabaseAuth.getCurrentUser();
+    if (!currentUser) {
+      alert('Please sign in to book.');
+      window.location.href = 'auth.html';
+      return;
+    }
+
     form.classList.add('submitting');
     cardFront.classList.add('anim');
 
