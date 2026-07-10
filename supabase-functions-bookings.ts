@@ -118,6 +118,7 @@ async function handleCreateBooking(req) {
 
     // Create booking in database
     const bookingId = `bk-${Date.now()}`;
+    const bookingStatus = (payment.system === 'flutterwave' && payment.transaction_id) ? 'paid' : 'confirmed';
     const { data, error } = await supabase
       .from('bookings')
       .insert([
@@ -131,7 +132,7 @@ async function handleCreateBooking(req) {
           payment_system: payment.system,
           transaction_id: payment.transaction_id || null,
           user_email: userEmail || null,
-          status: 'confirmed',
+          status: bookingStatus,
           created_at: new Date().toISOString(),
         },
       ])
