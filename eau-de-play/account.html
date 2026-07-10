@@ -9,6 +9,22 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/public.css">
   <link rel="stylesheet" href="css/cart.css">
+  <style id="account-critical-styles">
+    /* Critical fallback styles in case public.css didn't load */
+    .dashboard-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:18px}
+    .summary-card-large{display:flex;gap:14px;align-items:center;padding:18px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);box-shadow:0 10px 30px rgba(0,0,0,0.35);}
+    .summary-icon{width:56px;height:56px;border-radius:12px;display:grid;place-items:center;font-size:26px;background:linear-gradient(135deg,rgba(255,138,0,0.18),rgba(255,180,100,0.06))}
+    .summary-body{display:flex;flex-direction:column}
+    .summary-count{font-size:1.6rem;font-weight:700;margin-top:4px}
+    .account-grid{display:grid;grid-template-columns:1fr 360px;gap:20px}
+    .profile-box,.bookings-box,.purchases-box,.upcoming-services-box,.booking-info-box{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);padding:16px;border-radius:12px}
+    .booking-card{perspective:1200px;transform-style:preserve-3d;transition:transform 260ms ease,box-shadow 260ms ease;border-radius:12px;overflow:hidden}
+    .booking-card .card-inner{transition:transform 420ms cubic-bezier(.22,.9,.36,1);transform-style:preserve-3d;position:relative;box-shadow:0 8px 20px rgba(0,0,0,0.28);border-radius:12px;}
+    .booking-card .card-front,.booking-card .card-back{backface-visibility:hidden;position:relative;padding:12px;min-height:86px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))}
+    .booking-card .card-back{position:absolute;inset:0;transform:rotateY(180deg)}
+    .booking-card.is-flipped .card-inner{transform:rotateY(180deg);box-shadow:0 30px 80px rgba(0,0,0,0.48)}
+    .booking-card:hover{transform:translateY(-6px) rotateX(3deg) rotateY(-4deg)}
+  </style>
 </head>
 <body>
   <div class="account-page-shell">
