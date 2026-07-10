@@ -115,7 +115,7 @@ function getRuntimeConfigScript() {
   const flutterwavePublicKey = process.env.VITE_FLW_PUBLIC_KEY || process.env.FLW_PUBLIC_KEY || '';
   const apiUrl = process.env.VITE_API_URL || process.env.API_URL || '';
 
-  return `\n    <script>\n      window.__APP_CONFIG__ = {\n        supabaseUrl: ${JSON.stringify(supabaseUrl)},\n        supabaseAnonKey: ${JSON.stringify(supabaseAnonKey)},\n        stripePublicKey: ${JSON.stringify(stripePublicKey)},\n        flutterwavePublicKey: ${JSON.stringify(flutterwavePublicKey)},\n        apiUrl: ${JSON.stringify(apiUrl)}\n      };\n      window.__SUPABASE_CONFIG__ = {\n        url: ${JSON.stringify(supabaseUrl)},\n        anonKey: ${JSON.stringify(supabaseAnonKey)}\n      };\n    </script>\n  `;
+  return `\n    <script>\n      window.__APP_CONFIG__ = {\n        supabaseUrl: ${JSON.stringify(supabaseUrl)},\n        supabaseAnonKey: ${JSON.stringify(supabaseAnonKey)},\n        flutterwavePublicKey: ${JSON.stringify(flutterwavePublicKey)},\n        apiUrl: ${JSON.stringify(apiUrl)}\n      };\n      window.__SUPABASE_CONFIG__ = {\n        url: ${JSON.stringify(supabaseUrl)},\n        anonKey: ${JSON.stringify(supabaseAnonKey)}\n      };\n    </script>\n  `;
 }
 
 function getSiteDataScript(siteData) {

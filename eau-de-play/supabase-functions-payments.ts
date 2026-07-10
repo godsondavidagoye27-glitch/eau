@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, stripe-signature',
+        'Access-Control-Allow-Headers': 'Content-Type',
       },
     });
   }
