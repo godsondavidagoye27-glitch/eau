@@ -63,7 +63,7 @@ function renderBookings(bookings) {
   }
 
   container.innerHTML = past.map((booking) => `
-    <div class="booking-card" data-booking-id="${booking.id}">
+    <div class="booking-card card-enter" data-booking-id="${booking.id}">
       <div class="booking-row">
         <strong>${booking.service_name || 'Service'}</strong>
       </div>
@@ -102,6 +102,13 @@ function renderBookings(bookings) {
       const booking = bookings.find((item) => item.id === bookingId);
       if (booking) showBookingInfo(booking);
     });
+  });
+
+  // Stagger entrance animation for better UX
+  document.querySelectorAll('.booking-card.card-enter').forEach((el, idx) => {
+    el.style.animationDelay = `${idx * 60}ms`;
+    // remove helper class after animation finished to avoid interfering with hover states
+    el.addEventListener('animationend', () => el.classList.remove('card-enter'));
   });
 
   document.querySelectorAll('.upcoming-service-card').forEach((card) => {
@@ -174,6 +181,14 @@ async function init() {
     profileEmail.textContent = user.email || user.id || 'Account user';
   }
 
+  // show loading spinners while we fetch
+  const bookingsContainer = document.getElementById('bookings-list');
+  const purchasesContainer = document.getElementById('purchases-list');
+  const upcomingContainer = document.getElementById('upcoming-services');
+  if (bookingsContainer) bookingsContainer.innerHTML = `<div class="loading-row"><div class="spinner"><span></span></div><div>Loading bookings…</div></div>`;
+  if (purchasesContainer) purchasesContainer.innerHTML = `<div class="loading-row"><div class="spinner"><span></span></div><div>Loading purchases…</div></div>`;
+  if (upcomingContainer) upcomingContainer.innerHTML = `<div class="loading-row"><div class="spinner"><span></span></div><div>Loading upcoming services…</div></div>`;
+
   const bookings = await fetchBookings(user.email || user.id);
   console.debug('[account] fetched bookings count:', bookings.length, bookings);
   const cartHistory = (() => {
@@ -191,11 +206,14 @@ async function init() {
     try {
       const channel = subscribeToTable('bookings', (payload) => {
         console.debug('[realtime] bookings payload:', payload);
+        // small UI hint while refreshing
+        if (bookingsContainer) bookingsContainer.style.opacity = '0.6';
         // For simplicity, re-fetch the user's bookings on any table change
         fetchBookings(user.email || user.id).then((fresh) => {
           renderDashboardSummary(fresh, cartHistory);
           renderBookings(fresh);
-        }).catch((err) => console.error('Realtime refresh error', err));
+        }).catch((err) => console.error('Realtime refresh error', err))
+        .finally(() => { if (bookingsContainer) bookingsContainer.style.opacity = ''; });
       });
 
       // store channel for cleanup
