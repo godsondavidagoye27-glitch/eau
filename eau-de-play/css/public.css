@@ -1804,15 +1804,25 @@ body.home-background {
   background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.01) 50%, rgba(255,255,255,0.03) 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.2s linear infinite;
+  display:flex; align-items:center; padding:12px; gap:12px;
 }
 @keyframes skeleton-shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
 
 /* Booking card flip */
 .booking-card { perspective: 1200px; }
-.booking-card .card-inner { transition: transform 420ms cubic-bezier(.22,.9,.36,1); transform-style: preserve-3d; position: relative; }
-.booking-card .card-front, .booking-card .card-back { backface-visibility: hidden; position: relative; }
-.booking-card .card-back { position: absolute; inset: 0; transform: rotateY(180deg); }
+.booking-card .card-inner { transition: transform 420ms cubic-bezier(.22,.9,.36,1); transform-style: preserve-3d; position: relative; box-shadow: 0 8px 20px rgba(0,0,0,0.28); border-radius: 12px; overflow: hidden; }
+.booking-card .card-front, .booking-card .card-back { backface-visibility: hidden; position: relative; min-height: 86px; padding:12px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); }
+.booking-card .card-back { position: absolute; inset: 0; transform: rotateY(180deg); box-shadow: inset 0 1px 0 rgba(255,255,255,0.02); }
 .booking-card.is-flipped .card-inner { transform: rotateY(180deg); }
+.booking-card .card-inner::after { content: ''; position: absolute; inset: 0; pointer-events: none; box-shadow: 0 12px 40px rgba(0,0,0,0.24); opacity:0.9; }
+
+.card-front { z-index: 2; }
+.card-back { z-index: 1; transform: rotateY(180deg); }
+
+.booking-back-content { padding: 12px; color: rgba(255,255,255,0.95); display:flex; flex-direction:column; gap:8px; }
+.booking-back-actions { display:flex; gap:8px; margin-top:8px; }
+.booking-action { display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; background:rgba(255,138,0,0.12); color: #fff; cursor:pointer; border:1px solid rgba(255,138,0,0.12); }
+.booking-action.secondary { background: transparent; border:1px solid rgba(255,255,255,0.06); }
 
 .booking-back-content { padding: 12px; color: rgba(255,255,255,0.95); }
 .booking-action { margin-top:10px; display:inline-block; padding:6px 10px; border-radius:8px; background:rgba(255,138,0,0.12); color: #fff; cursor:pointer; }

@@ -80,37 +80,41 @@ function renderBookings(bookings) {
     return;
   }
 
-  container.innerHTML = past.map((booking) => `
-    <div class="booking-card card-enter" data-booking-id="${booking.id}">
-      <div class="card-inner">
-        <div class="card-front">
-          <div class="booking-row">
-            <strong>${booking.service_name || 'Service'}</strong>
+    container.innerHTML = past.map((booking) => `
+      <div class="booking-card card-enter" data-booking-id="${booking.id}">
+        <div class="card-inner">
+          <div class="card-front">
+            <div class="booking-row">
+              <strong>${booking.service_name || 'Service'}</strong>
+            </div>
+            <div class="booking-row">
+              <span>Date:</span> ${new Date(booking.start_date).toLocaleString()}
+            </div>
+            <div class="booking-row">
+              <span>Location:</span> ${booking.location || 'N/A'}
+            </div>
+            <div class="booking-row">
+              <span>Total:</span> €${parseFloat(booking.total || 0).toFixed(2)}
+            </div>
+            <div class="booking-row">
+              <span>Status:</span> <span class="booking-status ${String(booking.status || 'confirmed').toLowerCase()}">${booking.status || 'Confirmed'}</span>
+            </div>
           </div>
-          <div class="booking-row">
-            <span>Date:</span> ${new Date(booking.start_date).toLocaleString()}
-          </div>
-          <div class="booking-row">
-            <span>Location:</span> ${booking.location || 'N/A'}
-          </div>
-          <div class="booking-row">
-            <span>Total:</span> €${parseFloat(booking.total || 0).toFixed(2)}
-          </div>
-          <div class="booking-row">
-            <span>Status:</span> <span class="booking-status ${String(booking.status || 'confirmed').toLowerCase()}">${booking.status || 'Confirmed'}</span>
-          </div>
-        </div>
-        <div class="card-back">
-          <div class="booking-back-content">
-            <div><strong>${booking.service_name || 'Service'}</strong></div>
-            <div>Transaction: ${booking.transaction_id || '—'}</div>
-            <div>Booked by: ${booking.user_email || '—'}</div>
-            <div class="booking-action" data-action="details" data-booking-id="${booking.id}">View Details</div>
+          <div class="card-back">
+            <div class="booking-back-content">
+              <div><strong>${booking.service_name || 'Service'}</strong></div>
+              <div>Transaction: ${booking.transaction_id || '—'}</div>
+              <div>Booked by: ${booking.user_email || '—'}</div>
+              <div class="booking-back-actions">
+                <div class="booking-action" data-action="reschedule" data-booking-id="${booking.id}">Reschedule</div>
+                <div class="booking-action secondary" data-action="cancel" data-booking-id="${booking.id}">Cancel</div>
+                <div class="booking-action" data-action="details" data-booking-id="${booking.id}">View Details</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  `).join('');
+    `).join('');
 
   upcomingContainer.innerHTML = upcoming.length === 0
     ? '<p>No upcoming services scheduled.</p>'
@@ -136,7 +140,35 @@ function renderBookings(bookings) {
       }
 
       // flip
-      card.classList.toggle('is-flipped');
+      // toggle flip only if clicked outside action buttons
+      if (!e.target.closest('.booking-action')) {
+        card.classList.toggle('is-flipped');
+      }
+    });
+  });
+
+  // handle reschedule and cancel actions
+  document.querySelectorAll('.booking-action').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const action = btn.dataset.action;
+      const id = btn.dataset.bookingId;
+      if (action === 'cancel') {
+        if (!confirm('Cancel this booking? This action can be undone by admin. Proceed?')) return;
+        try {
+          await cancelBooking(id);
+        } catch (err) { console.error(err); alert('Unable to cancel booking.'); }
+      }
+      if (action === 'reschedule') {
+        const newDate = prompt('Enter new date & time (YYYY-MM-DD HH:MM):');
+        if (!newDate) return;
+        // try to parse
+        const parsed = new Date(newDate);
+        if (isNaN(parsed)) { alert('Invalid date format.'); return; }
+        try {
+          await rescheduleBooking(id, parsed.toISOString());
+        } catch (err) { console.error(err); alert('Unable to reschedule booking.'); }
+      }
     });
   });
 
@@ -302,6 +334,9 @@ async function init() {
   renderBookings(window.__bookings_cache);
   renderPurchases(cartHistory);
 
+  // attach dashboard interactions after initial render
+  attachDashboardInteractions();
+
   // Realtime: subscribe to bookings changes and refresh the list when updates occur
   if (typeof subscribeToTable === 'function') {
     try {
@@ -343,5 +378,61 @@ async function init() {
     });
   }
 }
+
+async function cancelBooking(id) {
+  try {
+    const { data, error } = await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', id).select();
+    if (error) throw error;
+    // apply to local cache
+    const idx = (window.__bookings_cache||[]).findIndex(b => String(b.id) === String(id));
+    if (idx !== -1) { window.__bookings_cache[idx].status = 'cancelled'; renderBookings(window.__bookings_cache); renderDashboardSummary(window.__bookings_cache, JSON.parse(localStorage.getItem('eau-de-play-cart')||'[]')); }
+    return data;
+  } catch (err) { throw err; }
+}
+
+async function rescheduleBooking(id, isoDate) {
+  try {
+    const { data, error } = await supabase.from('bookings').update({ start_date: isoDate }).eq('id', id).select();
+    if (error) throw error;
+    const idx = (window.__bookings_cache||[]).findIndex(b => String(b.id) === String(id));
+    if (idx !== -1) { window.__bookings_cache[idx].start_date = isoDate; renderBookings(window.__bookings_cache); renderDashboardSummary(window.__bookings_cache, JSON.parse(localStorage.getItem('eau-de-play-cart')||'[]')); }
+    return data;
+  } catch (err) { throw err; }
+}
+
+// Dashboard expand/collapse measured height helper
+function attachDashboardInteractions() {
+  document.querySelectorAll('.summary-card-large').forEach((card) => {
+    card.addEventListener('click', (e) => {
+      const expanded = card.classList.contains('expanded');
+      const list = card.querySelector('.expanded-list');
+      if (!list) {
+        // create and populate
+        const recent = (window.__bookings_cache || []).slice(0,5);
+        const div = document.createElement('div');
+        div.className = 'expanded-list';
+        div.innerHTML = recent.map(b => `<div class="expanded-item">${new Date(b.start_date).toLocaleDateString()} - ${b.service_name || 'Service'} • €${parseFloat(b.total||0).toFixed(2)}</div>`).join('');
+        card.appendChild(div);
+      }
+      const el = card.querySelector('.expanded-list');
+      if (!el) return;
+      if (!expanded) {
+        // expand measured height
+        el.style.display = 'block';
+        const full = el.scrollHeight + 'px';
+        el.style.height = '0px';
+        requestAnimationFrame(() => { el.style.transition = 'height 360ms ease, opacity 240ms ease'; el.style.height = full; el.style.opacity = '1'; card.classList.add('expanded'); });
+        el.addEventListener('transitionend', function cb() { el.style.height = ''; el.style.transition = ''; el.removeEventListener('transitionend', cb); });
+      } else {
+        // collapse
+        const cur = el.scrollHeight + 'px';
+        el.style.height = cur;
+        requestAnimationFrame(() => { el.style.transition = 'height 320ms ease, opacity 200ms ease'; el.style.height = '0px'; el.style.opacity = '0'; });
+        el.addEventListener('transitionend', function cb2() { el.style.display = 'none'; el.style.height = ''; el.style.transition = ''; card.classList.remove('expanded'); el.removeEventListener('transitionend', cb2); });
+      }
+    });
+  });
+}
+
 
 init();
