@@ -29,28 +29,80 @@
 <body>
   <div class="account-page-shell">
     <div id="navbar-placeholder"></div>
-    <!-- Static navbar fallback (visible if JS injection fails) -->
-    <nav class="site-nav-fallback">
-      <div class="nav-inner">
-        <a class="nav-brand" href="index.html">EAU DEY PLAY</a>
-        <ul class="nav-links">
-          <li><a href="index.html">Home</a></li>
-          <li><a href="services.html">Services</a></li>
-          <li><a href="shop.html">Shop</a></li>
-          <li><a href="account.html">Account</a></li>
-          <li><a href="contact.html">Contact</a></li>
-        </ul>
+    <!-- Full static navbar (matches components.createNavbar markup) -->
+    <nav class="navbar" aria-label="Main navigation">
+      <div class="navbar-container">
+        <div class="navbar-left">
+          <div class="navbar-brand">
+            <span class="brand-line">EAU DEY</span>
+            <span class="brand-line brand-play">PLAY</span>
+          </div>
+        </div>
+
+        <div class="navbar-center">
+          <ul class="navbar-nav desktop-nav">
+            <li><a href="index.html">HOME</a></li>
+            <li><a href="services.html">SERVICES</a></li>
+            <li><a href="shop.html">SHOP</a></li>
+            <li><a href="about.html">ABOUT</a></li>
+            <li><a href="afro-pulse-27.html">AFRO PULSE</a></li>
+            <li><a href="gallery.html">GALLERY</a></li>
+            <li><a href="contact.html">CONTACT</a></li>
+          </ul>
+        </div>
+
+        <div class="navbar-right">
+          <a href="cart.html" class="cart-link">🛒 CART <span class="cart-count">0</span></a>
+          <a href="auth.html" class="auth-link">LOGIN / SIGNUP</a>
+          <a href="account.html" class="account-link">ACCOUNT</a>
+          <a href="admin-login.html" class="admin-link">ADMIN</a>
+        </div>
+
+        <button class="navbar-toggle" aria-label="Open navigation" aria-expanded="false">☰</button>
       </div>
     </nav>
-    <style>
-      .site-nav-fallback{background:linear-gradient(90deg,#0f0f13,#08060a);padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.03);}
-      .site-nav-fallback .nav-inner{display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto}
-      .site-nav-fallback .nav-brand{color:#fff;font-weight:700;text-decoration:none;font-size:1.1rem}
-      .site-nav-fallback .nav-links{list-style:none;margin:0;padding:0;display:flex;gap:12px}
-      .site-nav-fallback .nav-links a{color:rgba(255,255,255,0.9);text-decoration:none;padding:8px 10px;border-radius:6px}
-      .site-nav-fallback .nav-links a:hover{background:rgba(255,255,255,0.03)}
-      @media(max-width:700px){.site-nav-fallback .nav-links{display:none}}
-    </style>
+
+    <div class="mobile-menu" id="mobile-menu">
+      <div class="mobile-menu-panel">
+        <button class="mobile-menu-close" aria-label="Close navigation">✕</button>
+        <ul class="navbar-nav mobile-nav">
+          <li><a href="index.html">HOME</a></li>
+          <li><a href="services.html">SERVICES</a></li>
+          <li><a href="shop.html">SHOP</a></li>
+          <li><a href="about.html">ABOUT</a></li>
+          <li><a href="afro-pulse-27.html">AFRO PULSE</a></li>
+          <li><a href="gallery.html">GALLERY</a></li>
+          <li><a href="contact.html">CONTACT</a></li>
+          <li><a href="cart.html" class="cart-link">🛒 CART <span class="cart-count">0</span></a></li>
+          <li><a href="auth.html" class="auth-link">LOGIN / SIGNUP</a></li>
+          <li><a href="account.html" class="account-link">ACCOUNT</a></li>
+          <li><a href="admin-login.html">ADMIN</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      // Minimal mobile toggle fallback in case components.js didn't run yet
+      (function(){
+        try {
+          const toggle = document.querySelector('.navbar-toggle');
+          const mobileMenu = document.getElementById('mobile-menu');
+          const closeBtn = document.querySelector('.mobile-menu-close');
+          if (toggle && mobileMenu) {
+            toggle.addEventListener('click', function(){
+              const open = mobileMenu.classList.toggle('open');
+              toggle.setAttribute('aria-expanded', String(open));
+            });
+          }
+          if (closeBtn && mobileMenu) {
+            closeBtn.addEventListener('click', function(){ mobileMenu.classList.remove('open'); if (toggle) toggle.setAttribute('aria-expanded','false'); });
+          }
+          if (mobileMenu) {
+            mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { mobileMenu.classList.remove('open'); if (toggle) toggle.setAttribute('aria-expanded','false'); }));
+          }
+        } catch (e) { /* ignore */ }
+      })();
+    </script>
 
     <section class="account-section">
       <div class="account-container">
