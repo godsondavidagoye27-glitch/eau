@@ -914,12 +914,16 @@ body.home-background {
 .site-footer {
   background: rgba(9, 7, 18, 0.96);
   color: var(--color-text-light);
-  padding: var(--spacing-3xl) 0 var(--spacing-xl);
+  padding: 2.2rem 0 1.8rem;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
 }
 
 @media (max-width: 480px) {
   .site-footer {
-    padding: 1rem 0 0.75rem;
+    min-height: 120px;
+    padding: 1.2rem 0 1rem;
   }
 }
 .site-footer .site-footer-inner {
@@ -1501,15 +1505,50 @@ body.home-background {
    ACCOUNT PAGE STYLES
    ============================================ */
 
+.account-page-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .account-section {
   padding: var(--spacing-3xl) 0;
-  min-height: 80vh;
+  flex: 1;
 }
 
 .account-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 var(--spacing-lg);
+}
+
+.dashboard-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.summary-card {
+  background: linear-gradient(135deg, rgba(255,138,0,0.16), rgba(255,255,255,0.04));
+  border: 1px solid rgba(255,255,255,0.11);
+  border-radius: 16px;
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.summary-label {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.summary-card strong {
+  font-size: 1.6rem;
+  color: #fff;
 }
 
 .account-container > h2 {
@@ -1696,6 +1735,10 @@ body.home-background {
   .account-grid {
     grid-template-columns: 1fr;
     gap: var(--spacing-2xl);
+  }
+
+  .dashboard-summary {
+    grid-template-columns: 1fr;
   }
 
   .account-container > h2 {

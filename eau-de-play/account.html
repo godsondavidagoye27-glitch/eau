@@ -11,54 +11,72 @@
   <link rel="stylesheet" href="css/cart.css">
 </head>
 <body>
-  <div id="navbar-placeholder"></div>
+  <div class="account-page-shell">
+    <div id="navbar-placeholder"></div>
 
-  <section class="account-section">
-    <div class="account-container">
-      <h2>My Account</h2>
-      <div class="account-grid">
-        <div class="account-left">
-          <div class="profile-box">
-            <h3>Profile</h3>
-            <p id="profile-email"></p>
-            <button id="signout-btn" class="btn">Sign Out</button>
+    <section class="account-section">
+      <div class="account-container">
+        <h2>My Account</h2>
+
+        <div class="dashboard-summary">
+          <div class="summary-card">
+            <span class="summary-label">Bookings</span>
+            <strong id="summary-bookings-count">0</strong>
           </div>
-
-          <div class="bookings-box">
-            <h3>My Bookings</h3>
-            <div id="bookings-list">
-              <!-- Bookings populated here -->
-            </div>
+          <div class="summary-card">
+            <span class="summary-label">Upcoming</span>
+            <strong id="summary-upcoming-count">0</strong>
           </div>
-
-          <div class="purchases-box">
-            <h3>My Purchases</h3>
-            <div id="purchases-list">
-              <!-- Purchases populated here -->
-            </div>
+          <div class="summary-card">
+            <span class="summary-label">Purchases</span>
+            <strong id="summary-purchases-count">0</strong>
           </div>
         </div>
 
-        <div class="account-right">
-          <div class="upcoming-services-box">
-            <h3>Upcoming Services</h3>
-            <div id="upcoming-services">
-              <p>No upcoming services scheduled.</p>
+        <div class="account-grid">
+          <div class="account-left">
+            <div class="profile-box">
+              <h3>Profile</h3>
+              <p id="profile-email">Loading your account…</p>
+              <button id="signout-btn" class="btn">Sign Out</button>
+            </div>
+
+            <div class="bookings-box">
+              <h3>My Bookings</h3>
+              <div id="bookings-list">
+                <p>Loading your bookings…</p>
+              </div>
+            </div>
+
+            <div class="purchases-box">
+              <h3>My Purchases</h3>
+              <div id="purchases-list">
+                <p>Loading your purchases…</p>
+              </div>
             </div>
           </div>
 
-          <div class="booking-info-box">
-            <h3>Booking Information</h3>
-            <div id="booking-info">
-              <p>Select a booking to view details.</p>
+          <div class="account-right">
+            <div class="upcoming-services-box">
+              <h3>Upcoming Services</h3>
+              <div id="upcoming-services">
+                <p>No upcoming services scheduled.</p>
+              </div>
+            </div>
+
+            <div class="booking-info-box">
+              <h3>Booking Information</h3>
+              <div id="booking-info">
+                <p>Select a booking to view details.</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <div id="footer-placeholder"></div>
+    <div id="footer-placeholder"></div>
+  </div>
 
       <!-- Order Detail Modal -->
       <div id="order-modal" class="modal" aria-hidden="true">

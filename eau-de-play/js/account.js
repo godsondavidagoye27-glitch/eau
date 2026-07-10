@@ -1,56 +1,83 @@
 import { supabaseAuth } from './supabase-auth.js';
-import SupabaseDB, { supabase } from './supabase.js';
+import { supabase } from './supabase.js';
+
+function getStoredUser() {
+  try {
+    const raw = localStorage.getItem('eau-de-play-current-user') || localStorage.getItem('eau-de-play-user');
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    return null;
+  }
+}
 
 async function fetchBookings(userEmail) {
   try {
+    if (!userEmail) return [];
+
     const { data, error } = await supabase
       .from('bookings')
       .select('*')
       .eq('user_email', userEmail)
       .order('start_date', { ascending: false });
-    
+
     if (error) {
-      console.error('Error fetching bookings:', error);
+      console.warn('Bookings could not be loaded:', error.message || error);
       return [];
     }
+
     return data || [];
-  } catch (e) {
-    console.error('Error fetching bookings:', e);
+  } catch (error) {
+    console.warn('Bookings request failed:', error);
     return [];
   }
+}
+
+function renderDashboardSummary(bookings, purchases) {
+  const bookingCount = document.getElementById('summary-bookings-count');
+  const upcomingCount = document.getElementById('summary-upcoming-count');
+  const purchaseCount = document.getElementById('summary-purchases-count');
+
+  if (bookingCount) bookingCount.textContent = String(bookings.length);
+  if (purchaseCount) purchaseCount.textContent = String(purchases.length);
+
+  const now = new Date();
+  const upcoming = bookings.filter((booking) => new Date(booking.start_date) > now);
+  if (upcomingCount) upcomingCount.textContent = String(upcoming.length);
 }
 
 function renderBookings(bookings) {
   const container = document.getElementById('bookings-list');
   const upcomingContainer = document.getElementById('upcoming-services');
-  if (!container) return;
+  const infoContainer = document.getElementById('booking-info');
+  if (!container || !upcomingContainer) return;
 
   const now = new Date();
-  const upcoming = bookings.filter(b => new Date(b.start_date) > now);
-  const past = bookings.filter(b => new Date(b.start_date) <= now);
+  const upcoming = bookings.filter((booking) => new Date(booking.start_date) > now);
+  const past = bookings.filter((booking) => new Date(booking.start_date) <= now);
 
   if (bookings.length === 0) {
-    container.innerHTML = '<p>No bookings found.</p>';
+    container.innerHTML = '<p>No bookings found yet.</p>';
     upcomingContainer.innerHTML = '<p>No upcoming services scheduled.</p>';
+    if (infoContainer) infoContainer.innerHTML = '<p>Select a booking to view details.</p>';
     return;
   }
 
-  container.innerHTML = past.map(b => `
-    <div class="booking-card" data-booking-id="${b.id}">
+  container.innerHTML = past.map((booking) => `
+    <div class="booking-card" data-booking-id="${booking.id}">
       <div class="booking-row">
-        <strong>${b.service_name}</strong>
+        <strong>${booking.service_name || 'Service'}</strong>
       </div>
       <div class="booking-row">
-        <span>Date:</span> ${new Date(b.start_date).toLocaleString()}
+        <span>Date:</span> ${new Date(booking.start_date).toLocaleString()}
       </div>
       <div class="booking-row">
-        <span>Location:</span> ${b.location}
+        <span>Location:</span> ${booking.location || 'N/A'}
       </div>
       <div class="booking-row">
-        <span>Total:</span> €${parseFloat(b.total).toFixed(2)}
+        <span>Total:</span> €${parseFloat(booking.total || 0).toFixed(2)}
       </div>
       <div class="booking-row">
-        <span>Status:</span> <span class="booking-status ${b.status?.toLowerCase() || 'completed'}">${b.status || 'Completed'}</span>
+        <span>Status:</span> <span class="booking-status ${String(booking.status || 'confirmed').toLowerCase()}">${booking.status || 'Confirmed'}</span>
       </div>
       <p style="font-size:0.85rem; color:var(--color-text-secondary); margin-top:8px;">
         To cancel or modify, please <a href="contact.html">contact our admin</a>.
@@ -58,33 +85,36 @@ function renderBookings(bookings) {
     </div>
   `).join('');
 
-  upcomingContainer.innerHTML = upcoming.length === 0 
+  upcomingContainer.innerHTML = upcoming.length === 0
     ? '<p>No upcoming services scheduled.</p>'
-    : upcoming.map(b => `
-    <div class="upcoming-service-card" data-booking-id="${b.id}">
-      <div class="service-date">${new Date(b.start_date).toLocaleDateString()}</div>
-      <div class="service-name">${b.service_name}</div>
-      <div class="service-location">${b.location}</div>
-      <div class="service-price">€${parseFloat(b.total).toFixed(2)}</div>
-    </div>
-  `).join('');
+    : upcoming.map((booking) => `
+      <div class="upcoming-service-card" data-booking-id="${booking.id}">
+        <div class="service-date">${new Date(booking.start_date).toLocaleDateString()}</div>
+        <div class="service-name">${booking.service_name || 'Service'}</div>
+        <div class="service-location">${booking.location || 'N/A'}</div>
+        <div class="service-price">€${parseFloat(booking.total || 0).toFixed(2)}</div>
+      </div>
+    `).join('');
 
-  // Attach click handlers
-  document.querySelectorAll('.booking-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      const bookingId = e.currentTarget.dataset.bookingId;
-      const booking = bookings.find(b => b.id === bookingId);
+  document.querySelectorAll('.booking-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      const bookingId = card.dataset.bookingId;
+      const booking = bookings.find((item) => item.id === bookingId);
       if (booking) showBookingInfo(booking);
     });
   });
 
-  document.querySelectorAll('.upcoming-service-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      const bookingId = e.currentTarget.dataset.bookingId;
-      const booking = bookings.find(b => b.id === bookingId);
+  document.querySelectorAll('.upcoming-service-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      const bookingId = card.dataset.bookingId;
+      const booking = bookings.find((item) => item.id === bookingId);
       if (booking) showBookingInfo(booking);
     });
   });
+
+  if (bookings.length > 0 && infoContainer) {
+    showBookingInfo(bookings[0]);
+  }
 }
 
 function showBookingInfo(booking) {
@@ -93,30 +123,14 @@ function showBookingInfo(booking) {
 
   infoContainer.innerHTML = `
     <div class="booking-detail">
-      <h4>${booking.service_name}</h4>
-      <div class="detail-row">
-        <span>Booking ID:</span> <strong>${booking.id}</strong>
-      </div>
-      <div class="detail-row">
-        <span>Date & Time:</span> <strong>${new Date(booking.start_date).toLocaleString()}</strong>
-      </div>
-      <div class="detail-row">
-        <span>Location:</span> <strong>${booking.location}</strong>
-      </div>
-      <div class="detail-row">
-        <span>Total Cost:</span> <strong>€${parseFloat(booking.total).toFixed(2)}</strong>
-      </div>
-      <div class="detail-row">
-        <span>Payment Method:</span> <strong>${booking.payment_system || 'Credit Card'}</strong>
-      </div>
-      <div class="detail-row">
-        <span>Status:</span> <strong class="booking-status ${booking.status?.toLowerCase() || 'completed'}">${booking.status || 'Completed'}</strong>
-      </div>
-      ${booking.transaction_id ? `
-        <div class="detail-row">
-          <span>Transaction ID:</span> <strong>${booking.transaction_id}</strong>
-        </div>
-      ` : ''}
+      <h4>${booking.service_name || 'Service'}</h4>
+      <div class="detail-row"><span>Booking ID:</span><strong>${booking.id || 'N/A'}</strong></div>
+      <div class="detail-row"><span>Date & Time:</span><strong>${new Date(booking.start_date).toLocaleString()}</strong></div>
+      <div class="detail-row"><span>Location:</span><strong>${booking.location || 'N/A'}</strong></div>
+      <div class="detail-row"><span>Total Cost:</span><strong>€${parseFloat(booking.total || 0).toFixed(2)}</strong></div>
+      <div class="detail-row"><span>Payment Method:</span><strong>${booking.payment_system || 'Card'}</strong></div>
+      <div class="detail-row"><span>Status:</span><strong class="booking-status ${String(booking.status || 'confirmed').toLowerCase()}">${booking.status || 'Confirmed'}</strong></div>
+      ${booking.transaction_id ? `<div class="detail-row"><span>Transaction ID:</span><strong>${booking.transaction_id}</strong></div>` : ''}
       <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--color-border);">
         <p style="font-size:0.85rem; color:var(--color-text-secondary);">
           To cancel or modify this booking, please <a href="contact.html">contact our admin</a>.
@@ -131,50 +145,47 @@ function renderPurchases(purchases) {
   if (!container) return;
 
   if (purchases.length === 0) {
-    container.innerHTML = '<p>No purchases found.</p>';
+    container.innerHTML = '<p>No purchases found yet.</p>';
     return;
   }
 
-  container.innerHTML = purchases.map(p => `
+  container.innerHTML = purchases.map((purchase) => `
     <div class="purchase-card">
-      <div class="purchase-row">
-        <strong>${p.name}</strong>
-      </div>
-      <div class="purchase-row">
-        <span>Quantity:</span> ${p.quantity}
-      </div>
-      <div class="purchase-row">
-        <span>Price:</span> €${parseFloat(p.price).toFixed(2)}
-      </div>
+      <div class="purchase-row"><strong>${purchase.name || 'Purchase'}</strong></div>
+      <div class="purchase-row"><span>Quantity:</span> ${purchase.quantity || 1}</div>
+      <div class="purchase-row"><span>Price:</span> €${parseFloat(purchase.price || 0).toFixed(2)}</div>
     </div>
   `).join('');
 }
 
 async function init() {
-  const user = await supabaseAuth.getCurrentUser();
+  const storedUser = getStoredUser();
+  const user = (await supabaseAuth.getCurrentUser()) || storedUser;
+
   if (!user) {
-    window.location.href = 'auth.html?redirect=account.html';
+    document.getElementById('profile-email').textContent = 'Please sign in to view your account.';
+    document.getElementById('bookings-list').innerHTML = '<p>Please sign in to view your bookings.</p>';
+    document.getElementById('purchases-list').innerHTML = '<p>Please sign in to view your purchases.</p>';
     return;
   }
 
   const profileEmail = document.getElementById('profile-email');
   if (profileEmail) {
-    profileEmail.textContent = user.email || user.id;
+    profileEmail.textContent = user.email || user.id || 'Account user';
   }
 
-  // Fetch and display bookings
   const bookings = await fetchBookings(user.email || user.id);
+  console.debug('[account] fetched bookings count:', bookings.length, bookings);
+  const cartHistory = (() => {
+    try { return JSON.parse(localStorage.getItem('eau-de-play-cart') || '[]'); }
+    catch { return []; }
+  })();
+  console.debug('[account] cart history items:', cartHistory.length, cartHistory);
+
+  renderDashboardSummary(bookings, cartHistory);
   renderBookings(bookings);
+  renderPurchases(cartHistory);
 
-  // Fetch and display purchases from cart history
-  try {
-    const cartHistory = JSON.parse(localStorage.getItem('eau-de-play-cart') || '[]');
-    renderPurchases(cartHistory);
-  } catch (e) {
-    console.error('Error parsing cart history:', e);
-  }
-
-  // Signout button
   const signoutBtn = document.getElementById('signout-btn');
   if (signoutBtn) {
     signoutBtn.addEventListener('click', async () => {
