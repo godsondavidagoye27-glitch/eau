@@ -4,7 +4,6 @@
 
 import { supabaseAuth } from './supabase-auth.js';
 import { supabase } from './supabase.js';
-import { stripePayment } from './stripe-payment.js';
 
 function getApiUrl() {
   const runtimeConfig = typeof window !== 'undefined' ? (window.__APP_CONFIG__ || null) : null;
@@ -14,7 +13,7 @@ function getApiUrl() {
 
 export class Checkout {
   constructor() {
-    this.stripe = stripePayment;
+    this.cart = window.cartManager;
     this.cart = window.cartManager;
     this.userId = null;
     this.paymentIntentId = null;
@@ -29,14 +28,7 @@ export class Checkout {
       throw new Error('User must be logged in to checkout');
     }
 
-    // Initialize Stripe
-    await this.stripe.init();
-
-    // Mount card element if it exists
-    const cardContainer = document.getElementById('card-element');
-    if (cardContainer) {
-      await this.stripe.mountCardElement('card-element');
-    }
+    // No third-party init required for Flutterwave flow
   }
 
   // VALIDATE CHECKOUT FORM
@@ -67,18 +59,8 @@ export class Checkout {
   // CREATE PAYMENT INTENT
   async createPaymentIntent(order) {
     try {
-      const total = this.cart.getGrandTotal() * 100; // Convert to cents
-      
-      this.paymentIntentId = await this.stripe.createPaymentIntent(
-        this.cart.getGrandTotal(),
-        {
-          userId: this.userId,
-          orderId: order.id,
-          items: this.cart.getCartItems().length
-        }
-      );
-
-      return this.paymentIntentId;
+      // For Flutterwave we don't create a server-side PaymentIntent; return null
+      return null;
     } catch (error) {
       console.error('❌ Error creating payment intent:', error);
       throw error;
@@ -113,43 +95,67 @@ export class Checkout {
 
       if (!payment.success) {
         // Update order status to failed
-        await supabase
-          .from('orders')
-          .update({ status: 'failed', notes: payment.error })
-          .eq('id', order.id);
+        // Create order
+        const order = await this.createOrder(formData);
 
-        return { success: false, error: payment.error };
-      }
-
-      // Update order with payment confirmation
-      await supabase
-        .from('orders')
-        .update({
-          status: 'confirmed',
-          payment_id: payment.transactionId,
-          payment_method: 'stripe',
-          paid_at: new Date().toISOString()
-        })
-        .eq('id', order.id);
-
-      // Optionally notify backend to start fulfillment/tracking polling
-      try {
-        if (typeof fetch === 'function') {
-          const apiUrl = getApiUrl();
-          fetch(`${apiUrl}/track/initiate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderId: order.id })
-          }).catch(() => {});
+        // Start Flutterwave Checkout
+        const flwKey = (window.__APP_CONFIG__ && window.__APP_CONFIG__.flutterwavePublicKey) || '';
+        if (!flwKey || !window.FlutterwaveCheckout) {
+          throw new Error('Flutterwave not configured');
         }
-      } catch (e) {}
 
-      // Clear cart
-      await this.cart.clearCart();
+        const tx_ref = `order-${order.id}-${Date.now()}`;
 
-      return {
-        success: true,
-        orderId: order.id,
+        FlutterwaveCheckout({
+          public_key: flwKey,
+          tx_ref,
+          amount: this.cart.getGrandTotal(),
+          currency: 'EUR',
+          payment_options: 'card',
+          customer: {
+            email: formData.email,
+            name: `${formData.firstName} ${formData.lastName}`
+          },
+          callback: async (data) => {
+            try {
+              const verifyRes = await fetch('/api/flutterwave/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ transaction_id: data.transaction_id })
+              });
+              const vr = await verifyRes.json();
+              if (vr && vr.success && vr.data && vr.data.status === 'successful') {
+                // Update order with payment confirmation
+                await supabase
+                  .from('orders')
+                  .update({
+                    status: 'confirmed',
+                    payment_id: data.transaction_id,
+                    payment_method: 'flutterwave',
+                    paid_at: new Date().toISOString()
+                  })
+                  .eq('id', order.id);
+
+                // Clear cart
+                await this.cart.clearCart();
+                // Redirect to success page
+                window.location.href = `checkout-success.html?orderId=${order.id}`;
+              } else {
+                await supabase
+                  .from('orders')
+                  .update({ status: 'failed', notes: 'Payment verification failed' })
+                  .eq('id', order.id);
+                alert('Payment verification failed');
+              }
+            } catch (err) {
+              console.error('Verification error:', err);
+              alert('Payment verification error');
+            }
+          },
+          onclose: function() {}
+        });
+
+        return { success: true, orderId: order.id };
         transactionId: payment.transactionId
       };
     } catch (error) {
@@ -167,7 +173,7 @@ export class Checkout {
         carrier: null,
         tracking_number: null,
         shipped_at: null,
-        payment_method: 'stripe',
+        payment_method: 'flutterwave',
         
         // Customer info
         first_name: formData.firstName,
