@@ -1,4 +1,6 @@
 import Database from './db.js';
+import { supabaseAuth } from './supabase-auth.js';
+
 function qs(name) {
   const params = new URLSearchParams(window.location.search);
   return params.get(name);
@@ -199,6 +201,11 @@ async function init() {
     document.querySelector('#card-back .cvv-block div').textContent = inputCardCvv.value.trim().padEnd(3, '•').slice(0, 3);
   }
 
+  function updateTotal() {
+    const totalDisplay = document.querySelector('.price-badge');
+    totalDisplay.textContent = `€${flatPrice.toFixed(2)}`;
+  }
+
   [inputWhere, inputStart, inputCardName, inputCardNumber, inputCardExpiry, inputCardCvv].forEach((field) => {
     field.addEventListener('input', updatePreview);
     field.addEventListener('focus', () => cardFront.classList.add('card-focus'));
@@ -225,79 +232,71 @@ async function init() {
     if (!where) { alert('Please enter where the service is needed'); return; }
     if (!start) { alert('Please select start date/time'); return; }
 
+    // Real payment is required - no offline/demo mode
+    if (!usingFlutterwave) {
+      alert('Payment service is not available. Please try again later.');
+      return;
+    }
+
     form.classList.add('submitting');
     cardFront.classList.add('anim');
 
     try {
-      if (usingFlutterwave) {
-        const tx_ref = `tx-${Date.now()}`;
-        FlutterwaveCheckout({
-          public_key: flwKey,
-          tx_ref,
-          amount: total,
-          currency: 'EUR',
-          payment_options: 'card',
-          customer: { name: cardName || 'Guest' },
-          callback: async function (data) {
-            try {
-              const verifyRes = await fetch('/api/flutterwave/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ transaction_id: data.transaction_id })
-              });
-              const vr = await verifyRes.json();
-              if (vr && vr.success && vr.data && vr.data.status === 'successful') {
-                const payload = {
-                  serviceId,
-                  serviceName: service.name,
-                  where,
-                  start,
-                  total,
-                  payment: { system: 'flutterwave', transaction_id: data.transaction_id }
-                };
-                const saveRes = await postBooking(payload);
-                if (saveRes && saveRes.success && saveRes.booking) {
-                  window.location.href = `booking-confirmation.html?bookingId=${saveRes.booking.id}`;
-                  return;
-                }
-                alert('Booking save failed after payment verification.');
-              } else {
-                alert('Payment verification failed');
+      const tx_ref = `tx-${Date.now()}`;
+      FlutterwaveCheckout({
+        public_key: flwKey,
+        tx_ref,
+        amount: total,
+        currency: 'EUR',
+        payment_options: 'card',
+        customer: { name: cardName || 'Guest' },
+        callback: async function (data) {
+          try {
+            const verifyRes = await fetch('/api/flutterwave/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ transaction_id: data.transaction_id })
+            });
+            const vr = await verifyRes.json();
+            if (vr && vr.success && vr.data && vr.data.status === 'successful') {
+              // Get current user email if authenticated
+              const currentUser = supabaseAuth.currentUser;
+              const userEmail = currentUser?.email || null;
+
+              const payload = {
+                serviceId,
+                serviceName: service.name,
+                where,
+                start,
+                total,
+                userEmail,
+                payment: { system: 'flutterwave', transaction_id: data.transaction_id }
+              };
+              const saveRes = await postBooking(payload);
+              if (saveRes && saveRes.success && saveRes.booking) {
+                window.location.href = `booking-confirmation.html?bookingId=${saveRes.booking.id}`;
+                return;
               }
-            } catch (err) {
-              console.error('Verification error:', err);
-              alert('Payment verification error');
-            } finally {
-              form.classList.remove('submitting');
-              cardFront.classList.remove('anim');
+              alert('Booking save failed after payment verification.');
+            } else {
+              alert('Payment verification failed. Please try again.');
             }
-          },
-          onclose: function() {
+          } catch (err) {
+            console.error('Verification error:', err);
+            alert('Payment verification error. Please contact support.');
+          } finally {
             form.classList.remove('submitting');
             cardFront.classList.remove('anim');
           }
-        });
-        return;
-      }
-
-      const booking = {
-        id: 'bk-' + Date.now(),
-        serviceId,
-        serviceName: service.name,
-        where,
-        start,
-        total,
-        payment: { system: 'demo' },
-        createdAt: new Date().toISOString()
-      };
-      const bookings = JSON.parse(localStorage.getItem('eau-bookings') || '[]');
-      bookings.push(booking);
-      localStorage.setItem('eau-bookings', JSON.stringify(bookings));
-      window.location.href = `booking-confirmation.html?bookingId=${booking.id}`;
+        },
+        onclose: function() {
+          form.classList.remove('submitting');
+          cardFront.classList.remove('anim');
+        }
+      });
     } catch (err) {
       console.error('Booking error:', err);
       alert(err && err.message ? err.message : 'Booking failed');
-    } finally {
       form.classList.remove('submitting');
       cardFront.classList.remove('anim');
     }

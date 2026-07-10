@@ -1,103 +1,190 @@
 import { supabaseAuth } from './supabase-auth.js';
 import SupabaseDB, { supabase } from './supabase.js';
 
-async function fetchOrders() {
-  const user = await supabaseAuth.getCurrentUser();
-  if (!user) {
-    window.location.href = 'auth.html?redirect=account.html';
+async function fetchBookings(userEmail) {
+  try {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('user_email', userEmail)
+      .order('start_date', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching bookings:', error);
+      return [];
+    }
+    return data || [];
+  } catch (e) {
+    console.error('Error fetching bookings:', e);
     return [];
   }
-
-  const data = await SupabaseDB.getOrders(user.id);
-
-  if (!data) return [];
-
-  return data || [];
 }
 
-function renderOrders(orders) {
-  const container = document.getElementById('orders-list');
+function renderBookings(bookings) {
+  const container = document.getElementById('bookings-list');
+  const upcomingContainer = document.getElementById('upcoming-services');
   if (!container) return;
 
-  if (orders.length === 0) {
-    container.innerHTML = '<p>No orders found.</p>';
+  const now = new Date();
+  const upcoming = bookings.filter(b => new Date(b.start_date) > now);
+  const past = bookings.filter(b => new Date(b.start_date) <= now);
+
+  if (bookings.length === 0) {
+    container.innerHTML = '<p>No bookings found.</p>';
+    upcomingContainer.innerHTML = '<p>No upcoming services scheduled.</p>';
     return;
   }
 
-  container.innerHTML = orders.map(o => `
-    <div class="order-card" data-order-id="${o.id}">
-      <div class="order-row">
-        <strong>Order:</strong> ${o.id}
+  container.innerHTML = past.map(b => `
+    <div class="booking-card" data-booking-id="${b.id}">
+      <div class="booking-row">
+        <strong>${b.service_name}</strong>
       </div>
-      <div class="order-row">
-        <strong>Date:</strong> ${new Date(o.created_at).toLocaleString()}
+      <div class="booking-row">
+        <span>Date:</span> ${new Date(b.start_date).toLocaleString()}
       </div>
-      <div class="order-row">
-        <strong>Total:</strong> $${parseFloat(o.total).toFixed(2)}
+      <div class="booking-row">
+        <span>Location:</span> ${b.location}
       </div>
-      <div class="order-row">
-        <strong>Status:</strong> <span class="order-status">${o.status}</span>
+      <div class="booking-row">
+        <span>Total:</span> €${parseFloat(b.total).toFixed(2)}
       </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-small track-btn" data-order-id="${o.id}">Track Delivery</button>
-        <button class="btn btn-small detail-btn" data-order-id="${o.id}">View Details</button>
+      <div class="booking-row">
+        <span>Status:</span> <span class="booking-status ${b.status?.toLowerCase() || 'completed'}">${b.status || 'Completed'}</span>
       </div>
+      <p style="font-size:0.85rem; color:var(--color-text-secondary); margin-top:8px;">
+        To cancel or modify, please <a href="contact.html">contact our admin</a>.
+      </p>
     </div>
   `).join('');
 
-  // attach track handlers
-  document.querySelectorAll('.track-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const id = e.target.dataset.orderId;
-      await showDeliveryStatus(id);
+  upcomingContainer.innerHTML = upcoming.length === 0 
+    ? '<p>No upcoming services scheduled.</p>'
+    : upcoming.map(b => `
+    <div class="upcoming-service-card" data-booking-id="${b.id}">
+      <div class="service-date">${new Date(b.start_date).toLocaleDateString()}</div>
+      <div class="service-name">${b.service_name}</div>
+      <div class="service-location">${b.location}</div>
+      <div class="service-price">€${parseFloat(b.total).toFixed(2)}</div>
+    </div>
+  `).join('');
+
+  // Attach click handlers
+  document.querySelectorAll('.booking-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      const bookingId = e.currentTarget.dataset.bookingId;
+      const booking = bookings.find(b => b.id === bookingId);
+      if (booking) showBookingInfo(booking);
     });
   });
 
-  document.querySelectorAll('.detail-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const id = e.target.dataset.orderId;
-      await showOrderDetail(id);
+  document.querySelectorAll('.upcoming-service-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      const bookingId = e.currentTarget.dataset.bookingId;
+      const booking = bookings.find(b => b.id === bookingId);
+      if (booking) showBookingInfo(booking);
     });
   });
 }
 
-async function showDeliveryStatus(orderId) {
-  const tracker = document.getElementById('delivery-tracker');
-  if (!tracker) return;
+function showBookingInfo(booking) {
+  const infoContainer = document.getElementById('booking-info');
+  if (!infoContainer) return;
 
-  tracker.innerHTML = '<p>Loading delivery status...</p>';
-
-  try {
-    const { data, error } = await supabase
-      .from('orders')
-      .select('id,status,shipping,tracking_number,updated_at')
-      .eq('id', orderId)
-      .single();
-
-    if (error) throw error;
-
-    // If tracking_number exists, show simulated tracking steps
-    const tracking = data.tracking_number || null;
-    if (!tracking) {
-      tracker.innerHTML = `
-        <p>Order <strong>${data.id}</strong> is currently <strong>${data.status}</strong>.</p>
-        <p>Tracking number not available yet. We'll update you soon.</p>
-      `;
-      return;
-    }
-
-    // Simulate delivery stages based on status and timestamps
-    const stages = ['Order Received', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered'];
-    const statusIndex = Math.min(stages.length -1, stages.indexOf(mapStatusToStage(data.status)));
-
-    const html = stages.map((s, i) => `
-      <div class="track-step ${i <= statusIndex ? 'completed' : ''}">
-        <div class="step-title">${s}</div>
-        ${i <= statusIndex ? `<div class="step-time">${new Date(data.updated_at).toLocaleString()}</div>` : ''}
+  infoContainer.innerHTML = `
+    <div class="booking-detail">
+      <h4>${booking.service_name}</h4>
+      <div class="detail-row">
+        <span>Booking ID:</span> <strong>${booking.id}</strong>
       </div>
-    `).join('');
+      <div class="detail-row">
+        <span>Date & Time:</span> <strong>${new Date(booking.start_date).toLocaleString()}</strong>
+      </div>
+      <div class="detail-row">
+        <span>Location:</span> <strong>${booking.location}</strong>
+      </div>
+      <div class="detail-row">
+        <span>Total Cost:</span> <strong>€${parseFloat(booking.total).toFixed(2)}</strong>
+      </div>
+      <div class="detail-row">
+        <span>Payment Method:</span> <strong>${booking.payment_system || 'Credit Card'}</strong>
+      </div>
+      <div class="detail-row">
+        <span>Status:</span> <strong class="booking-status ${booking.status?.toLowerCase() || 'completed'}">${booking.status || 'Completed'}</strong>
+      </div>
+      ${booking.transaction_id ? `
+        <div class="detail-row">
+          <span>Transaction ID:</span> <strong>${booking.transaction_id}</strong>
+        </div>
+      ` : ''}
+      <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--color-border);">
+        <p style="font-size:0.85rem; color:var(--color-text-secondary);">
+          To cancel or modify this booking, please <a href="contact.html">contact our admin</a>.
+        </p>
+      </div>
+    </div>
+  `;
+}
 
-    tracker.innerHTML = `
+function renderPurchases(purchases) {
+  const container = document.getElementById('purchases-list');
+  if (!container) return;
+
+  if (purchases.length === 0) {
+    container.innerHTML = '<p>No purchases found.</p>';
+    return;
+  }
+
+  container.innerHTML = purchases.map(p => `
+    <div class="purchase-card">
+      <div class="purchase-row">
+        <strong>${p.name}</strong>
+      </div>
+      <div class="purchase-row">
+        <span>Quantity:</span> ${p.quantity}
+      </div>
+      <div class="purchase-row">
+        <span>Price:</span> €${parseFloat(p.price).toFixed(2)}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function init() {
+  const user = await supabaseAuth.getCurrentUser();
+  if (!user) {
+    window.location.href = 'auth.html?redirect=account.html';
+    return;
+  }
+
+  const profileEmail = document.getElementById('profile-email');
+  if (profileEmail) {
+    profileEmail.textContent = user.email || user.id;
+  }
+
+  // Fetch and display bookings
+  const bookings = await fetchBookings(user.email || user.id);
+  renderBookings(bookings);
+
+  // Fetch and display purchases from cart history
+  try {
+    const cartHistory = JSON.parse(localStorage.getItem('eau-de-play-cart') || '[]');
+    renderPurchases(cartHistory);
+  } catch (e) {
+    console.error('Error parsing cart history:', e);
+  }
+
+  // Signout button
+  const signoutBtn = document.getElementById('signout-btn');
+  if (signoutBtn) {
+    signoutBtn.addEventListener('click', async () => {
+      await supabaseAuth.signOut();
+      window.location.href = 'index.html';
+    });
+  }
+}
+
+init();
       <div class="tracking-number">Tracking: <strong>${tracking}</strong></div>
       <div class="tracking-steps">${html}</div>
     `;

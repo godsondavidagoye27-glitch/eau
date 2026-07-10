@@ -1496,6 +1496,242 @@ body.home-background {
 .card-top {
   display: flex;
   justify-content: space-between;
+
+/* ============================================
+   ACCOUNT PAGE STYLES
+   ============================================ */
+
+.account-section {
+  padding: var(--spacing-3xl) 0;
+  min-height: 80vh;
+}
+
+.account-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+.account-container > h2 {
+  font-size: 2.5rem;
+  margin-bottom: var(--spacing-3xl);
+  color: #fff;
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-3xl);
+}
+
+.account-left,
+.account-right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2xl);
+}
+
+.profile-box,
+.bookings-box,
+.purchases-box,
+.upcoming-services-box,
+.booking-info-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: var(--spacing-2xl);
+}
+
+.profile-box h3,
+.bookings-box h3,
+.purchases-box h3,
+.upcoming-services-box h3,
+.booking-info-box h3 {
+  font-size: 1.25rem;
+  margin-bottom: var(--spacing-lg);
+  color: #fff;
+}
+
+.profile-box p {
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: var(--spacing-lg);
+  word-break: break-all;
+}
+
+#profile-email {
+  font-family: 'Courier New', monospace;
+  background: rgba(255, 138, 0, 0.1);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.booking-card,
+.purchase-card,
+.upcoming-service-card {
+  background: rgba(255, 138, 0, 0.05);
+  border: 1px solid rgba(255, 138, 0, 0.2);
+  border-radius: 12px;
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.booking-card:hover,
+.purchase-card:hover,
+.upcoming-service-card:hover {
+  background: rgba(255, 138, 0, 0.1);
+  border-color: rgba(255, 138, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.booking-row,
+.purchase-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+}
+
+.booking-row strong,
+.purchase-row strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+.booking-status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+}
+
+.booking-status.pending {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+}
+
+.booking-status.cancelled {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+}
+
+.upcoming-service-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255, 180, 100, 0.08);
+  border: 1px solid rgba(255, 180, 100, 0.2);
+}
+
+.service-date {
+  font-size: 0.85rem;
+  color: rgba(255, 180, 100, 0.8);
+  font-weight: 600;
+}
+
+.service-name {
+  font-size: 1.1rem;
+  color: #fff;
+  font-weight: 600;
+}
+
+.service-location {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.service-price {
+  font-size: 1rem;
+  color: #ff8a00;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.booking-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.booking-detail h4 {
+  font-size: 1.15rem;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+}
+
+.detail-row span {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.detail-row strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+#signout-btn {
+  align-self: flex-start;
+}
+
+/* ============================================
+   ACCOUNT PAGE MOBILE RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .account-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-2xl);
+  }
+
+  .account-container > h2 {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .account-section {
+    padding: var(--spacing-2xl) 0;
+  }
+
+  .account-container {
+    padding: 0 var(--spacing-md);
+  }
+
+  .account-container > h2 {
+    font-size: 1.5rem;
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .profile-box,
+  .bookings-box,
+  .purchases-box,
+  .upcoming-services-box,
+  .booking-info-box {
+    padding: var(--spacing-lg);
+  }
+
+  .booking-card,
+  .purchase-card,
+  .upcoming-service-card {
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+  }
+}
   align-items: center;
   margin-bottom: 40px;
   flex-wrap: wrap;
