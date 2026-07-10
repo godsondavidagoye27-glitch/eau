@@ -69,6 +69,16 @@ export class PublicApp {
 
   async fetchLatestData() {
     try {
+      const supabaseContent = await this.db.fetchSiteDataFromSupabase();
+      if (supabaseContent && typeof supabaseContent === 'object') {
+        this.db.syncFromServerData(supabaseContent);
+        return;
+      }
+    } catch (err) {
+      console.warn('Failed to fetch site data from Supabase', err);
+    }
+
+    try {
       const response = await fetch('/api/site-data');
       if (response.ok) {
         const data = await response.json();
@@ -696,8 +706,15 @@ export class PublicApp {
   }
 }
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+function initializePublicApp() {
+  if (window.__PUBLIC_APP_INITIALIZED__) return;
+  window.__PUBLIC_APP_INITIALIZED__ = true;
   window.publicApp = new PublicApp();
   window.PublicApp = PublicApp;
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializePublicApp, { once: true });
+} else {
+  initializePublicApp();
+}
