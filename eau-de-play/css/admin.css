@@ -360,6 +360,114 @@
     gap: var(--spacing-xs);
   }
 
+  .content-editor {
+    display: grid;
+    gap: var(--spacing-lg);
+  }
+
+  .content-editor-header {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .content-editor-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .content-editor-status {
+    min-width: 160px;
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+  }
+
+  .editor-section {
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .editor-section h3 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-xl);
+  }
+
+  .editor-row {
+    display: grid;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .editor-row-stack {
+    padding: var(--spacing-md);
+    background: var(--color-background-light);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+  }
+
+  .editor-row label {
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+  }
+
+  .editor-row input,
+  .editor-row textarea {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-background);
+    font-family: inherit;
+    font-size: var(--font-size-base);
+  }
+
+  .editor-row textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+
+  .footer-link-row,
+  .gallery-item-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--spacing-sm);
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .footer-link-row input,
+  .gallery-item-row input {
+    width: 100%;
+  }
+
+  .preview-box {
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: var(--color-background-light);
+  }
+
+  .preview-box h4 {
+    margin-top: 0;
+  }
+
+  .btn-small {
+    padding: 0.6rem 0.9rem;
+    font-size: 0.95rem;
+    border-radius: var(--radius-sm);
+  }
+
+  }
+
   .media-row label {
     font-weight: var(--font-weight-medium);
     font-size: var(--font-size-sm);

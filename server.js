@@ -40,6 +40,12 @@ const DEFAULT_SITE_DATA = {
     { id: 102, name: 'Eau de Play Cap', category: 'merchandise', price: 20, description: 'Adjustable cap with embroidered logo', image: '', buttonText: 'ADD TO CART' },
     { id: 103, name: 'Brand Hoodie', category: 'merchandise', price: 60, description: 'Comfortable pullover hoodie', image: '', buttonText: 'ADD TO CART' }
   ],
+  homeHero: {
+    title: 'EAU DEY PLAY',
+    subtitle: 'We bring premium entertainment experiences to every event, festival, and party. Book our DJ services, photography, or full event planning for an unforgettable vibe.',
+    buttonText: 'Book Now',
+    buttonUrl: 'contact.html'
+  },
   settings: [
     {
       id: 'afro-pulse',
@@ -62,6 +68,7 @@ const DEFAULT_SITE_DATA = {
       galleryVideos: []
     }
   ],
+  draft: {},
   orders: [],
   users: [ { id: 1, email: 'admin@eaudeplay.com', password: 'admin123', role: 'admin' } ],
   bookings: []
@@ -75,6 +82,7 @@ function normalizeSiteData(data) {
     ...data,
     products: Array.isArray(data.products) ? data.products : baseData.products,
     merchandise: Array.isArray(data.merchandise) ? data.merchandise : baseData.merchandise,
+    homeHero: typeof data.homeHero === 'object' && data.homeHero !== null ? { ...baseData.homeHero, ...data.homeHero } : baseData.homeHero,
     settings: Array.isArray(data.settings) ? data.settings : baseData.settings,
     orders: Array.isArray(data.orders) ? data.orders : baseData.orders,
     users: Array.isArray(data.users) ? data.users : baseData.users,

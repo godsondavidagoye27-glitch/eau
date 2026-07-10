@@ -151,7 +151,7 @@
         // Check if user is logged in
         const user = await supabaseAuth.getCurrentUser();
         if (!user) {
-          window.location.href = 'admin-login.html?redirect=checkout-flutterwave.html';
+          window.location.href = 'auth.html?redirect=checkout-flutterwave.html';
           return;
         }
 

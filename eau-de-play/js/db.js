@@ -116,6 +116,11 @@ export class Database {
             galleryVideos: [],
           }
         ],
+        footerLinks: [
+          { label: 'Instagram', href: 'https://www.instagram.com/deyplay.rvk?igsh=bjZ4ZTFhdDJlYzUw' },
+          { label: 'TikTok', href: 'https://www.tiktok.com/@eau.dey.play?_r=1&_t=ZN-97rkM4Xkbag' },
+          { label: 'Email', href: 'mailto:eaudeyplay@gmail.com' }
+        ],
         orders: [
           {
             id: 1001,
@@ -156,6 +161,30 @@ export class Database {
       console.warn('Supabase client unavailable', err);
       return null;
     }
+  }
+
+  getDraftData() {
+    const data = this.getData();
+    return data.draft && typeof data.draft === 'object' ? data.draft : {};
+  }
+
+  async saveDraftData(draft = {}) {
+    const data = this.getData();
+    data.draft = { ...data.draft, ...draft };
+    return this.saveData(data);
+  }
+
+  async publishDraft() {
+    const data = this.getData();
+    const draft = this.getDraftData();
+    const publishTarget = { ...data, ...draft, draft: {} };
+    return this.saveData(publishTarget);
+  }
+
+  async discardDraft() {
+    const data = this.getData();
+    data.draft = {};
+    return this.saveData(data);
   }
 
   async syncToSupabase(data) {
@@ -272,7 +301,7 @@ export class Database {
           const response = await window.fetch('/api/site-data', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: normalizedData })
+            body: JSON.stringify(normalizedData)
           });
 
           if (!response.ok) {

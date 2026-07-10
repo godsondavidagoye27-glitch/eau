@@ -2,6 +2,12 @@
 // COMPONENTS MODULE - Navbar & Footer Injection
 // ============================================
 
+const DEFAULT_FOOTER_LINKS = [
+  { label: 'Instagram', href: 'https://www.instagram.com/deyplay.rvk?igsh=bjZ4ZTFhdDJlYzUw' },
+  { label: 'TikTok', href: 'https://www.tiktok.com/@eau.dey.play?_r=1&_t=ZN-97rkM4Xkbag' },
+  { label: 'Email', href: 'mailto:eaudeyplay@gmail.com' }
+];
+
 export function createNavbar() {
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
   const isActive = (page) => currentPage === page ? 'active' : '';
@@ -33,7 +39,6 @@ export function createNavbar() {
           <a href="cart.html" class="cart-link ${cartActive}">🛒 CART <span class="cart-count">0</span></a>
           <a href="auth.html" class="auth-link ${isActive('auth.html')}">LOGIN / SIGNUP</a>
           <a href="account.html" class="account-link ${isActive('account.html')}">ACCOUNT</a>
-          <a href="admin-login.html" class="admin-link ${isActive('admin-login.html')}">ADMIN</a>
         </div>
 
         <button class="navbar-toggle" aria-label="Open navigation" aria-expanded="false">☰</button>
@@ -54,7 +59,6 @@ export function createNavbar() {
           <li><a href="cart.html" class="cart-link ${cartActive}">🛒 CART <span class="cart-count">0</span></a></li>
           <li><a href="auth.html" class="auth-link ${isActive('auth.html')}">LOGIN / SIGNUP</a></li>
           <li><a href="account.html" class="account-link ${isActive('account.html')}">ACCOUNT</a></li>
-          <li><a href="admin-login.html" class="${isActive('admin-login.html')}">ADMIN</a></li>
         </ul>
       </div>
     </div>
@@ -62,14 +66,26 @@ export function createNavbar() {
 }
 
 export function createFooter() {
-  // Minimal quick-links footer used across all pages
+  const defaultLinks = [
+    { label: 'Instagram', href: 'https://www.instagram.com/deyplay.rvk?igsh=bjZ4ZTFhdDJlYzUw' },
+    { label: 'TikTok', href: 'https://www.tiktok.com/@eau.dey.play?_r=1&_t=ZN-97rkM4Xkbag' },
+    { label: 'Email', href: 'mailto:eaudeyplay@gmail.com' }
+  ];
+
+  const siteData = typeof window !== 'undefined' ? window.__SITE_DATA__ : null;
+  const footerLinks = Array.isArray(siteData?.footerLinks) ? siteData.footerLinks : defaultLinks;
+
+  const linkHtml = footerLinks.map((link) => {
+    const href = String(link.href || '').trim();
+    const label = String(link.label || '').trim() || href;
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+  }).join('');
+
   return `
     <footer class="site-footer">
       <div class="site-footer-inner container">
         <nav class="footer-links">
-          <a href="https://www.instagram.com/deyplay.rvk?igsh=bjZ4ZTFhdDJlYzUw" target="_blank" rel="noopener noreferrer" aria-label="Instagram">Instagram</a>
-          <a href="https://www.tiktok.com/@eau.dey.play?_r=1&_t=ZN-97rkM4Xkbag" target="_blank" rel="noopener noreferrer" aria-label="TikTok">TikTok</a>
-          <a href="mailto:eaudeyplay@gmail.com" aria-label="Email">Email</a>
+          ${linkHtml}
         </nav>
       </div>
     </footer>

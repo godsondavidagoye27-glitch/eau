@@ -138,50 +138,352 @@ export class AdminApp {
 
   showSiteContentEditor() {
     const contentArea = document.getElementById('admin-content');
-    const allData = this.db.getData();
+    const liveData = this.db.getData();
+    const draftData = this.db.getDraftData();
+    const currentHero = { ...(liveData.homeHero || {}), ...(draftData.homeHero || {}) };
+    const afroLive = this.db.getById('settings', 'afro-pulse') || {};
+    const afroDraft = Array.isArray(draftData.settings)
+      ? draftData.settings.find((item) => item.id === 'afro-pulse') || {}
+      : {};
+    const currentAfro = {
+      ...afroLive,
+      ...afroDraft,
+      galleryImages: Array.isArray(afroDraft.galleryImages)
+        ? afroDraft.galleryImages
+        : Array.isArray(afroLive.galleryImages)
+          ? afroLive.galleryImages
+          : [],
+      galleryVideos: Array.isArray(afroDraft.galleryVideos)
+        ? afroDraft.galleryVideos
+        : Array.isArray(afroLive.galleryVideos)
+          ? afroLive.galleryVideos
+          : []
+    };
+    const footerLinks = Array.isArray(draftData.footerLinks)
+      ? draftData.footerLinks
+      : Array.isArray(liveData.footerLinks)
+        ? liveData.footerLinks
+        : [
+            { label: 'Instagram', href: 'https://www.instagram.com/deyplay.rvk?igsh=bjZ4ZTFhdDJlYzUw' },
+            { label: 'TikTok', href: 'https://www.tiktok.com/@eau.dey.play?_r=1&_t=ZN-97rkM4Xkbag' },
+            { label: 'Email', href: 'mailto:eaudeyplay@gmail.com' }
+          ];
+
+    const footerRowsHtml = footerLinks.map((link, index) => `
+      <div class="footer-link-row" data-index="${index}">
+        <input type="text" class="footer-link-label" placeholder="Label" value="${link.label || ''}">
+        <input type="url" class="footer-link-href" placeholder="URL" value="${link.href || ''}">
+        <button type="button" class="btn btn-small btn-secondary remove-footer-link" data-index="${index}">Remove</button>
+      </div>
+    `).join('');
+
+    const galleryImages = Array.isArray(currentAfro.galleryImages) ? currentAfro.galleryImages : [];
+    const galleryVideos = Array.isArray(currentAfro.galleryVideos) ? currentAfro.galleryVideos : [];
+    const galleryImageRows = galleryImages.map((item, index) => `
+      <div class="gallery-item-row" data-index="${index}">
+        <input type="text" class="gallery-image-src" placeholder="Image URL" value="${item.src || ''}">
+        <button type="button" class="btn btn-small btn-secondary remove-gallery-image" data-index="${index}">Remove</button>
+      </div>
+    `).join('');
+    const galleryVideoRows = galleryVideos.map((item, index) => `
+      <div class="gallery-item-row" data-index="${index}">
+        <input type="text" class="gallery-video-src" placeholder="Video URL or embed" value="${item.embedUrl || ''}">
+        <button type="button" class="btn btn-small btn-secondary remove-gallery-video" data-index="${index}">Remove</button>
+      </div>
+    `).join('');
 
     contentArea.innerHTML = `
       <div class="content-editor">
-        <h2>Site Content Editor</h2>
-        <p>Edit the global site data as JSON. Changes are saved to the server and will sync to all clients instantly.</p>
-        <textarea id="site-data-json" style="width:100%;min-height:480px;font-family:monospace;">${JSON.stringify(allData, null, 2)}</textarea>
-        <div style="margin-top:12px;display:flex;gap:12px;align-items:center;">
-          <button class="btn" id="save-site-data">Save</button>
-          <button class="btn btn-secondary" id="reload-site-data">Reload</button>
-          <span id="site-data-status" style="color:#9aa; font-size:0.95rem;"></span>
+        <div class="content-editor-header">
+          <div>
+            <h2>Site Content CMS</h2>
+            <p>Structured content editing for homepage hero, AFRO PULSE page settings, footer links, drafts, preview, and publishing.</p>
+          </div>
+          <div class="content-editor-actions">
+            <button class="btn" id="save-site-draft">Save Draft</button>
+            <button class="btn" id="publish-site-draft">Publish</button>
+            <button class="btn btn-secondary" id="discard-site-draft">Discard Draft</button>
+            <span id="site-data-status" class="content-editor-status"></span>
+          </div>
         </div>
+
+        <section class="editor-section">
+          <h3>Homepage Hero</h3>
+          <div class="editor-row">
+            <label>Hero Title</label>
+            <input type="text" id="hero-title" value="${currentHero.title || ''}" placeholder="Homepage headline">
+          </div>
+          <div class="editor-row">
+            <label>Hero Subtitle</label>
+            <textarea id="hero-subtitle" rows="3" placeholder="Supporting text">${currentHero.subtitle || ''}</textarea>
+          </div>
+          <div class="editor-row">
+            <label>Button Text</label>
+            <input type="text" id="hero-button-text" value="${currentHero.buttonText || ''}" placeholder="Button label">
+          </div>
+          <div class="editor-row">
+            <label>Button URL</label>
+            <input type="url" id="hero-button-url" value="${currentHero.buttonUrl || ''}" placeholder="https://">
+          </div>
+        </section>
+
+        <section class="editor-section">
+          <h3>AFRO PULSE '27 Settings</h3>
+          <div class="editor-row">
+            <label>Page Title</label>
+            <input type="text" id="afro-title" value="${currentAfro.title || ''}" placeholder="AFRO PULSE title">
+          </div>
+          <div class="editor-row">
+            <label>Page Subtitle</label>
+            <textarea id="afro-subtitle" rows="3" placeholder="AFRO PULSE description">${currentAfro.subtitle || ''}</textarea>
+          </div>
+          <div class="editor-row">
+            <label>Ticket URL</label>
+            <input type="url" id="afro-ticket-url" value="${currentAfro.ticketUrl || ''}" placeholder="https://">
+          </div>
+          <div class="editor-row">
+            <label>Ticket Button Text</label>
+            <input type="text" id="afro-ticket-text" value="${currentAfro.ticketButtonText || ''}" placeholder="Button text">
+          </div>
+          <div class="editor-row">
+            <label>Newsletter Endpoint</label>
+            <input type="url" id="afro-newsletter-endpoint" value="${currentAfro.newsletterEndpoint || ''}" placeholder="https://">
+          </div>
+          <div class="editor-row">
+            <label>Newsletter Confirmation</label>
+            <input type="text" id="afro-newsletter-confirmation" value="${currentAfro.newsletterConfirmation || ''}" placeholder="Thank you message">
+          </div>
+
+          <div class="editor-row editor-row-stack">
+            <label>Gallery Images</label>
+            <div id="gallery-images-list">${galleryImageRows}</div>
+            <button type="button" class="btn btn-small" id="add-gallery-image">Add Image</button>
+          </div>
+
+          <div class="editor-row editor-row-stack">
+            <label>Gallery Videos</label>
+            <div id="gallery-videos-list">${galleryVideoRows}</div>
+            <button type="button" class="btn btn-small" id="add-gallery-video">Add Video</button>
+          </div>
+        </section>
+
+        <section class="editor-section">
+          <h3>Footer Links</h3>
+          <div id="footer-links-list">${footerRowsHtml}</div>
+          <button type="button" class="btn btn-small" id="add-footer-link">Add Footer Link</button>
+        </section>
+
+        <section class="editor-section">
+          <h3>Preview</h3>
+          <div id="site-content-preview" class="site-content-preview"></div>
+        </section>
       </div>
     `;
 
-    document.getElementById('save-site-data').addEventListener('click', async () => {
-      const txt = document.getElementById('site-data-json').value;
-      let parsed;
-      try {
-        parsed = JSON.parse(txt);
-      } catch (err) {
-        alert('Invalid JSON: ' + err.message);
-        return;
+    const editorState = {
+      hero: currentHero,
+      afro: currentAfro,
+      footerLinks: footerLinks.slice(),
+      draftSaved: !!(draftData && Object.keys(draftData).length > 0)
+    };
+
+    const getEditorInputs = () => ({
+      hero: {
+        title: document.getElementById('hero-title').value,
+        subtitle: document.getElementById('hero-subtitle').value,
+        buttonText: document.getElementById('hero-button-text').value,
+        buttonUrl: document.getElementById('hero-button-url').value
+      },
+      afro: {
+        id: 'afro-pulse',
+        title: document.getElementById('afro-title').value,
+        subtitle: document.getElementById('afro-subtitle').value,
+        ticketUrl: document.getElementById('afro-ticket-url').value,
+        ticketButtonText: document.getElementById('afro-ticket-text').value,
+        newsletterEndpoint: document.getElementById('afro-newsletter-endpoint').value,
+        newsletterConfirmation: document.getElementById('afro-newsletter-confirmation').value,
+        galleryImages: Array.from(document.querySelectorAll('.gallery-image-src')).map((input) => ({ src: input.value.trim() })).filter(item => item.src),
+        galleryVideos: Array.from(document.querySelectorAll('.gallery-video-src')).map((input) => ({ embedUrl: input.value.trim() })).filter(item => item.embedUrl)
+      },
+      footerLinks: Array.from(document.querySelectorAll('.footer-link-row')).map((row) => {
+        const label = row.querySelector('.footer-link-label')?.value.trim() || '';
+        const href = row.querySelector('.footer-link-href')?.value.trim() || '';
+        return { label, href };
+      }).filter(link => link.label && link.href)
+    });
+
+    const renderPreview = () => {
+      const data = getEditorInputs();
+      const preview = document.getElementById('site-content-preview');
+      if (!preview) return;
+      preview.innerHTML = `
+        <div class="preview-box">
+          <h4>Homepage Hero Preview</h4>
+          <p><strong>${data.hero.title || '(No title)'}</strong></p>
+          <p>${data.hero.subtitle || '(No subtitle)'}</p>
+          <p><em>Button:</em> ${data.hero.buttonText || '(No text)'} → ${data.hero.buttonUrl || '(No URL)'}</p>
+          <hr>
+          <h4>AFRO PULSE Preview</h4>
+          <p><strong>${data.afro.title || '(No title)'}</strong></p>
+          <p>${data.afro.subtitle || '(No subtitle)'}</p>
+          <p><em>Ticket link:</em> ${data.afro.ticketButtonText || '(No button)'} → ${data.afro.ticketUrl || '(No URL)'}</p>
+          <p><em>Newsletter endpoint:</em> ${data.afro.newsletterEndpoint || '(Not configured)'}</p>
+          <p><em>Confirmation text:</em> ${data.afro.newsletterConfirmation || '(Not configured)'}</p>
+          <hr>
+          <h4>Footer Links Preview</h4>
+          <ul>${data.footerLinks.map(link => `<li><a href="${link.href}">${link.label}</a></li>`).join('')}</ul>
+        </div>
+      `;
+    };
+
+    const setStatus = (message, isError = false) => {
+      const statusEl = document.getElementById('site-data-status');
+      if (!statusEl) return;
+      statusEl.textContent = message;
+      statusEl.style.color = isError ? '#ff8b94' : '#8be9fd';
+      if (!isError) {
+        setTimeout(() => { statusEl.textContent = ''; }, 3000);
       }
+    };
+
+    const refreshFooterList = () => {
+      const footerList = document.getElementById('footer-links-list');
+      if (!footerList) return;
+      footerList.innerHTML = editorState.footerLinks.map((link, index) => `
+        <div class="footer-link-row" data-index="${index}">
+          <input type="text" class="footer-link-label" placeholder="Label" value="${link.label || ''}">
+          <input type="url" class="footer-link-href" placeholder="URL" value="${link.href || ''}">
+          <button type="button" class="btn btn-small btn-secondary remove-footer-link" data-index="${index}">Remove</button>
+        </div>
+      `).join('');
+    };
+
+    const refreshGalleryList = (type) => {
+      const listId = type === 'image' ? 'gallery-images-list' : 'gallery-videos-list';
+      const className = type === 'image' ? 'gallery-image-src' : 'gallery-video-src';
+      const items = type === 'image' ? editorState.afro.galleryImages : editorState.afro.galleryVideos;
+      const listNode = document.getElementById(listId);
+      if (!listNode) return;
+      listNode.innerHTML = items.map((item, index) => `
+        <div class="gallery-item-row" data-index="${index}">
+          <input type="text" class="${className}" placeholder="${type === 'image' ? 'Image URL' : 'Video URL'}" value="${type === 'image' ? item.src || '' : item.embedUrl || ''}">
+          <button type="button" class="btn btn-small btn-secondary remove-gallery-${type}" data-index="${index}">Remove</button>
+        </div>
+      `).join('');
+    };
+
+    const attachListActions = () => {
+      document.querySelectorAll('.remove-footer-link').forEach((button) => {
+        button.addEventListener('click', () => {
+          const idx = Number(button.dataset.index);
+          editorState.footerLinks.splice(idx, 1);
+          refreshFooterList();
+          renderPreview();
+        });
+      });
+
+      document.querySelectorAll('.remove-gallery-image').forEach((button) => {
+        button.addEventListener('click', () => {
+          const idx = Number(button.dataset.index);
+          editorState.afro.galleryImages.splice(idx, 1);
+          refreshGalleryList('image');
+          renderPreview();
+        });
+      });
+
+      document.querySelectorAll('.remove-gallery-video').forEach((button) => {
+        button.addEventListener('click', () => {
+          const idx = Number(button.dataset.index);
+          editorState.afro.galleryVideos.splice(idx, 1);
+          refreshGalleryList('video');
+          renderPreview();
+        });
+      });
+    };
+
+    const initializeEditor = () => {
+      renderPreview();
+      attachListActions();
+    };
+
+    document.getElementById('save-site-draft').addEventListener('click', async () => {
+      const inputData = getEditorInputs();
+      editorState.hero = inputData.hero;
+      editorState.afro = inputData.afro;
+      editorState.footerLinks = inputData.footerLinks;
 
       try {
-        await this.db.saveData(parsed);
-        document.getElementById('site-data-status').textContent = 'Saved.';
-        setTimeout(() => { document.getElementById('site-data-status').textContent = ''; }, 2000);
+        await this.db.saveDraftData({
+          homeHero: editorState.hero,
+          settings: [{ id: 'afro-pulse', ...editorState.afro }],
+          footerLinks: editorState.footerLinks
+        });
+        setStatus('Draft saved');
       } catch (err) {
-        document.getElementById('site-data-status').textContent = 'Save failed.';
-        console.warn('Save site data failed', err);
+        console.warn('Save draft failed', err);
+        setStatus('Unable to save draft', true);
       }
     });
 
-    document.getElementById('reload-site-data').addEventListener('click', async () => {
+    document.getElementById('publish-site-draft').addEventListener('click', async () => {
+      const inputData = getEditorInputs();
+      editorState.hero = inputData.hero;
+      editorState.afro = inputData.afro;
+      editorState.footerLinks = inputData.footerLinks;
+
       try {
-        await this.db.refreshFromServer();
-        const refreshed = this.db.getData();
-        document.getElementById('site-data-json').value = JSON.stringify(refreshed, null, 2);
+        await this.db.saveDraftData({
+          homeHero: editorState.hero,
+          settings: [{ id: 'afro-pulse', ...editorState.afro }],
+          footerLinks: editorState.footerLinks
+        });
+        await this.db.publishDraft();
+        setStatus('Published live');
       } catch (err) {
-        console.warn('Reload failed', err);
+        console.warn('Publish failed', err);
+        setStatus('Publish failed', true);
       }
     });
+
+    document.getElementById('discard-site-draft').addEventListener('click', async () => {
+      try {
+        await this.db.discardDraft();
+        this.showSiteContentEditor();
+        setStatus('Draft discarded');
+      } catch (err) {
+        console.warn('Discard failed', err);
+        setStatus('Unable to discard draft', true);
+      }
+    });
+
+    document.getElementById('add-footer-link').addEventListener('click', () => {
+      editorState.footerLinks.push({ label: '', href: '' });
+      refreshFooterList();
+      attachListActions();
+      renderPreview();
+    });
+
+    document.getElementById('add-gallery-image').addEventListener('click', () => {
+      editorState.afro.galleryImages.push({ id: `img-${Date.now()}`, src: '' });
+      refreshGalleryList('image');
+      attachListActions();
+      renderPreview();
+    });
+
+    document.getElementById('add-gallery-video').addEventListener('click', () => {
+      editorState.afro.galleryVideos.push({ id: `vid-${Date.now()}`, embedUrl: '' });
+      refreshGalleryList('video');
+      attachListActions();
+      renderPreview();
+    });
+
+    ['hero-title','hero-subtitle','hero-button-text','hero-button-url','afro-title','afro-subtitle','afro-ticket-url','afro-ticket-text','afro-newsletter-endpoint','afro-newsletter-confirmation'].forEach((fieldId) => {
+      const el = document.getElementById(fieldId);
+      if (!el) return;
+      el.addEventListener('input', renderPreview);
+    });
+
+    initializeEditor();
   }
 
   showEventSettings() {
