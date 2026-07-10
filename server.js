@@ -30,9 +30,9 @@ const MIME_TYPES = {
 
 const DEFAULT_SITE_DATA = {
   products: [
-    { id: 1, name: 'Premium DJ Services', category: 'service', price: 500, description: 'Professional DJ services for events', image: '', buttonText: 'BOOK' },
-    { id: 2, name: 'Photography & Videography', category: 'service', price: 500, description: 'Professional photography and videography packages', image: '', buttonText: 'BOOK' },
-    { id: 3, name: 'Event Planning', category: 'service', price: 12000, description: 'Complete event planning and coordination', image: '', buttonText: 'BOOK' },
+    { id: 1, name: 'Premium DJ Services', category: 'service', price: 500, description: 'Professional DJ services for events', image: 'assets/images/IMG_3347.jpg', buttonText: 'BOOK' },
+    { id: 2, name: 'Photography & Videography', category: 'service', price: 500, description: 'Professional photography and videography packages', image: 'assets/images/IMG_4699.JPG', buttonText: 'BOOK' },
+    { id: 3, name: 'Event Planning', category: 'service', price: 12000, description: 'Complete event planning and coordination', image: 'assets/images/IMG_4703.jpg', buttonText: 'BOOK' },
     { id: 4, name: 'Sports Solutions', category: 'service', price: 500, description: 'Sports event management and coverage', image: '', buttonText: 'BOOK' }
   ],
   merchandise: [
