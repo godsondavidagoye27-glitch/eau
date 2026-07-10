@@ -642,6 +642,12 @@ body.home-background {
   color: var(--color-text-light);
   padding: var(--spacing-3xl) 0 var(--spacing-xl);
 }
+
+@media (max-width: 480px) {
+  .site-footer {
+    padding: 1rem 0 0.75rem;
+  }
+}
 .site-footer .site-footer-inner {
   display: flex;
   justify-content: space-between;
@@ -1177,6 +1183,9 @@ body.home-background {
   perspective: 1400px;
   min-height: 270px;
   cursor: pointer;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 .card-face {
   position: absolute;
@@ -1188,6 +1197,10 @@ body.home-background {
   transform-style: preserve-3d;
   box-shadow: 0 24px 60px rgba(0,0,0,0.18);
   transition: transform 0.35s ease, box-shadow 0.35s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
 }
 .card-front {
   background: linear-gradient(135deg, #1c1a30, #3d3b66);
@@ -1211,6 +1224,8 @@ body.home-background {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 40px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .card-chip {
   width: 64px;
@@ -1229,6 +1244,8 @@ body.home-background {
   font-size: 1.2rem;
   letter-spacing: 0.22em;
   margin-bottom: 30px;
+  word-break: break-all;
+  overflow-wrap: break-word;
 }
 .card-meta {
   display: grid;
@@ -1360,6 +1377,77 @@ body.home-background {
 
   .card-viz {
     min-height: 220px;
+  }
+}
+
+@media (max-width: 480px) {
+  .booking-card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .booking-intro h1 {
+    font-size: 1.6rem;
+  }
+
+  .booking-form-panel,
+  .booking-preview {
+    padding: 16px;
+  }
+
+  .card-viz {
+    min-height: 180px;
+  }
+
+  .card-face {
+    padding: 16px;
+  }
+
+  .card-top {
+    margin-bottom: 20px;
+  }
+
+  .card-chip {
+    width: 48px;
+    height: 32px;
+  }
+
+  .card-brand {
+    font-size: 1rem;
+  }
+
+  .card-number {
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+    letter-spacing: 0.12em;
+  }
+
+  .card-meta {
+    gap: 12px;
+  }
+
+  .card-meta span {
+    font-size: 0.7rem;
+    margin-bottom: 4px;
+  }
+
+  .card-meta strong {
+    font-size: 0.85rem;
+  }
+
+  .magnetic-strip {
+    height: 36px;
+    margin-bottom: 16px;
+  }
+
+  .signature-box {
+    min-width: 100px;
+    min-height: 32px;
+    font-size: 0.8rem;
+  }
+
+  .booking-details-panel {
+    margin-top: 20px;
   }
 }
 

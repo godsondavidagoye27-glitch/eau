@@ -259,6 +259,12 @@ footer {
   margin-top: auto;
 }
 
+@media (max-width: 480px) {
+  footer {
+    padding: 1rem 0 0.75rem;
+  }
+}
+
 .footer-content {
   max-width: 1200px;
   margin: 0 auto;
