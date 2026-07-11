@@ -139,6 +139,25 @@
 
   <!-- Scripts -->
   <script type="module" src="js/admin-app.js"></script>
+  <script type="module">
+    (async () => {
+      try {
+        const mod = await import('./js/admin-app.js');
+        if (mod && mod.AdminApp) {
+          try {
+            window.adminApp = new mod.AdminApp();
+            window.__ADMIN_MODULE_LOADED__ = true;
+          } catch (err) {
+            console.error('AdminApp initialization failed:', err);
+            window.__ADMIN_INIT_ERROR__ = String(err && err.message ? err.message : err);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to import admin-app module', err);
+        window.__ADMIN_INIT_ERROR__ = String(err && err.message ? err.message : err);
+      }
+    })();
+  </script>
   <script>
     // Set user email in header
     document.addEventListener('DOMContentLoaded', () => {
