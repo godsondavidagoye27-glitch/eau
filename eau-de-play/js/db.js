@@ -147,8 +147,11 @@ export class Database {
   }
 
   getSharedData() {
-    if (typeof window !== 'undefined' && window.__SITE_DATA__) {
-      return window.__SITE_DATA__;
+    if (typeof window !== 'undefined' && window.__SITE_DATA__ && typeof window.__SITE_DATA__ === 'object' && !Array.isArray(window.__SITE_DATA__)) {
+      const sharedData = window.__SITE_DATA__;
+      if (Object.keys(sharedData).length > 0) {
+        return sharedData;
+      }
     }
     return null;
   }
@@ -178,7 +181,24 @@ export class Database {
     const data = this.getData();
     const draft = this.getDraftData();
     const publishTarget = { ...data, ...draft, draft: {} };
-    return this.saveData(publishTarget);
+
+    await this.saveData(publishTarget);
+
+    try {
+      const client = await this.getSupabaseClient();
+      if (client && typeof client.from === 'function') {
+        const payload = {
+          id: 1,
+          content: publishTarget,
+          updated_at: new Date().toISOString()
+        };
+        await client.from('site_data').upsert(payload, { onConflict: 'id' }).select();
+      }
+    } catch (err) {
+      console.warn('Direct Supabase publish failed', err);
+    }
+
+    return publishTarget;
   }
 
   async discardDraft() {
@@ -213,6 +233,32 @@ export class Database {
     }
 
     return false;
+  }
+
+  async fetchSiteDataFromSupabase() {
+    const client = await this.getSupabaseClient();
+    if (!client || typeof client.from !== 'function') {
+      return null;
+    }
+
+    try {
+      const { data, error } = await client.from('site_data').select('content').eq('id', 1).single();
+      if (error) {
+        console.warn('Supabase site_data fetch failed', error);
+        return null;
+      }
+
+      if (!data || data.content == null) {
+        return null;
+      }
+
+      return typeof data.content === 'string'
+        ? JSON.parse(data.content)
+        : data.content;
+    } catch (err) {
+      console.warn('Supabase site_data load failed', err);
+      return null;
+    }
   }
 
   // GET ALL ITEMS
@@ -271,7 +317,7 @@ export class Database {
   // GET ALL DATA
   getData() {
     const sharedData = this.getSharedData();
-    if (sharedData && typeof sharedData === 'object') {
+    if (sharedData) {
       return sharedData;
     }
 

@@ -142,7 +142,8 @@
   <script>
     // Set user email in header
     document.addEventListener('DOMContentLoaded', () => {
-      const user = JSON.parse(localStorage.getItem('eau-de-play-current-user') || '{}');
+      const rawUser = localStorage.getItem('eau-de-play-current-user') || localStorage.getItem('eau-de-play-user');
+      const user = rawUser ? JSON.parse(rawUser) : {};
       const userEmail = document.getElementById('user-email');
       if (userEmail && user.email) {
         userEmail.textContent = user.email;

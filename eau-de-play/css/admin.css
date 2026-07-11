@@ -466,6 +466,19 @@
     border-radius: var(--radius-sm);
   }
 
+  .input-error {
+    border-color: #ff8b94 !important;
+    box-shadow: 0 0 0 3px rgba(255, 139, 148, 0.15);
+    background-color: rgba(255, 139, 148, 0.08);
+  }
+
+  .editor-empty {
+    margin: 0;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px dashed var(--color-border);
+    color: var(--color-text-muted);
+    border-radius: var(--radius-sm);
   }
 
   .media-row label {

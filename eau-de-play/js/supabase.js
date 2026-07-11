@@ -33,8 +33,8 @@ function getSupabaseConfigFromWindow() {
 
 function getSupabaseConfigFromMetaEnv() {
   const envConfig = typeof import.meta !== 'undefined' ? import.meta.env : null;
-  const url = getEnvValue(envConfig, ['VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL']);
-  const key = getEnvValue(envConfig, ['VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY']);
+  const url = getEnvValue(envConfig, ['VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL', 'SUPABASE_PROJECT_URL']);
+  const key = getEnvValue(envConfig, ['VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY', 'SUPABASE_KEY']);
   return { url, key };
 }
 

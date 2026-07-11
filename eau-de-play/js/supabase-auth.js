@@ -19,11 +19,12 @@ export class SupabaseAuth {
     this.client.auth.onAuthStateChange((event, session) => {
       console.log('🔐 Auth event:', event);
       if (session?.user) {
-        this.currentUser = session.user;
+        const user = this.attachAdminRole(session.user);
+        this.currentUser = user;
         // keep both legacy and new keys in sync
-        localStorage.setItem('eau-de-play-user', JSON.stringify(session.user));
-        localStorage.setItem('eau-de-play-current-user', JSON.stringify(session.user));
-        window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: session.user }));
+        localStorage.setItem('eau-de-play-user', JSON.stringify(user));
+        localStorage.setItem('eau-de-play-current-user', JSON.stringify(user));
+        window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: user }));
       } else {
         this.currentUser = null;
         // remove both keys so UI modules update correctly
@@ -34,16 +35,26 @@ export class SupabaseAuth {
     });
   }
 
+  attachAdminRole(user) {
+    const adminEmails = ['eaudeyplay@gmail.com', 'admin@eaudeplay.com'];
+    const normalizedEmail = String(user?.email || '').trim().toLowerCase();
+    if (adminEmails.includes(normalizedEmail)) {
+      return { ...user, role: 'admin' };
+    }
+    return { ...user, role: 'user' };
+  }
+
   // Try to restore an existing session on page load and sync localStorage
   async restoreSession() {
     try {
       const { data } = await this.client.auth.getSession();
       const session = data?.session || null;
       if (session?.user) {
-        this.currentUser = session.user;
-        localStorage.setItem('eau-de-play-user', JSON.stringify(session.user));
-        localStorage.setItem('eau-de-play-current-user', JSON.stringify(session.user));
-        window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: session.user }));
+        const user = this.attachAdminRole(session.user);
+        this.currentUser = user;
+        localStorage.setItem('eau-de-play-user', JSON.stringify(user));
+        localStorage.setItem('eau-de-play-current-user', JSON.stringify(user));
+        window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: user }));
       }
     } catch (error) {
       console.warn('Could not restore session:', error?.message || error);
@@ -76,14 +87,15 @@ export class SupabaseAuth {
         password
       });
       if (error) throw error;
-      this.currentUser = data.user;
+      const user = this.attachAdminRole(data.user);
+      this.currentUser = user;
       // ensure legacy localStorage key used elsewhere is set
-      if (data?.user) {
-        localStorage.setItem('eau-de-play-user', JSON.stringify(data.user));
-        localStorage.setItem('eau-de-play-current-user', JSON.stringify(data.user));
-        window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: data.user }));
+      if (user) {
+        localStorage.setItem('eau-de-play-user', JSON.stringify(user));
+        localStorage.setItem('eau-de-play-current-user', JSON.stringify(user));
+        window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: user }));
       }
-      return { success: true, user: data.user };
+      return { success: true, user };
     } catch (error) {
       console.error('❌ Sign in error:', error.message);
       return { success: false, error: error.message };
@@ -112,8 +124,9 @@ export class SupabaseAuth {
     try {
       const { data: { user }, error } = await this.client.auth.getUser();
       if (error) throw error;
-      this.currentUser = user;
-      return user;
+      const normalizedUser = this.attachAdminRole(user);
+      this.currentUser = normalizedUser;
+      return normalizedUser;
     } catch (error) {
       console.error('❌ Get user error:', error.message);
       return null;

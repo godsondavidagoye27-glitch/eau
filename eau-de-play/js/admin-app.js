@@ -16,10 +16,17 @@ export class AdminApp {
   }
 
   async init() {
-    const currentUser = this.auth.getCurrentUser();
+    let currentUser = this.auth.getCurrentUser();
 
-    // Check if user is logged in and has admin role
-    if (!currentUser || currentUser.role !== 'admin') {
+    if (!currentUser) {
+      currentUser = this.auth.loadCurrentUser();
+      if (currentUser) {
+        this.auth.currentUser = currentUser;
+      }
+    }
+
+    const isAdmin = currentUser && (currentUser.role === 'admin' || this.auth.isAdminEmail(currentUser.email));
+    if (!currentUser || !isAdmin) {
       window.location.href = 'admin-login.html';
       return;
     }
@@ -64,9 +71,13 @@ export class AdminApp {
   setupSidebar() {
     const navLinks = document.querySelectorAll('.admin-nav-link');
     navLinks.forEach(link => {
+      const view = link.dataset.view;
+      if (!view) {
+        return;
+      }
+
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        const view = link.dataset.view;
         this.switchView(view);
       });
     });
@@ -111,15 +122,15 @@ export class AdminApp {
   }
 
   switchView(view) {
+    if (!view || typeof view !== 'string') {
+      return;
+    }
 
     this.currentView = view;
     
     // Update active nav link
     document.querySelectorAll('.admin-nav-link').forEach(link => {
-      link.classList.remove('active');
-      if (link.dataset.view === view) {
-        link.classList.add('active');
-      }
+      link.classList.toggle('active', link.dataset.view === view);
     });
 
     // Update content
@@ -331,9 +342,63 @@ export class AdminApp {
           <p><em>Confirmation text:</em> ${data.afro.newsletterConfirmation || '(Not configured)'}</p>
           <hr>
           <h4>Footer Links Preview</h4>
-          <ul>${data.footerLinks.map(link => `<li><a href="${link.href}">${link.label}</a></li>`).join('')}</ul>
+          ${data.footerLinks.length > 0 ? `<ul>${data.footerLinks.map(link => `<li><a href="${link.href}">${link.label}</a></li>`).join('')}</ul>` : '<p><em>No footer links configured.</em></p>'}
         </div>
       `;
+    };
+
+    const isValidUrl = (value) => {
+      if (!value || !value.trim()) return true;
+      try {
+        new URL(value.trim());
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    const clearValidation = () => {
+      document.querySelectorAll('.input-error').forEach((el) => el.classList.remove('input-error'));
+    };
+
+    const validateEditorInputs = (data) => {
+      clearValidation();
+      const errors = [];
+
+      if (!data.hero.title.trim()) {
+        errors.push('Homepage hero title is required.');
+        document.getElementById('hero-title')?.classList.add('input-error');
+      }
+      if (!data.hero.subtitle.trim()) {
+        errors.push('Homepage hero subtitle is required.');
+        document.getElementById('hero-subtitle')?.classList.add('input-error');
+      }
+      if (data.hero.buttonUrl && !isValidUrl(data.hero.buttonUrl)) {
+        errors.push('Hero button URL is invalid.');
+        document.getElementById('hero-button-url')?.classList.add('input-error');
+      }
+      if (data.afro.ticketUrl && !isValidUrl(data.afro.ticketUrl)) {
+        errors.push('AFRO PULSE ticket URL is invalid.');
+        document.getElementById('afro-ticket-url')?.classList.add('input-error');
+      }
+      if (data.afro.newsletterEndpoint && !isValidUrl(data.afro.newsletterEndpoint)) {
+        errors.push('AFRO PULSE newsletter endpoint is invalid.');
+        document.getElementById('afro-newsletter-endpoint')?.classList.add('input-error');
+      }
+
+      data.footerLinks.forEach((link, index) => {
+        const row = document.querySelector(`.footer-link-row[data-index="${index}"]`);
+        if (!link.label.trim() || !link.href.trim()) {
+          errors.push(`Footer link ${index + 1} requires both a label and a URL.`);
+          row?.querySelector('.footer-link-label')?.classList.add('input-error');
+          row?.querySelector('.footer-link-href')?.classList.add('input-error');
+        } else if (!isValidUrl(link.href)) {
+          errors.push(`Footer link ${index + 1} URL is invalid.`);
+          row?.querySelector('.footer-link-href')?.classList.add('input-error');
+        }
+      });
+
+      return errors;
     };
 
     const setStatus = (message, isError = false) => {
@@ -349,13 +414,16 @@ export class AdminApp {
     const refreshFooterList = () => {
       const footerList = document.getElementById('footer-links-list');
       if (!footerList) return;
-      footerList.innerHTML = editorState.footerLinks.map((link, index) => `
-        <div class="footer-link-row" data-index="${index}">
-          <input type="text" class="footer-link-label" placeholder="Label" value="${link.label || ''}">
-          <input type="url" class="footer-link-href" placeholder="URL" value="${link.href || ''}">
-          <button type="button" class="btn btn-small btn-secondary remove-footer-link" data-index="${index}">Remove</button>
-        </div>
-      `).join('');
+      footerList.innerHTML = editorState.footerLinks.length > 0
+        ? editorState.footerLinks.map((link, index) => `
+            <div class="footer-link-row" data-index="${index}">
+              <input type="text" class="footer-link-label" placeholder="Label" value="${link.label || ''}">
+              <input type="url" class="footer-link-href" placeholder="URL" value="${link.href || ''}">
+              <button type="button" class="btn btn-small btn-secondary remove-footer-link" data-index="${index}">Remove</button>
+            </div>
+          `).join('')
+        : '<p class="editor-empty">No footer links yet. Add one to begin.</p>';
+      attachListActions();
     };
 
     const refreshGalleryList = (type) => {
@@ -364,12 +432,15 @@ export class AdminApp {
       const items = type === 'image' ? editorState.afro.galleryImages : editorState.afro.galleryVideos;
       const listNode = document.getElementById(listId);
       if (!listNode) return;
-      listNode.innerHTML = items.map((item, index) => `
-        <div class="gallery-item-row" data-index="${index}">
-          <input type="text" class="${className}" placeholder="${type === 'image' ? 'Image URL' : 'Video URL'}" value="${type === 'image' ? item.src || '' : item.embedUrl || ''}">
-          <button type="button" class="btn btn-small btn-secondary remove-gallery-${type}" data-index="${index}">Remove</button>
-        </div>
-      `).join('');
+      listNode.innerHTML = items.length > 0
+        ? items.map((item, index) => `
+            <div class="gallery-item-row" data-index="${index}">
+              <input type="text" class="${className}" placeholder="${type === 'image' ? 'Image URL' : 'Video URL'}" value="${type === 'image' ? item.src || '' : item.embedUrl || ''}">
+              <button type="button" class="btn btn-small btn-secondary remove-gallery-${type}" data-index="${index}">Remove</button>
+            </div>
+          `).join('')
+        : `<p class="editor-empty">No ${type === 'image' ? 'images' : 'videos'} added yet.</p>`;
+      attachListActions();
     };
 
     const attachListActions = () => {
@@ -408,6 +479,11 @@ export class AdminApp {
 
     document.getElementById('save-site-draft').addEventListener('click', async () => {
       const inputData = getEditorInputs();
+      const errors = validateEditorInputs(inputData);
+      if (errors.length) {
+        setStatus(errors.join(' '), true);
+        return;
+      }
       editorState.hero = inputData.hero;
       editorState.afro = inputData.afro;
       editorState.footerLinks = inputData.footerLinks;
@@ -427,6 +503,11 @@ export class AdminApp {
 
     document.getElementById('publish-site-draft').addEventListener('click', async () => {
       const inputData = getEditorInputs();
+      const errors = validateEditorInputs(inputData);
+      if (errors.length) {
+        setStatus(errors.join(' '), true);
+        return;
+      }
       editorState.hero = inputData.hero;
       editorState.afro = inputData.afro;
       editorState.footerLinks = inputData.footerLinks;
@@ -439,6 +520,7 @@ export class AdminApp {
         });
         await this.db.publishDraft();
         setStatus('Published live');
+        this.showSiteContentEditor();
       } catch (err) {
         console.warn('Publish failed', err);
         setStatus('Publish failed', true);

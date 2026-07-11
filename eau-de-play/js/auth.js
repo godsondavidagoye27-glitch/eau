@@ -99,8 +99,8 @@ export class Auth {
 
     const storedUsers = this.db.getAll('users') || [];
     storedUsers.forEach((user) => {
-      if (user?.role === 'admin' && user?.email && user?.password) {
-        candidates.push({ email: String(user.email).trim().toLowerCase(), password: String(user.password) });
+      if (user?.role === 'admin' && user?.email) {
+        candidates.push({ email: String(user.email).trim().toLowerCase(), password: String(user.password || '') });
       }
     });
 
@@ -117,10 +117,15 @@ export class Auth {
     return unique;
   }
 
+  isAdminEmail(email) {
+    const normalizedEmail = (email || '').trim().toLowerCase();
+    return this.getAdminCandidates().some((candidate) => candidate.email === normalizedEmail);
+  }
+
   matchesAdminCredentials(email, password) {
     const normalizedEmail = (email || '').trim().toLowerCase();
     const normalizedPassword = password || '';
-    return this.getAdminCandidates().some((candidate) => candidate.email === normalizedEmail && candidate.password === normalizedPassword);
+    return this.getAdminCandidates().some((candidate) => candidate.email === normalizedEmail && candidate.password && candidate.password === normalizedPassword);
   }
 
   // LOGIN
@@ -156,6 +161,7 @@ export class Auth {
   logout() {
     this.currentUser = null;
     localStorage.removeItem('eau-de-play-current-user');
+    localStorage.removeItem('eau-de-play-user');
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('userLoggedOut'));
     }
@@ -172,28 +178,59 @@ export class Auth {
     if (!this.currentUser) return false;
     const normalizedEmail = (this.currentUser.email || '').trim().toLowerCase();
     const normalizedPassword = this.currentUser.password || '';
-    return this.currentUser.role === 'admin' && this.matchesAdminCredentials(normalizedEmail, normalizedPassword);
+    const hasAdminEmail = this.isAdminEmail(normalizedEmail);
+    return this.currentUser.role === 'admin' && (this.matchesAdminCredentials(normalizedEmail, normalizedPassword) || hasAdminEmail);
   }
 
   // SAVE CURRENT USER
+  getStoredUser() {
+    const rawCurrent = localStorage.getItem('eau-de-play-current-user');
+    const rawLegacy = localStorage.getItem('eau-de-play-user');
+    if (rawCurrent) {
+      try {
+        return JSON.parse(rawCurrent);
+      } catch (err) {
+        console.warn('Failed to parse current user from localStorage', err);
+      }
+    }
+    if (rawLegacy) {
+      try {
+        return JSON.parse(rawLegacy);
+      } catch (err) {
+        console.warn('Failed to parse legacy user from localStorage', err);
+      }
+    }
+    return null;
+  }
+
   saveCurrentUser(user) {
-    localStorage.setItem('eau-de-play-current-user', JSON.stringify(user));
+    const normalizedUser = { ...user, role: user.role || 'admin' };
+    localStorage.setItem('eau-de-play-current-user', JSON.stringify(normalizedUser));
+    localStorage.setItem('eau-de-play-user', JSON.stringify(normalizedUser));
   }
 
   // LOAD CURRENT USER
   loadCurrentUser() {
     try {
-      const raw = localStorage.getItem('eau-de-play-current-user');
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!parsed || parsed.role !== 'admin') return null;
+      const parsed = this.getStoredUser();
+      if (!parsed) return null;
+
       const normalizedEmail = (parsed.email || '').trim().toLowerCase();
       const normalizedPassword = parsed.password || '';
-      if (this.matchesAdminCredentials(normalizedEmail, normalizedPassword)) {
-        return parsed;
+      const hasAdminRole = parsed.role === 'admin';
+      const isAdminEmail = this.isAdminEmail(normalizedEmail);
+
+      if ((hasAdminRole || isAdminEmail) && (this.matchesAdminCredentials(normalizedEmail, normalizedPassword) || isAdminEmail)) {
+        return {
+          ...parsed,
+          email: normalizedEmail,
+          role: 'admin'
+        };
       }
+
       return null;
     } catch (err) {
+      console.warn('Failed to load current user', err);
       return null;
     }
   }
