@@ -1178,8 +1178,18 @@ export class AdminApp {
 }
 
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+function initAdminApp() {
   if (document.getElementById('admin-content')) {
-    window.adminApp = new AdminApp();
+    try {
+      window.adminApp = new AdminApp();
+    } catch (err) {
+      console.error('Failed to initialize AdminApp', err);
+    }
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAdminApp);
+} else {
+  initAdminApp();
+}
