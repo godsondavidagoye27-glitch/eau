@@ -1,6 +1,9 @@
 // ============================================
 // ADMIN APP MODULE - Admin Dashboard Logic
 // ============================================
+try {
+  if (typeof window !== 'undefined') window.__ADMIN_MODULE_LOADED__ = true;
+} catch (e) { /* ignore */ }
 
 import Database from './db.js';
 import Auth from './auth.js';
