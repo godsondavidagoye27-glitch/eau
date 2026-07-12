@@ -618,7 +618,10 @@ export class PublicApp {
     };
 
     const html = services.map(service => {
-      const src = safeSrc(service.image);
+      const defaultSrc = service.name && service.name.toLowerCase().includes('dj')
+        ? '/assets/images/DJLogo.png'
+        : safeSrc(service.image);
+      const src = defaultSrc || '';
       const img = src ? `<img src="${src}" alt="${service.name}">` : `<div class="service-card-placeholder">No image</div>`;
       const bookLink = `book.html?serviceId=${service.id}`;
       return `
