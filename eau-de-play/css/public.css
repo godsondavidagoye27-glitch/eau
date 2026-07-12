@@ -83,15 +83,15 @@
   border-radius: 32px;
   overflow: hidden;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
-  background: linear-gradient(180deg, rgba(7,8,20,0.42), rgba(7,8,20,0.42)), url('../assets/images/IMG_1427.JPG');
+  background: linear-gradient(180deg, rgba(7,8,20,0.30), rgba(7,8,20,0.30)), url('../assets/images/IMG_1427.JPG');
   background-size: cover;
   background-position: center;
 }
 
 .afro-home-banner .afro-home-banner-content {
   padding: var(--spacing-4xl) var(--spacing-lg);
-  background: rgba(12, 10, 21, 0.5);
-  backdrop-filter: blur(14px);
+  background: rgba(12, 10, 21, 0.32);
+  backdrop-filter: blur(6px);
 }
 
 @media (max-width: 768px) {

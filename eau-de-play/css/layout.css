@@ -178,12 +178,22 @@
 @media (max-width: 680px) {
   .navbar-container {
     padding: 0 var(--spacing-md);
-    grid-template-columns: 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
   }
 
   .navbar-brand {
+    max-width: 220px;
     font-size: var(--font-size-base);
     line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .navbar-toggle {
+    width: 48px;
+    height: 48px;
   }
 
   .mobile-menu {
@@ -196,9 +206,9 @@
     padding-top: calc(var(--spacing-3xl) + 20px);
   }
 
-  .navbar-toggle {
-    width: 48px;
-    height: 48px;
+  .featured-section,
+  #featured-products {
+    display: none !important;
   }
 }
 
