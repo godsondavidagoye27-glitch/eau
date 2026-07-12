@@ -8,17 +8,24 @@ const DEFAULT_FOOTER_LINKS = [
   { label: 'Email', href: 'mailto:eaudeyplay@gmail.com' }
 ];
 
+function getSiteAssetPath(assetPath) {
+  if (!assetPath) return assetPath;
+  if (assetPath.startsWith('/')) return assetPath;
+  return `/${assetPath.replace(/^\.\//, '').replace(/^\//, '')}`;
+}
+
 export function createNavbar() {
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
   const isActive = (page) => currentPage === page ? 'active' : '';
   const cartActive = ['cart.html', 'checkout.html', 'checkout-success.html'].includes(currentPage) ? 'active' : '';
+  const logoSrc = getSiteAssetPath('assets/images/EAUDEYPLAYLOGO.png');
 
   return `
     <nav class="navbar">
       <div class="navbar-container">
         <div class="navbar-left">
           <a href="index.html" class="navbar-brand" aria-label="EAU DEY PLAY home">
-            <img src="assets/images/EAUDEYPLAYLOGO.png" alt="EAU DEY PLAY logo" class="brand-logo">
+            <img src="${logoSrc}" alt="EAU DEY PLAY logo" class="brand-logo">
           </a>
         </div>
 
