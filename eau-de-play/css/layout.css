@@ -42,22 +42,16 @@
 
 .navbar-brand {
   display: flex;
-  flex-direction: column;
-  line-height: 1;
-  font-family: var(--font-serif);
-  font-weight: var(--font-weight-black);
-  letter-spacing: 0.08em;
-  color: var(--color-text);
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
-.navbar-brand .brand-line {
+.navbar-brand .brand-logo {
   display: block;
-  white-space: nowrap;
-}
-
-.navbar-brand .brand-play {
-  font-size: 1.05em;
-  color: var(--color-primary-light);
+  width: clamp(96px, 12vw, 140px);
+  height: auto;
+  object-fit: contain;
 }
 
 .desktop-nav {

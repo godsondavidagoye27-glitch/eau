@@ -578,9 +578,10 @@ export class PublicApp {
     };
 
     const html = products.map(product => {
-      const src = safeSrc(product.image) || '';
+      const src = product.name && product.name.toLowerCase().includes('dj')
+        ? 'assets/images/DJLogo.png'
+        : safeSrc(product.image) || '';
       const imgHtml = src ? `<img src="${src}" alt="${product.name}" class="card-img">` : `<div class="card-img" style="display:flex;align-items:center;justify-content:center;color:var(--color-text-light);">No image</div>`;
-      // Hide price for services on the card; show for merchandise
       const priceHtml = product.category === 'service' ? '' : `<div class="card-price">$${product.price}</div>`;
       const bookLink = product.category === 'service' ? `book.html?serviceId=${product.id}` : '#';
       return `

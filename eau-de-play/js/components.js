@@ -17,10 +17,9 @@ export function createNavbar() {
     <nav class="navbar">
       <div class="navbar-container">
         <div class="navbar-left">
-          <div class="navbar-brand">
-            <span class="brand-line">EAU DEY</span>
-            <span class="brand-line brand-play">PLAY</span>
-          </div>
+          <a href="index.html" class="navbar-brand" aria-label="EAU DEY PLAY home">
+            <img src="assets/images/EAUDEYPLAYLOGO.png" alt="EAU DEY PLAY logo" class="brand-logo">
+          </a>
         </div>
 
         <div class="navbar-center">
