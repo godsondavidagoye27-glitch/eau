@@ -282,19 +282,7 @@ export class PublicApp {
         </div>
       </section>
 
-      <section class="gallery-preview-section container" id="gallery-section">
-        <div class="section-title">
-          <h2>Event Preview Carousel</h2>
-          <p>Swipe through a lightweight preview of the gallery before exploring the full collection.</p>
-        </div>
-        <div class="preview-carousel">
-          <button id="carousel-prev" class="carousel-control" aria-label="Previous images">‹</button>
-          <div class="carousel-window">
-            <div class="carousel-track" id="carousel-track"></div>
-          </div>
-          <button id="carousel-next" class="carousel-control" aria-label="Next images">›</button>
-        </div>
-      </section>
+      <!-- Gallery preview carousel removed per request -->
 
       <section class="newsletter-section container" id="newsletter-section">
         <div class="section-title">
@@ -309,7 +297,7 @@ export class PublicApp {
       </section>
     `;
 
-    this.renderGalleryPreviewCarousel(config.galleryImages);
+    // carousel removed: no preview carousel rendered
   }
 
   formatVideoEmbed(url) {
@@ -338,52 +326,11 @@ export class PublicApp {
     return `<div class="video-embed"><iframe src="${trimmed}" title="AFRO PULSE video" frameborder="0" allowfullscreen></iframe></div>`;
   }
 
-  renderGalleryPreviewCarousel(images) {
-    const track = document.getElementById('carousel-track');
-    if (!track) return;
-
-    const previewImages = (images || []).filter((image) => this.isRenderableMediaValue(image?.src)).slice(0, 8);
-    track.innerHTML = previewImages.map((image, index) => `
-      <div class="preview-card">
-        <img src="${image.src}" alt="Preview ${index + 1}">
-        <div class="preview-card-label">Featured ${index + 1}</div>
-      </div>
-    `).join('');
-
-    this.afroPreviewImages = previewImages;
-    this.afroPreviewIndex = 0;
-    this.startAfroCarousel(previewImages);
-    this.updateCarouselPosition();
-  }
-
-  startAfroCarousel(images) {
-    if (this.afroAutoRotateTimer) {
-      clearInterval(this.afroAutoRotateTimer);
-    }
-
-    if (!images || images.length <= 1) return;
-
-    this.afroAutoRotateTimer = window.setInterval(() => {
-      if (!this.afroPreviewImages || this.afroPreviewImages.length <= 1) return;
-      this.afroPreviewIndex = (this.afroPreviewIndex + 1) % this.afroPreviewImages.length;
-      this.updateCarouselPosition();
-    }, 4000);
-  }
-
-  updateCarouselPosition() {
-    const track = document.getElementById('carousel-track');
-    if (!track) return;
-    const card = track.querySelector('.preview-card');
-    const cardWidth = card ? card.offsetWidth + parseInt(getComputedStyle(card).marginRight || '0', 10) : 240;
-    track.style.transform = `translateX(-${this.afroPreviewIndex * cardWidth}px)`;
-  }
+  // Carousel functionality removed. Keep placeholders if needed in future.
 
   setupAfroPulseInteractions(config) {
     const newsletterForm = document.getElementById('afro-newsletter-form');
     const feedback = document.getElementById('newsletter-feedback');
-    const prevButton = document.getElementById('carousel-prev');
-    const nextButton = document.getElementById('carousel-next');
-    const totalSlides = config.galleryImages.length;
 
     if (newsletterForm) {
       newsletterForm.addEventListener('submit', async (event) => {
@@ -421,19 +368,7 @@ export class PublicApp {
       });
     }
 
-    if (prevButton) {
-      prevButton.addEventListener('click', () => {
-        this.afroPreviewIndex = Math.max(0, this.afroPreviewIndex - 1);
-        this.updateCarouselPosition();
-      });
-    }
-
-    if (nextButton) {
-      nextButton.addEventListener('click', () => {
-        this.afroPreviewIndex = Math.min(totalSlides - 1, this.afroPreviewIndex + 1);
-        this.updateCarouselPosition();
-      });
-    }
+    // Carousel controls removed
   }
 
   // GALLERY PAGE SETUP
