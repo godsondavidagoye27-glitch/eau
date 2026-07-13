@@ -95,6 +95,8 @@ async function init() {
               <button class="btn btn-primary btn-large" type="submit">Confirm booking</button>
             </div>
 
+            <div id="booking-status" class="alert"></div>
+
             <p class="small-text">Payment is completed securely inside the Flutterwave checkout modal after you submit the booking.</p>
           </form>
         </section>
@@ -214,6 +216,14 @@ async function init() {
     totalDisplay.textContent = `€${flatPrice.toFixed(2)}`;
   }
 
+  function showBookingMessage(message, type = 'error') {
+    const statusBox = document.getElementById('booking-status');
+    if (!statusBox) return;
+    statusBox.textContent = message;
+    statusBox.className = `alert show ${type === 'success' ? 'success-message' : ''}`;
+    statusBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   [inputWhere, inputStart, inputCardName, inputCardNumber, inputCardExpiry, inputCardCvv].forEach((field) => {
     field.addEventListener('input', updatePreview);
     field.addEventListener('focus', () => cardFront.classList.add('card-focus'));
@@ -237,19 +247,19 @@ async function init() {
     const cardName = inputCardName.value.trim();
     const total = flatPrice;
 
-    if (!where) { alert('Please enter where the service is needed'); return; }
-    if (!start) { alert('Please select start date/time'); return; }
+    if (!where) { showBookingMessage('Please enter where the service is needed.'); return; }
+    if (!start) { showBookingMessage('Please select start date/time.'); return; }
 
     // Real payment is required - no offline/demo mode
     if (!usingFlutterwave) {
-      alert('Payment service is not available. Please try again later.');
+      showBookingMessage('Payment service is not available. Please try again later.');
       return;
     }
 
     // Ensure user is still signed in
     const currentUser = await supabaseAuth.getCurrentUser();
     if (!currentUser) {
-      alert('Please sign in to book.');
+      showBookingMessage('Please sign in to book. Redirecting...');
       window.location.href = 'auth.html';
       return;
     }
@@ -293,13 +303,13 @@ async function init() {
                 window.location.href = `booking-confirmation.html?bookingId=${saveRes.booking.id}`;
                 return;
               }
-              alert('Booking save failed after payment verification.');
+              showBookingMessage('Booking save failed after payment verification.');
             } else {
-              alert('Payment verification failed. Please try again.');
+              showBookingMessage('Payment verification failed. Please try again.');
             }
           } catch (err) {
             console.error('Verification error:', err);
-            alert('Payment verification error. Please contact support.');
+            showBookingMessage('Payment verification error. Please contact support.');
           } finally {
             form.classList.remove('submitting');
             cardFront.classList.remove('anim');
@@ -312,7 +322,7 @@ async function init() {
       });
     } catch (err) {
       console.error('Booking error:', err);
-      alert(err && err.message ? err.message : 'Booking failed');
+      showBookingMessage(err && err.message ? err.message : 'Booking failed.');
       form.classList.remove('submitting');
       cardFront.classList.remove('anim');
     }

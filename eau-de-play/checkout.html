@@ -171,13 +171,11 @@
 
       // Redirect to shop if cart is empty
       if (items.length === 0) {
-        alert('Your cart is empty. Please add items before checking out.');
-        window.location.href = 'shop.html';
-        return;
-      }
-
-      // Render order items
-      const orderItemsContainer = document.getElementById('order-items');
+          const statusDiv = document.getElementById('checkout-status');
+          if (statusDiv) {
+            statusDiv.className = 'payment-status error';
+            statusDiv.textContent = 'Your cart is empty. Please add items before checking out.';
+          }
       const orderItemsHTML = items.map(item => `
         <div class="order-summary-item">
           <div class="item-details">

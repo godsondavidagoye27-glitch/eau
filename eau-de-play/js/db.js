@@ -70,7 +70,7 @@ export class Database {
             category: "service",
             price: 600,
             description: "Sports event management and coverage",
-            image: "assets/images/IMG_1632.JPG",
+            image: "assets/images/IMG-20260713-WA0008.jpg",
             buttonText: "BOOK"
           }
         ],

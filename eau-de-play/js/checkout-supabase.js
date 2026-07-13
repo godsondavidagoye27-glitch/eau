@@ -67,6 +67,14 @@ export class Checkout {
     }
   }
 
+  showCheckoutStatus(message, success = false) {
+    if (typeof document === 'undefined') return;
+    const statusElement = document.getElementById('checkout-status');
+    if (!statusElement) return;
+    statusElement.className = `payment-status ${success ? 'success' : 'error'}`;
+    statusElement.textContent = message;
+  }
+
   // PROCESS PAYMENT
   async processPayment(formData) {
     try {
@@ -124,11 +132,11 @@ export class Checkout {
                 .from('orders')
                 .update({ status: 'failed', notes: 'Payment verification failed' })
                 .eq('id', order.id);
-              alert('Payment verification failed');
+              this.showCheckoutStatus('Payment verification failed. Please try again.');
             }
           } catch (err) {
             console.error('Verification error:', err);
-            alert('Payment verification error');
+            this.showCheckoutStatus('Payment verification error. Please contact support.');
           }
         },
         onclose: function() {}
