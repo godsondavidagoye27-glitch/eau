@@ -52,7 +52,7 @@ export class Database {
             category: "service",
             price: 800,
             description: "Professional photography and videography packages",
-            image: "assets/images/IMG_4699.JPG",
+            image: "assets/images/IMG-20260713-WA0009.jpg",
             buttonText: "BOOK"
           },
           {
