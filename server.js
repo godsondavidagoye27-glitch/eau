@@ -434,6 +434,47 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // API: POST /api/upload (Media uploads)
+    if (req.method === 'POST' && url.pathname === '/api/upload') {
+      try {
+        const body = await readRequestBody(req);
+        const parsed = JSON.parse(body || '{}');
+        const { filename, data } = parsed;
+
+        if (!filename || !data) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Missing filename or data' }));
+          return;
+        }
+
+        // Extract base64 data (handle data URLs)
+        let base64Data = data;
+        if (data.includes(',')) {
+          base64Data = data.split(',')[1];
+        }
+
+        // Decode base64 to buffer
+        const buffer = Buffer.from(base64Data, 'base64');
+
+        // Save to local storage or Supabase
+        let uploadUrl;
+        try {
+          uploadUrl = await uploadToSupabaseStorage(filename, buffer);
+        } catch (e) {
+          console.log('Supabase upload failed, falling back to local storage:', e.message);
+          uploadUrl = await uploadToLocalStorage(filename, buffer);
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, url: uploadUrl }));
+      } catch (err) {
+        console.error('Upload error:', err);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+      return;
+    }
+
     // Serve static files from ROOT_DIR
     let filePath = path.join(ROOT_DIR, url.pathname === '/' ? 'index.html' : decodeURIComponent(url.pathname));
     if (!filePath.startsWith(ROOT_DIR)) {
