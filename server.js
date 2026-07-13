@@ -371,6 +371,69 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // API: POST /api/newsletter (Resend integration)
+    if (req.method === 'POST' && url.pathname === '/api/newsletter') {
+      try {
+        const body = await readRequestBody(req);
+        const parsed = JSON.parse(body || '{}');
+        const email = parsed.email || '';
+
+        if (!email || !email.includes('@')) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Invalid email address' }));
+          return;
+        }
+
+        if (!RESEND_API_KEY) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Newsletter service not configured' }));
+          return;
+        }
+
+        // Send email via Resend
+        const resendRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: RESEND_SENDER,
+            to: email,
+            subject: 'Welcome to AFRO PULSE Newsletter',
+            html: `
+              <h2>Welcome to AFRO PULSE '27!</h2>
+              <p>Thank you for subscribing to our newsletter.</p>
+              <p>We'll keep you updated on the latest news, events, and exclusive offers from EAU DEY PLAY and AFRO PULSE.</p>
+              <p>Stay tuned!</p>
+            `
+          })
+        });
+
+        const resendData = await resendRes.json();
+
+        if (!resendRes.ok) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ 
+            success: false, 
+            error: resendData.message || 'Failed to subscribe' 
+          }));
+          return;
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: true, 
+          message: 'Successfully subscribed to newsletter',
+          emailId: resendData.id 
+        }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+      return;
+    }
+
     // Serve static files from ROOT_DIR
     let filePath = path.join(ROOT_DIR, url.pathname === '/' ? 'index.html' : decodeURIComponent(url.pathname));
     if (!filePath.startsWith(ROOT_DIR)) {

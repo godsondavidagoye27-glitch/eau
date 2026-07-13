@@ -44,7 +44,7 @@
       "subtitle": "Every edition set to spark up summer seasons in Iceland. Sign up for the next experience, join our community to stay updated on newsletters and reserve your tickets for AFRO PULSE '27.",
       "ticketUrl": "",
       "ticketButtonText": "Get Tickets",
-      "newsletterEndpoint": "",
+      "newsletterEndpoint": "/api/newsletter",
       "newsletterConfirmation": "Thanks for subscribing! We’ll keep you updated.",
       "galleryImages": [
         {
