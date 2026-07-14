@@ -21,10 +21,30 @@
     const id = qs('bookingId');
     const root = document.getElementById('confirmation-root');
 
+    function getPaymentState() {
+      const value = (qs('paymentStatus') || qs('status') || '').toLowerCase();
+      if (['paid', 'success', 'completed', 'confirmed', 'succeeded'].includes(value)) return 'confirmed';
+      if (['cancelled', 'canceled', 'cancel', 'failed', 'error'].includes(value)) return 'cancelled';
+      return 'pending';
+    }
+
     async function fetchBooking(id){
       try{
         const res = await fetch(`/api/bookings?id=${encodeURIComponent(id)}`);
         if(!res.ok) return null;
+        const json = await res.json();
+        return json && json.success ? json.booking : null;
+      }catch(e){return null}
+    }
+
+    async function updateBookingStatus(id, paymentState){
+      if (!id || paymentState === 'pending') return null;
+      try{
+        const res = await fetch('/api/bookings/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId: id, paymentStatus: paymentState })
+        });
         const json = await res.json();
         return json && json.success ? json.booking : null;
       }catch(e){return null}
@@ -42,20 +62,33 @@
     }
 
     (async ()=>{
+      const paymentState = getPaymentState();
       let bk = await fetchBooking(id);
+
+      if (id && paymentState !== 'pending') {
+        const updated = await updateBookingStatus(id, paymentState);
+        if (updated) bk = updated;
+      }
 
       if(!bk){ root.innerHTML = '<h2>Booking not found.</h2>'; return; }
 
+      const heading = paymentState === 'cancelled' ? 'Payment Cancelled' : paymentState === 'confirmed' ? 'Booking Confirmed ✓' : 'Booking Pending';
+      const headingColor = paymentState === 'cancelled' ? '#e53935' : '#4caf50';
+      const serviceName = bk.serviceName || bk.service_name || 'N/A';
+      const location = bk.where || bk.location || 'N/A';
+      const startValue = bk.start || bk.start_date || 'N/A';
+      const statusText = bk.status || (paymentState === 'confirmed' ? 'Confirmed' : paymentState === 'cancelled' ? 'Cancelled' : 'Pending');
+
       root.innerHTML = `
-        <h1>Booking Confirmed ✓</h1>
+        <h1 style="color:${headingColor};">${heading}</h1>
         <div class="booking-summary">
           <p><strong>Booking ID:</strong> ${bk.id}</p>
-          <p><strong>Service:</strong> ${bk.service_name || 'N/A'}</p>
-          <p><strong>Location:</strong> ${bk.location || 'N/A'}</p>
-          <p><strong>Date & Time:</strong> ${bk.start_date ? formatDate(bk.start_date) : 'N/A'}</p>
+          <p><strong>Service:</strong> ${serviceName}</p>
+          <p><strong>Location:</strong> ${location}</p>
+          <p><strong>Date & Time:</strong> ${startValue && startValue !== 'N/A' ? formatDate(startValue) : 'N/A'}</p>
           <p><strong>Total:</strong> €${bk.total ? parseFloat(bk.total).toFixed(2) : '0.00'}</p>
-          <p><strong>Payment Method:</strong> ${bk.payment_system ? bk.payment_system.toUpperCase() : 'Card'}</p>
-          <p><strong>Status:</strong> <span style="color: #4caf50; font-weight: 600;">${bk.status || 'Confirmed'}</span></p>
+          <p><strong>Payment Method:</strong> ${bk.payment?.system ? bk.payment.system.toUpperCase() : 'PAYPAL'}</p>
+          <p><strong>Status:</strong> <span style="color: ${headingColor}; font-weight: 600;">${statusText}</span></p>
         </div>
         <div style="margin-top:16px; display:flex; gap:12px; flex-wrap: wrap;">
           <button class="btn" id="print">Print Receipt</button>

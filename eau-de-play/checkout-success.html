@@ -29,7 +29,7 @@
             Order #ORD-1234567890
           </div>
 
-          <p style="font-size: var(--font-size-sm); color: var(--color-text-light);">
+          <p id="status-message" style="font-size: var(--font-size-sm); color: var(--color-text-light);">
             A confirmation email has been sent to your email address.
             <br>
             You can track your order status in your email or contact us for updates.
@@ -50,13 +50,53 @@
   <!-- Scripts -->
   <script type="module" src="js/public-app.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Get order ID from URL
+    async function updateOrderStatus(orderId, paymentStatus) {
+      if (!orderId || paymentStatus === 'pending') return null;
+      try {
+        const response = await fetch('/api/orders/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId, paymentStatus })
+        });
+        return response.ok ? response.json() : null;
+      } catch (err) {
+        console.warn('Unable to update order status', err);
+        return null;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const orderId = urlParams.get('orderId');
-      
+      const paymentStatus = (urlParams.get('paymentStatus') || '').toLowerCase();
+      const statusMessage = document.getElementById('status-message');
+      const title = document.querySelector('.success-box h2');
+
       if (orderId) {
         document.getElementById('order-id').textContent = 'Order #' + orderId;
+      }
+
+      let displayState = 'pending';
+      if (['paid', 'success', 'completed', 'confirmed', 'succeeded'].includes(paymentStatus)) {
+        displayState = 'confirmed';
+      } else if (['cancelled', 'canceled', 'cancel', 'failed', 'error'].includes(paymentStatus)) {
+        displayState = 'cancelled';
+      }
+
+      if (orderId && displayState !== 'pending') {
+        const result = await updateOrderStatus(orderId, displayState);
+        if (result?.success) {
+          const orderStatus = result.order?.status || displayState;
+          if (title) {
+            title.textContent = displayState === 'cancelled' ? 'Payment Cancelled' : 'Order Confirmed!';
+          }
+          if (statusMessage) {
+            statusMessage.innerHTML = displayState === 'cancelled'
+              ? 'The PayPal payment was cancelled, so the order remains pending.'
+              : `Your order is now marked as ${orderStatus}.`;
+            statusMessage.style.color = displayState === 'cancelled' ? '#e53935' : 'var(--color-text-light)';
+          }
+        }
       }
     });
   </script>

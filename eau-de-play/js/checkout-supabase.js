@@ -1,25 +1,17 @@
 // ============================================
-// CHECKOUT MODULE - Flutterwave + Supabase Integration
+// CHECKOUT MODULE - PayPal + Supabase Integration
 // ============================================
 
 import { supabaseAuth } from './supabase-auth.js';
 import { supabase } from './supabase.js';
 
-function getApiUrl() {
-  const runtimeConfig = typeof window !== 'undefined' ? (window.__APP_CONFIG__ || null) : null;
-  const envConfig = typeof import.meta !== 'undefined' ? import.meta.env : null;
-  return runtimeConfig?.apiUrl || envConfig?.VITE_API_URL || '/api';
-}
-
 export class Checkout {
   constructor() {
-    this.cart = window.cartManager;
     this.cart = window.cartManager;
     this.userId = null;
     this.paymentIntentId = null;
   }
 
-  // INITIALIZE CHECKOUT
   async init() {
     const user = await supabaseAuth.getCurrentUser();
     this.userId = user?.id;
@@ -27,14 +19,11 @@ export class Checkout {
     if (!this.userId) {
       throw new Error('User must be logged in to checkout');
     }
-
-    // No third-party init required for Flutterwave flow
   }
 
-  // VALIDATE CHECKOUT FORM
   validateForm(formData) {
     const required = [
-      'firstName', 'lastName', 'email', 'phone', 
+      'firstName', 'lastName', 'email', 'phone',
       'address', 'city', 'state', 'zip'
     ];
 
@@ -47,7 +36,6 @@ export class Checkout {
       }
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       return { valid: false, error: 'Invalid email format' };
@@ -56,15 +44,8 @@ export class Checkout {
     return { valid: true };
   }
 
-  // CREATE PAYMENT INTENT
-  async createPaymentIntent(order) {
-    try {
-      // For Flutterwave we don't create a server-side PaymentIntent; return null
-      return null;
-    } catch (error) {
-      console.error('❌ Error creating payment intent:', error);
-      throw error;
-    }
+  async createPaymentIntent() {
+    return null;
   }
 
   showCheckoutStatus(message, success = false) {
@@ -75,81 +56,57 @@ export class Checkout {
     statusElement.textContent = message;
   }
 
-  // PROCESS PAYMENT
+  buildPayPalUrl(order, total) {
+    const runtimeConfig = typeof window !== 'undefined' ? (window.__APP_CONFIG__ || {}) : {};
+    const businessEmail = runtimeConfig.paypalBusinessEmail || '';
+    const baseOrigin = window.location.origin && window.location.origin !== 'null' ? window.location.origin : 'https://www.paypal.com';
+    const url = new URL('https://www.paypal.com/cgi-bin/webscr');
+    url.searchParams.set('cmd', '_xclick');
+    if (businessEmail) {
+      url.searchParams.set('business', businessEmail);
+    }
+    url.searchParams.set('item_name', `EAU DEY PLAY Order ${order.id}`);
+    url.searchParams.set('amount', Number(total).toFixed(2));
+    url.searchParams.set('currency_code', 'EUR');
+    url.searchParams.set('no_shipping', '1');
+    url.searchParams.set('return', `${baseOrigin}/checkout-success.html?orderId=${encodeURIComponent(order.id)}&paymentStatus=success`);
+    url.searchParams.set('cancel_return', `${baseOrigin}/checkout-success.html?orderId=${encodeURIComponent(order.id)}&paymentStatus=cancelled`);
+    return url.toString();
+  }
+
   async processPayment(formData) {
     try {
-      // Validate form
       const validation = this.validateForm(formData);
       if (!validation.valid) {
         return { success: false, error: validation.error };
       }
 
-      // Create the order in Supabase with pending status.
       const order = await this.createOrder(formData);
+      const total = Number(this.cart.getGrandTotal() || 0);
+      const payPalUrl = this.buildPayPalUrl(order, total);
 
-      // Start Flutterwave Checkout
-      const flwKey = (window.__APP_CONFIG__ && window.__APP_CONFIG__.flutterwavePublicKey) || '';
-      if (!flwKey || !window.FlutterwaveCheckout) {
-        throw new Error('Flutterwave not configured');
+      void supabase
+        .from('orders')
+        .update({
+          status: 'pending',
+          payment_method: 'paypal',
+          notes: formData.notes || ''
+        })
+        .eq('id', order.id);
+
+      if (typeof this.cart?.clearCart === 'function') {
+        await this.cart.clearCart();
       }
 
-      const tx_ref = `order-${order.id}-${Date.now()}`;
-
-      FlutterwaveCheckout({
-        public_key: flwKey,
-        tx_ref,
-        amount: this.cart.getGrandTotal(),
-        currency: 'EUR',
-        payment_options: 'card',
-        customer: {
-          email: formData.email,
-          name: `${formData.firstName} ${formData.lastName}`,
-          phone_number: formData.phone
-        },
-        callback: async (data) => {
-          try {
-            const verifyRes = await fetch('/api/flutterwave/verify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ transaction_id: data.transaction_id })
-            });
-            const vr = await verifyRes.json();
-            if (vr && vr.success && vr.data && vr.data.status === 'successful') {
-              await supabase
-                .from('orders')
-                .update({
-                  status: 'confirmed',
-                  payment_id: data.transaction_id,
-                  payment_method: 'flutterwave',
-                  paid_at: new Date().toISOString()
-                })
-                .eq('id', order.id);
-
-              await this.cart.clearCart();
-              window.location.href = `checkout-success.html?orderId=${order.id}`;
-            } else {
-              await supabase
-                .from('orders')
-                .update({ status: 'failed', notes: 'Payment verification failed' })
-                .eq('id', order.id);
-              this.showCheckoutStatus('Payment verification failed. Please try again.');
-            }
-          } catch (err) {
-            console.error('Verification error:', err);
-            this.showCheckoutStatus('Payment verification error. Please contact support.');
-          }
-        },
-        onclose: function() {}
-      });
-
-      return { success: true, orderId: order.id };
+      this.showCheckoutStatus('Redirecting you to PayPal to complete payment.', true);
+      window.location.assign(payPalUrl);
+      return { success: true, orderId: order.id, redirectUrl: payPalUrl };
     } catch (error) {
       console.error('❌ Checkout error:', error);
       return { success: false, error: error.message };
     }
   }
 
-  // CREATE ORDER IN SUPABASE
   async createOrder(formData) {
     try {
       const user = await supabaseAuth.getCurrentUser();
@@ -160,31 +117,21 @@ export class Checkout {
         carrier: null,
         tracking_number: null,
         shipped_at: null,
-        payment_method: 'flutterwave',
-        
-        // Customer info
+        payment_method: 'paypal',
         first_name: formData.firstName,
         last_name: formData.lastName,
         email: formData.email,
         phone: formData.phone,
-        
-        // Shipping address
         address: formData.address,
         city: formData.city,
         state: formData.state,
         zip: formData.zip,
         country: formData.country || 'United States',
-        
-        // Items
         items: JSON.stringify(this.cart.getCartItems()),
-        
-        // Calculations
         subtotal: this.cart.getSubtotal(),
         tax: this.cart.getTax(),
         shipping: this.cart.getShipping(),
         total: this.cart.getGrandTotal(),
-        
-        // Metadata
         notes: formData.notes || '',
         created_at: new Date().toISOString()
       };
@@ -196,7 +143,6 @@ export class Checkout {
         .single();
 
       if (error) throw error;
-
       return data;
     } catch (error) {
       console.error('❌ Error creating order:', error);
@@ -204,7 +150,6 @@ export class Checkout {
     }
   }
 
-  // GET ORDER STATUS
   async getOrderStatus(orderId) {
     try {
       const { data, error } = await supabase
@@ -221,18 +166,15 @@ export class Checkout {
     }
   }
 
-  // SAVE CARD FOR FUTURE USE
-  async saveCard(formData) {
-    console.warn('Save card is not supported in the Flutterwave checkout flow.');
+  async saveCard() {
+    console.warn('Save card is not supported in the PayPal checkout flow.');
     return { success: false, error: 'Save card is not supported' };
   }
 
-  // CLEAR PAYMENT DATA
   clearPayment() {
     this.paymentIntentId = null;
   }
 
-  // DESTROY
   destroy() {
     return null;
   }

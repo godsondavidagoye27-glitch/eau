@@ -7,6 +7,7 @@ const ROOT_DIR = path.join(__dirname, 'eau-de-play');
 const DATA_FILE = path.join(__dirname, 'data', 'site-data.json');
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const RESEND_SENDER = process.env.RESEND_SENDER || 'newsletter@yourdomain.com';
+const BOOKING_EMAIL_RECIPIENT = process.env.BOOKING_EMAIL_RECIPIENT || process.env.RESEND_TO_EMAIL || 'eaudeyplay@gmail.com';
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -90,6 +91,76 @@ function normalizeSiteData(data) {
   };
 }
 
+function normalizeBookingStatus(status) {
+  const value = String(status || '').toLowerCase();
+  if (['paid', 'confirmed', 'complete', 'completed', 'success', 'succeeded'].includes(value)) {
+    return 'confirmed';
+  }
+  if (['cancelled', 'canceled', 'cancel', 'failed', 'error'].includes(value)) {
+    return 'cancelled';
+  }
+  return 'pending';
+}
+
+function normalizeOrderStatus(status) {
+  const value = String(status || '').toLowerCase();
+  if (['paid', 'confirmed', 'complete', 'completed', 'success', 'succeeded'].includes(value)) {
+    return 'paid';
+  }
+  if (['cancelled', 'canceled', 'cancel', 'failed', 'error'].includes(value)) {
+    return 'cancelled';
+  }
+  return 'pending';
+}
+
+function findBooking(site, bookingId) {
+  return (site.bookings || []).find((booking) => String(booking.id) === String(bookingId));
+}
+
+function updateBooking(site, bookingId, updates) {
+  const booking = findBooking(site, bookingId);
+  if (!booking) return null;
+
+  const paymentStatus = updates.paymentStatus || booking.payment?.status || 'pending';
+  const nextStatus = normalizeBookingStatus(updates.status || paymentStatus);
+
+  booking.status = nextStatus;
+  booking.payment = {
+    ...(booking.payment || {}),
+    ...(updates.payment || {}),
+    status: paymentStatus,
+    system: updates.paymentSystem || booking.payment?.system || 'paypal',
+    updatedAt: new Date().toISOString()
+  };
+  booking.updatedAt = new Date().toISOString();
+
+  if (updates.notes) {
+    booking.notes = updates.notes;
+  }
+
+  return booking;
+}
+
+function findOrder(site, orderId) {
+  return (site.orders || []).find((order) => String(order.id) === String(orderId));
+}
+
+function updateOrder(site, orderId, updates) {
+  const order = findOrder(site, orderId);
+  if (!order) return null;
+
+  const paymentStatus = updates.paymentStatus || order.payment_status || order.paymentStatus || 'pending';
+  const nextStatus = normalizeOrderStatus(updates.status || paymentStatus);
+
+  order.status = nextStatus;
+  order.payment_status = paymentStatus;
+  order.payment_method = updates.paymentMethod || order.payment_method || 'paypal';
+  order.updated_at = new Date().toISOString();
+  order.notes = updates.notes || order.notes || '';
+
+  return order;
+}
+
 function loadSiteData() {
   try {
     if (fs.existsSync(DATA_FILE)) {
@@ -116,13 +187,110 @@ function saveSiteData(data) {
   }
 }
 
+async function sendEmail(to, subject, html) {
+  if (!RESEND_API_KEY) {
+    console.warn('Resend API key missing; email notification was not sent.');
+    return { success: false, skipped: true, reason: 'missing_api_key' };
+  }
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      from: RESEND_SENDER,
+      to,
+      subject,
+      html
+    })
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(detail || 'Failed to send email');
+  }
+
+  return { success: true, response: await response.json() };
+}
+
+async function sendBookingEmail(booking) {
+  if (!booking || !booking.id) return { success: false, skipped: true, reason: 'invalid_booking' };
+
+  const adminHtml = `
+    <h2>New booking received</h2>
+    <p>A new booking was submitted through PayPal.</p>
+    <ul>
+      <li><strong>Booking ID:</strong> ${booking.id}</li>
+      <li><strong>Booker:</strong> ${booking.customerName || 'N/A'}</li>
+      <li><strong>Phone:</strong> ${booking.customerPhone || 'N/A'}</li>
+      <li><strong>Email:</strong> ${booking.customerEmail || 'N/A'}</li>
+      <li><strong>Service:</strong> ${booking.serviceName || 'N/A'}</li>
+      <li><strong>Location:</strong> ${booking.where || 'N/A'}</li>
+      <li><strong>Start:</strong> ${booking.start || 'N/A'}</li>
+      <li><strong>Total:</strong> €${Number(booking.total || 0).toFixed(2)}</li>
+      <li><strong>Status:</strong> ${booking.status || 'pending'}</li>
+    </ul>
+  `;
+
+  const customerHtml = `
+    <h2>Your booking is on the way</h2>
+    <p>Thanks for booking with EAU DEY PLAY. We have received your request and will be in touch soon.</p>
+    <ul>
+      <li><strong>Confirmation number:</strong> ${booking.id}</li>
+      <li><strong>Service:</strong> ${booking.serviceName || 'N/A'}</li>
+      <li><strong>Location:</strong> ${booking.where || 'N/A'}</li>
+      <li><strong>Start:</strong> ${booking.start || 'N/A'}</li>
+      <li><strong>Total:</strong> €${Number(booking.total || 0).toFixed(2)}</li>
+    </ul>
+  `;
+
+  const adminResult = await sendEmail(BOOKING_EMAIL_RECIPIENT, `New booking received - ${booking.id}`, adminHtml);
+  const customerResult = booking.customerEmail ? await sendEmail(booking.customerEmail, `Booking confirmation ${booking.id}`, customerHtml) : { success: false, skipped: true, reason: 'missing_customer_email' };
+
+  return { success: adminResult.success || customerResult.success, adminResult, customerResult };
+}
+
+async function sendOrderEmail(order) {
+  if (!order || !order.id) return { success: false, skipped: true, reason: 'invalid_order' };
+
+  const adminHtml = `
+    <h2>New cart order received</h2>
+    <p>A new cart order was submitted through PayPal.</p>
+    <ul>
+      <li><strong>Order ID:</strong> ${order.id}</li>
+      <li><strong>Customer:</strong> ${order.customerName || 'N/A'}</li>
+      <li><strong>Phone:</strong> ${order.phone || 'N/A'}</li>
+      <li><strong>Email:</strong> ${order.email || 'N/A'}</li>
+      <li><strong>Total:</strong> €${Number(order.total || 0).toFixed(2)}</li>
+      <li><strong>Status:</strong> ${order.status || 'pending'}</li>
+    </ul>
+  `;
+
+  const customerHtml = `
+    <h2>Your order is confirmed</h2>
+    <p>Thank you for shopping with EAU DEY PLAY. Your order is now being processed.</p>
+    <ul>
+      <li><strong>Confirmation number:</strong> ${order.id}</li>
+      <li><strong>Total:</strong> €${Number(order.total || 0).toFixed(2)}</li>
+      <li><strong>Delivery address:</strong> ${[order.address, order.city, order.state, order.zip, order.country].filter(Boolean).join(', ') || 'N/A'}</li>
+    </ul>
+  `;
+
+  const adminResult = await sendEmail(BOOKING_EMAIL_RECIPIENT, `New order received - ${order.id}`, adminHtml);
+  const customerResult = order.email ? await sendEmail(order.email, `Order confirmation ${order.id}`, customerHtml) : { success: false, skipped: true, reason: 'missing_customer_email' };
+
+  return { success: adminResult.success || customerResult.success, adminResult, customerResult };
+}
+
 function getRuntimeConfigScript() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || process.env.SUPABASE_PROJECT_URL || '';
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || '';
-  const flutterwavePublicKey = process.env.VITE_FLW_PUBLIC_KEY || process.env.NEXT_PUBLIC_FLW_PUBLIC_KEY || process.env.FLW_PUBLIC_KEY || '';
+  const paypalBusinessEmail = process.env.PAYPAL_BUSINESS_EMAIL || process.env.VITE_PAYPAL_BUSINESS_EMAIL || '';
   const apiUrl = process.env.VITE_API_URL || process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '';
 
-  return `\n    <script>\n      window.__APP_CONFIG__ = {\n        supabaseUrl: ${JSON.stringify(supabaseUrl)},\n        supabaseAnonKey: ${JSON.stringify(supabaseAnonKey)},\n        flutterwavePublicKey: ${JSON.stringify(flutterwavePublicKey)},\n        apiUrl: ${JSON.stringify(apiUrl)}\n      };\n      window.__SUPABASE_CONFIG__ = {\n        url: ${JSON.stringify(supabaseUrl)},\n        anonKey: ${JSON.stringify(supabaseAnonKey)}\n      };\n    </script>\n  `;
+  return `\n    <script>\n      window.__APP_CONFIG__ = {\n        supabaseUrl: ${JSON.stringify(supabaseUrl)},\n        supabaseAnonKey: ${JSON.stringify(supabaseAnonKey)},\n        paypalBusinessEmail: ${JSON.stringify(paypalBusinessEmail)},\n        apiUrl: ${JSON.stringify(apiUrl)}\n      };\n      window.__SUPABASE_CONFIG__ = {\n        url: ${JSON.stringify(supabaseUrl)},\n        anonKey: ${JSON.stringify(supabaseAnonKey)}\n      };\n    </script>\n  `;
 }
 
 function getSiteDataScript(siteData) {
@@ -295,7 +463,7 @@ const server = http.createServer(async (req, res) => {
       const config = {
         supabaseUrl: process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || process.env.SUPABASE_PROJECT_URL || '',
         supabaseAnonKey: process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || '',
-        flutterwavePublicKey: process.env.VITE_FLW_PUBLIC_KEY || process.env.NEXT_PUBLIC_FLW_PUBLIC_KEY || process.env.FLW_PUBLIC_KEY || '',
+        paypalBusinessEmail: process.env.PAYPAL_BUSINESS_EMAIL || process.env.VITE_PAYPAL_BUSINESS_EMAIL || '',
         apiUrl: process.env.VITE_API_URL || process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || ''
       };
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -306,8 +474,17 @@ const server = http.createServer(async (req, res) => {
     // API: GET /api/bookings
     if (req.method === 'GET' && url.pathname === '/api/bookings') {
       const data = loadSiteData();
+      const bookingId = url.searchParams.get('id');
+      const bookings = data.bookings || [];
+      if (bookingId) {
+        const booking = bookings.find((item) => String(item.id) === String(bookingId));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: !!booking, booking: booking || null }));
+        return;
+      }
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ bookings: data.bookings || [] }));
+      res.end(JSON.stringify({ bookings }));
       return;
     }
 
@@ -326,6 +503,7 @@ const server = http.createServer(async (req, res) => {
         total = prod ? prod.price : 0;
       }
 
+      const initialStatus = normalizeBookingStatus(payload.payment?.status || payload.paymentStatus || 'pending');
       const booking = {
         id: payload.id || `bk-${Date.now()}`,
         serviceId: payload.serviceId,
@@ -333,37 +511,168 @@ const server = http.createServer(async (req, res) => {
         where: payload.where,
         start: payload.start,
         total: total,
+        customerName: payload.customerName || '',
+        customerPhone: payload.customerPhone || '',
+        customerEmail: payload.customerEmail || '',
         payment: payload.payment || {},
+        status: initialStatus,
         createdAt: new Date().toISOString()
       };
 
       site.bookings.push(booking);
       saveSiteData(site);
+
+      try {
+        await sendBookingEmail(booking);
+      } catch (err) {
+        console.warn('Booking confirmation email failed:', err.message);
+      }
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true, booking }));
       return;
     }
 
-    // API: POST /api/flutterwave/verify
-    if (req.method === 'POST' && url.pathname === '/api/flutterwave/verify') {
+    // API: POST /api/bookings/status
+    if (req.method === 'POST' && url.pathname === '/api/bookings/status') {
       try {
         const body = await readRequestBody(req);
-        const parsed = JSON.parse(body || '{}');
-        const transactionId = parsed.transaction_id;
-        const flwSecret = process.env.FLW_SECRET_KEY || process.env.VITE_FLW_SECRET_KEY || '';
-        if (!transactionId || !flwSecret) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: false, error: 'Missing transaction_id or server not configured' }));
+        const payload = JSON.parse(body || '{}');
+        const site = loadSiteData();
+        const existingBooking = findBooking(site, payload.bookingId);
+        const updated = updateBooking(site, payload.bookingId, {
+          paymentStatus: payload.paymentStatus,
+          status: payload.status,
+          paymentSystem: payload.paymentSystem || 'paypal',
+          notes: payload.notes || ''
+        });
+
+        if (!updated) {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Booking not found' }));
           return;
         }
 
-        const verifyRes = await fetch(`https://api.flutterwave.com/v3/transactions/${encodeURIComponent(transactionId)}/verify`, {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${flwSecret}`, 'Content-Type': 'application/json' }
-        });
-        const verifyJson = await verifyRes.json();
+        saveSiteData(site);
+
+        if (updated.status === 'confirmed' && existingBooking?.status !== 'confirmed') {
+          try {
+            await sendBookingEmail(updated);
+          } catch (err) {
+            console.warn('Booking confirmation email failed:', err.message);
+          }
+        }
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: verifyRes.ok, data: verifyJson.data || verifyJson }));
+        res.end(JSON.stringify({ success: true, booking: updated }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+      return;
+    }
+
+    // API: POST /api/orders
+    if (req.method === 'POST' && url.pathname === '/api/orders') {
+      try {
+        const body = await readRequestBody(req);
+        const payload = JSON.parse(body || '{}');
+        const site = loadSiteData();
+        site.orders = site.orders || [];
+
+        const order = {
+          id: payload.id || `ORD-${Date.now()}`,
+          customerName: payload.customerName || '',
+          email: payload.email || '',
+          phone: payload.phone || '',
+          address: payload.address || '',
+          city: payload.city || '',
+          state: payload.state || '',
+          zip: payload.zip || '',
+          country: payload.country || '',
+          items: payload.items || [],
+          subtotal: Number(payload.subtotal || 0),
+          shipping: Number(payload.shipping || 0),
+          tax: Number(payload.tax || 0),
+          total: Number(payload.total || 0),
+          date: payload.date || new Date().toISOString(),
+          status: normalizeOrderStatus(payload.status || 'pending'),
+          payment: payload.payment || 'paypal',
+          payment_method: payload.payment_method || 'paypal',
+          payment_status: normalizeOrderStatus(payload.payment_status || 'pending'),
+          notes: payload.notes || '',
+          created_at: payload.created_at || new Date().toISOString()
+        };
+
+        site.orders.push(order);
+        saveSiteData(site);
+
+        try {
+          await sendOrderEmail(order);
+        } catch (err) {
+          console.warn('Order confirmation email failed:', err.message);
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, order }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+      return;
+    }
+
+    // API: GET /api/orders
+    if (req.method === 'GET' && url.pathname === '/api/orders') {
+      const data = loadSiteData();
+      const orderId = url.searchParams.get('id');
+      const orders = data.orders || [];
+      if (orderId) {
+        const order = orders.find((item) => String(item.id) === String(orderId));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: !!order, order: order || null }));
+        return;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ orders }));
+      return;
+    }
+
+    // API: POST /api/orders/status
+    if (req.method === 'POST' && url.pathname === '/api/orders/status') {
+      try {
+        const body = await readRequestBody(req);
+        const payload = JSON.parse(body || '{}');
+        const site = loadSiteData();
+        const updated = updateOrder(site, payload.orderId, {
+          paymentStatus: payload.paymentStatus,
+          status: payload.status,
+          paymentMethod: payload.paymentMethod || 'paypal',
+          notes: payload.notes || ''
+        });
+
+        if (!updated) {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Order not found' }));
+          return;
+        }
+
+        saveSiteData(site);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, order: updated }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+      return;
+    }
+
+    // API: POST /api/paypal/verify
+    if (req.method === 'POST' && url.pathname === '/api/paypal/verify') {
+      try {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, message: 'PayPal confirmation is handled by the checkout redirect flow.' }));
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: false, error: err.message }));

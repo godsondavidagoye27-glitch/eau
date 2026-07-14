@@ -79,46 +79,45 @@ async function handleCreateBooking(req) {
       });
     }
 
-    // Verify payment was successful if Flutterwave
-    if (payment.system === 'flutterwave' && payment.transaction_id) {
-      const FLW_SECRET = Deno.env.get('FLW_SECRET_KEY') || Deno.env.get('VITE_FLW_SECRET_KEY');
-      if (!FLW_SECRET) {
-        return new Response(JSON.stringify({ error: 'Payment verification not configured' }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
-
-      const verifyRes = await fetch(
-        `https://api.flutterwave.com/v3/transactions/${encodeURIComponent(payment.transaction_id)}/verify`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${FLW_SECRET}`,
+    if (payment.system === 'paypal') {
+      const bookingStatus = 'pending';
+      const bookingId = `bk-${Date.now()}`;
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert([
+          {
+            id: bookingId,
+            service_id: serviceId || null,
+            service_name: serviceName,
+            location: where,
+            start_date: start,
+            total: parseFloat(total),
+            payment_system: payment.system,
+            transaction_id: payment.transaction_id || null,
+            user_email: userEmail || null,
+            status: bookingStatus,
+            created_at: new Date().toISOString(),
           },
-        }
-      );
+        ])
+        .select()
+        .single();
 
-      if (!verifyRes.ok) {
-        return new Response(JSON.stringify({ error: 'Payment verification failed' }), {
-          status: 402,
+      if (error) {
+        console.error('Error creating booking:', error);
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 400,
           headers: { 'Content-Type': 'application/json' },
         });
       }
 
-      const verification = await verifyRes.json();
-      if (!verification.data || verification.data.status !== 'successful') {
-        return new Response(JSON.stringify({ error: 'Payment not successful' }), {
-          status: 402,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
+      return new Response(JSON.stringify({ success: true, booking: data }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Create booking in database
     const bookingId = `bk-${Date.now()}`;
-    const bookingStatus = (payment.system === 'flutterwave' && payment.transaction_id) ? 'paid' : 'confirmed';
+    const bookingStatus = 'confirmed';
     const { data, error } = await supabase
       .from('bookings')
       .insert([
