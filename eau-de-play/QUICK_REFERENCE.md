@@ -1,4 +1,4 @@
-# QUICK REFERENCE GUIDE - EAU DEY PLAY
+# QUICK REFERENCE GUIDE - EAU DE PLAY
 
 ## 🚀 Getting Started (30 seconds)
 
@@ -84,7 +84,7 @@ localStorage.clear();
 
 ### Change Brand Name
 **Files to edit**:
-- All `.html` files: Search and replace "EAU DEY PLAY"
+- All `.html` files: Search and replace "EAU DE PLAY"
 - `css/variables.css`: Change brand colors
 
 ### Add New Admin User

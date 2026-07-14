@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Checkout - EAU DEY PLAY</title>
+  <title>Checkout - EAU DE PLAY</title>
   
   <!-- CSS Links -->
   <link rel="stylesheet" href="css/variables.css">
@@ -213,29 +213,28 @@
           payment_status: 'pending'
         };
 
-        const db = JSON.parse(localStorage.getItem('eau-de-play-db') || '{}');
-        if (!db.orders) db.orders = [];
-        db.orders.push(order);
-        localStorage.setItem('eau-de-play-db', JSON.stringify(db));
-
         try {
           const response = await fetch('/api/orders', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(order)
           });
+
           if (!response.ok) {
-            console.warn('Server order save failed, continuing with local checkout flow.', await response.text());
+            const errorText = await response.text();
+            throw new Error(errorText || 'Unable to place the order right now.');
           }
         } catch (error) {
-          console.warn('Server order save failed', error);
+          console.error('Server order save failed', error);
+          alert(error.message || 'Unable to place the order right now. Please try again.');
+          return;
         }
 
         const businessEmail = (window.__APP_CONFIG__ && window.__APP_CONFIG__.paypalBusinessEmail) || '';
         const paypalUrl = new URL('https://www.paypal.com/cgi-bin/webscr');
         paypalUrl.searchParams.set('cmd', '_xclick');
         if (businessEmail) paypalUrl.searchParams.set('business', businessEmail);
-        paypalUrl.searchParams.set('item_name', `EAU DEY PLAY Order ${order.id}`);
+        paypalUrl.searchParams.set('item_name', `EAU DE PLAY Order ${order.id}`);
         paypalUrl.searchParams.set('amount', total.toFixed(2));
         paypalUrl.searchParams.set('currency_code', 'EUR');
         paypalUrl.searchParams.set('no_shipping', '1');

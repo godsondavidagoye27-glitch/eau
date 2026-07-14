@@ -36,7 +36,7 @@ export class SupabaseAuth {
   }
 
   attachAdminRole(user) {
-    const adminEmails = ['eaudeyplay@gmail.com', 'admin@eaudeplay.com'];
+    const adminEmails = ['eaudeplay@gmail.com', 'admin@eaudeplay.com'];
     const normalizedEmail = String(user?.email || '').trim().toLowerCase();
     if (adminEmails.includes(normalizedEmail)) {
       return { ...user, role: 'admin' };

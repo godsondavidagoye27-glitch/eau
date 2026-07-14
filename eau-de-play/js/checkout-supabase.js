@@ -65,7 +65,7 @@ export class Checkout {
     if (businessEmail) {
       url.searchParams.set('business', businessEmail);
     }
-    url.searchParams.set('item_name', `EAU DEY PLAY Order ${order.id}`);
+    url.searchParams.set('item_name', `EAU DE PLAY Order ${order.id}`);
     url.searchParams.set('amount', Number(total).toFixed(2));
     url.searchParams.set('currency_code', 'EUR');
     url.searchParams.set('no_shipping', '1');

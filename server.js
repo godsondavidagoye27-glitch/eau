@@ -7,7 +7,7 @@ const ROOT_DIR = path.join(__dirname, 'eau-de-play');
 const DATA_FILE = path.join(__dirname, 'data', 'site-data.json');
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const RESEND_SENDER = process.env.RESEND_SENDER || 'newsletter@yourdomain.com';
-const BOOKING_EMAIL_RECIPIENT = process.env.BOOKING_EMAIL_RECIPIENT || process.env.RESEND_TO_EMAIL || 'eaudeyplay@gmail.com';
+const BOOKING_EMAIL_RECIPIENT = process.env.BOOKING_EMAIL_RECIPIENT || process.env.RESEND_TO_EMAIL || 'eaudeplay@gmail.com';
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -42,7 +42,7 @@ const DEFAULT_SITE_DATA = {
     { id: 103, name: 'Brand Hoodie', category: 'merchandise', price: 60, description: 'Comfortable pullover hoodie', image: '', buttonText: 'ADD TO CART' }
   ],
   homeHero: {
-    title: 'EAU DEY PLAY',
+    title: 'EAU DE PLAY',
     subtitle: 'We bring premium entertainment experiences to every event, festival, and party. Book our DJ services, photography, or full event planning for an unforgettable vibe.',
     buttonText: 'Book Now',
     buttonUrl: 'contact.html'
@@ -236,7 +236,7 @@ async function sendBookingEmail(booking) {
 
   const customerHtml = `
     <h2>Your booking is on the way</h2>
-    <p>Thanks for booking with EAU DEY PLAY. We have received your request and will be in touch soon.</p>
+    <p>Thanks for booking with EAU DE PLAY. We have received your request and will be in touch soon.</p>
     <ul>
       <li><strong>Confirmation number:</strong> ${booking.id}</li>
       <li><strong>Service:</strong> ${booking.serviceName || 'N/A'}</li>
@@ -270,7 +270,7 @@ async function sendOrderEmail(order) {
 
   const customerHtml = `
     <h2>Your order is confirmed</h2>
-    <p>Thank you for shopping with EAU DEY PLAY. Your order is now being processed.</p>
+    <p>Thank you for shopping with EAU DE PLAY. Your order is now being processed.</p>
     <ul>
       <li><strong>Confirmation number:</strong> ${order.id}</li>
       <li><strong>Total:</strong> €${Number(order.total || 0).toFixed(2)}</li>
@@ -522,12 +522,6 @@ const server = http.createServer(async (req, res) => {
       site.bookings.push(booking);
       saveSiteData(site);
 
-      try {
-        await sendBookingEmail(booking);
-      } catch (err) {
-        console.warn('Booking confirmation email failed:', err.message);
-      }
-
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true, booking }));
       return;
@@ -607,12 +601,6 @@ const server = http.createServer(async (req, res) => {
         site.orders.push(order);
         saveSiteData(site);
 
-        try {
-          await sendOrderEmail(order);
-        } catch (err) {
-          console.warn('Order confirmation email failed:', err.message);
-        }
-
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, order }));
       } catch (err) {
@@ -645,6 +633,7 @@ const server = http.createServer(async (req, res) => {
         const body = await readRequestBody(req);
         const payload = JSON.parse(body || '{}');
         const site = loadSiteData();
+        const existingOrder = findOrder(site, payload.orderId);
         const updated = updateOrder(site, payload.orderId, {
           paymentStatus: payload.paymentStatus,
           status: payload.status,
@@ -659,6 +648,15 @@ const server = http.createServer(async (req, res) => {
         }
 
         saveSiteData(site);
+
+        if ((updated.status === 'paid' || updated.status === 'confirmed') && existingOrder?.status !== 'paid' && existingOrder?.status !== 'confirmed') {
+          try {
+            await sendOrderEmail(updated);
+          } catch (err) {
+            console.warn('Order confirmation email failed:', err.message);
+          }
+        }
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, order: updated }));
       } catch (err) {
@@ -713,7 +711,7 @@ const server = http.createServer(async (req, res) => {
             html: `
               <h2>Welcome to AFRO PULSE '27!</h2>
               <p>Thank you for subscribing to our newsletter.</p>
-              <p>We'll keep you updated on the latest news, events, and exclusive offers from EAU DEY PLAY and AFRO PULSE.</p>
+              <p>We'll keep you updated on the latest news, events, and exclusive offers from EAU DE PLAY and AFRO PULSE.</p>
               <p>Stay tuned!</p>
             `
           })

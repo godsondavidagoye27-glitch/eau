@@ -2,7 +2,7 @@
 
 ## 🎯 Overview
 
-This guide walks you through integrating **Flutterwave** for payments and **Supabase** for authentication and database storage with your EAU DEY PLAY website.
+This guide walks you through integrating **Flutterwave** for payments and **Supabase** for authentication and database storage with your EAU DE PLAY website.
 
 **What You'll Get:**
 - ✅ Flutterwave payment processing (real payments)

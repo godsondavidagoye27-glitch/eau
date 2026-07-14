@@ -1,4 +1,4 @@
-# EAU DEY PLAY - Complete Website with Admin Dashboard
+# EAU DE PLAY - Complete Website with Admin Dashboard
 
 A fully functional, multi-page website built with vanilla HTML5, CSS3, and ES6+ JavaScript. No frameworks, no build tools required!
 
@@ -264,7 +264,7 @@ Edit `css/variables.css`:
 Edit `db.js` in the `initializeDB()` method or use the admin dashboard to add dynamically.
 
 ### Modify Logo Text
-Search for "EAU DEY PLAY" in HTML files to change branding.
+Search for "EAU DE PLAY" in HTML files to change branding.
 
 ### Change Admin Credentials
 Edit `db.js` in the initial `users` array:

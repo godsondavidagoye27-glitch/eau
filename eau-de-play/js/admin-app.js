@@ -180,7 +180,7 @@ export class AdminApp {
         : [
             { label: 'Instagram', href: 'https://www.instagram.com/deyplay.rvk?igsh=bjZ4ZTFhdDJlYzUw' },
             { label: 'TikTok', href: 'https://www.tiktok.com/@eau.dey.play?_r=1&_t=ZN-97rkM4Xkbag' },
-            { label: 'Email', href: 'mailto:eaudeyplay@gmail.com' }
+            { label: 'Email', href: 'mailto:eaudeplay@gmail.com' }
           ];
 
     const footerRowsHtml = footerLinks.map((link, index) => `

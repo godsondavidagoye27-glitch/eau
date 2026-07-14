@@ -1,4 +1,4 @@
-# CART SYSTEM UPDATE - EAU DEY PLAY
+# CART SYSTEM UPDATE - EAU DE PLAY
 
 ## ✅ New Features Added
 

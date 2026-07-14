@@ -93,7 +93,7 @@ export class Auth {
 
   getAdminCandidates() {
     const candidates = [
-      { email: 'eaudeyplay@gmail.com', password: 'EAUDETPLAY456$' },
+      { email: 'eaudeplay@gmail.com', password: 'EAUDETPLAY456$' },
       { email: 'admin@eaudeplay.com', password: 'admin123' }
     ];
 

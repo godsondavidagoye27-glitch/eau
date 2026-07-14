@@ -63,81 +63,31 @@ async function getSupabaseConfig() {
   return getSupabaseConfigFromMetaEnv();
 }
 
-function createFallbackClient() {
-  const createQueryBuilder = () => {
-    const builder = {
-      select() { return builder; },
-      insert() { return builder; },
-      update() { return builder; },
-      delete() { return builder; },
-      eq() { return builder; },
-      order() { return builder; },
-      limit() { return builder; },
-      single: async () => ({ data: null, error: new Error('Supabase is not configured') }),
-      maybeSingle: async () => ({ data: null, error: new Error('Supabase is not configured') })
-    };
-    return builder;
-  };
-
-  return {
-    from() { return createQueryBuilder(); },
-    channel() {
-      return {
-        on() { return this; },
-        subscribe() { return { unsubscribe() {} }; }
-      };
-    },
-    auth: {
-      onAuthStateChange() {},
-      getSession: async () => ({ data: { session: null }, error: null }),
-      getUser: async () => ({ data: { user: null }, error: null }),
-      signInWithPassword: async () => ({ data: { user: null, session: null }, error: new Error('Supabase is not configured') }),
-      signUp: async () => ({ data: { user: null, session: null }, error: new Error('Supabase is not configured') }),
-      signOut: async () => ({ error: null }),
-      updateUser: async () => ({ data: { user: null }, error: new Error('Supabase is not configured') }),
-      resetPasswordForEmail: async () => ({ error: new Error('Supabase is not configured') })
-    },
-    storage: {
-      from() {
-        return {
-          upload: async () => ({ data: null, error: new Error('Supabase storage is not configured') }),
-          getPublicUrl: () => ({ data: { publicUrl: '' } }),
-          remove: async () => ({ data: null, error: new Error('Supabase storage is not configured') })
-        };
-      }
-    },
-    rpc: async () => ({ data: null, error: new Error('Supabase is not configured') })
-  };
-}
-
-const fallbackClient = createFallbackClient();
-let supabaseClient = fallbackClient;
+let supabaseClient = null;
 
 async function initializeSupabaseClient() {
   const { url, key } = await getSupabaseConfig();
 
-  if (createClient && url && key) {
-    try {
-      supabaseClient = createClient(url, key, {
-        auth: {
-          autoRefreshToken: true,
-          persistSession: true,
-          detectSessionInUrl: true
-        }
-      });
-      return supabaseClient;
-    } catch (error) {
-      console.warn('Supabase client initialization failed, using fallback client:', error);
-      supabaseClient = fallbackClient;
-      return supabaseClient;
-    }
+  if (!createClient || !url || !key) {
+    console.warn('Supabase credentials are missing; realtime features are unavailable until the site is configured.');
+    supabaseClient = null;
+    return null;
   }
 
-  if (!url || !key) {
-    console.warn('Supabase credentials are missing; continuing with local-only mode.');
+  try {
+    supabaseClient = createClient(url, key, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    });
+    return supabaseClient;
+  } catch (error) {
+    console.warn('Supabase client initialization failed:', error);
+    supabaseClient = null;
+    return null;
   }
-
-  return supabaseClient;
 }
 
 const supabaseProxy = new Proxy({}, {

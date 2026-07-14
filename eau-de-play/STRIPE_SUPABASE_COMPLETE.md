@@ -2,7 +2,7 @@
 
 ## ✨ What's New
 
-Your EAU DEY PLAY website has been upgraded with **real payment processing** and **professional backend infrastructure**!
+Your EAU DE PLAY website has been upgraded with **real payment processing** and **professional backend infrastructure**!
 
 ### 💳 Flutterwave Integration
 - ✅ Real credit card payments (test mode ready)

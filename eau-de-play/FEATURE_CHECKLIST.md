@@ -1,4 +1,4 @@
-# FEATURE CHECKLIST - EAU DEY PLAY
+# FEATURE CHECKLIST - EAU DE PLAY
 
 ## ✅ Public Website Features
 

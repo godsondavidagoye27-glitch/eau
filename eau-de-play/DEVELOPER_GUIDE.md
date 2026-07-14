@@ -1,4 +1,4 @@
-# DEVELOPER GUIDE - EAU DEY PLAY
+# DEVELOPER GUIDE - EAU DE PLAY
 
 ## 🎯 Architecture Overview
 
@@ -377,7 +377,7 @@ new AdminLogin()                            // Initialize
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Gallery - EAU DEY PLAY</title>
+  <title>Gallery - EAU DE PLAY</title>
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/global.css">
   <link rel="stylesheet" href="css/layout.css">

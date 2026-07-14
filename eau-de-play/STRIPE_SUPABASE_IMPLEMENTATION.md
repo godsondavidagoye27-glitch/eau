@@ -464,7 +464,7 @@ TOTAL: 11 files, ~2,750 lines of code & docs
 
 ## 🎉 You're All Set!
 
-Your EAU DEY PLAY website now has:
+Your EAU DE PLAY website now has:
 
 ✅ Professional payment processing with Flutterwave
 ✅ Secure user authentication with Supabase

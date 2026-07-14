@@ -18,7 +18,7 @@ export class PublicApp {
     // Inject navbar/footer first
     injectNavbarAndFooter();
     
-    // Render immediately with cached/fallback data (non-blocking)
+    // Render immediately with the latest live data once available
     this.setupPageSpecificLogic();
     this.hasInitialRender = true;
 
