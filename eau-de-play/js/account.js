@@ -102,14 +102,49 @@ function renderAvatarPreview(dataUrl) {
   const preview = document.getElementById('avatar-preview');
   const previewSide = document.getElementById('avatar-preview-side');
   if (!preview) return;
+  // Use quoted URL to avoid CSS parsing issues with data URLs and provide an <img>
+  // fallback for older browsers where setting backgroundImage may fail.
   if (dataUrl) {
-    preview.style.backgroundImage = `url(${dataUrl})`;
-    preview.classList.add('has-avatar');
-    if (previewSide) { previewSide.style.backgroundImage = `url(${dataUrl})`; previewSide.classList.add('has-avatar'); }
+    try {
+      preview.style.backgroundImage = 'url("' + dataUrl + '")';
+      preview.style.backgroundSize = 'cover';
+      preview.style.backgroundPosition = 'center';
+      preview.classList.add('has-avatar');
+    } catch (e) {
+      // graceful fallback: inject an <img> element
+      preview.innerHTML = '';
+      const img = document.createElement('img');
+      img.alt = 'Avatar preview';
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'cover';
+      img.src = dataUrl;
+      preview.appendChild(img);
+      preview.classList.add('has-avatar');
+    }
+    if (previewSide) {
+      try {
+        previewSide.style.backgroundImage = 'url("' + dataUrl + '")';
+        previewSide.style.backgroundSize = 'cover';
+        previewSide.style.backgroundPosition = 'center';
+        previewSide.classList.add('has-avatar');
+      } catch (e) {
+        previewSide.innerHTML = '';
+        const img2 = document.createElement('img');
+        img2.alt = 'Avatar preview';
+        img2.style.width = '100%';
+        img2.style.height = '100%';
+        img2.style.objectFit = 'cover';
+        img2.src = dataUrl;
+        previewSide.appendChild(img2);
+        previewSide.classList.add('has-avatar');
+      }
+    }
   } else {
     preview.style.backgroundImage = '';
     preview.classList.remove('has-avatar');
-    if (previewSide) { previewSide.style.backgroundImage = ''; previewSide.classList.remove('has-avatar'); }
+    preview.innerHTML = '';
+    if (previewSide) { previewSide.style.backgroundImage = ''; previewSide.classList.remove('has-avatar'); previewSide.innerHTML = ''; }
   }
 }
 
