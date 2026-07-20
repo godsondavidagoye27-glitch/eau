@@ -3,6 +3,59 @@
    ============================================ */
 
 /* HERO SECTION */
+.page-preloader {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(10, 12, 28, 0.96), rgba(7, 8, 20, 0.98));
+  z-index: 9999;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.page-preloader-hidden {
+  opacity: 0;
+}
+
+.preloader-content {
+  text-align: center;
+  max-width: 800px;
+  padding: var(--spacing-lg);
+}
+
+.preloader-badge {
+  display: inline-block;
+  margin-bottom: var(--spacing-md);
+  font-size: 0.85rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.preloader-title {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.05;
+  margin-bottom: var(--spacing-lg);
+  color: #ffffff;
+}
+
+.preloader-strip {
+  width: 140px;
+  height: 4px;
+  margin: 0 auto;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0.2) 100%);
+  animation: preloader-slide 1.2s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes preloader-slide {
+  0% { transform: translateX(-45%); }
+  100% { transform: translateX(145%); }
+}
+
 .hero {
   position: relative;
   padding: var(--spacing-4xl) 0;

@@ -15,6 +15,14 @@
   <meta name="google-site-verification" content="-c4Z8QDJB78e2IX30DcG9vcNxZ_YTQlSFcav4Q9sh0g" />
 </head>
 <body>
+  <div class="page-preloader" id="page-preloader" aria-hidden="true">
+    <div class="preloader-content">
+      <div class="preloader-badge">EAU DE PLAY</div>
+      <div class="preloader-title">Unlocking your next great experience</div>
+      <div class="preloader-strip" aria-hidden="true"></div>
+    </div>
+  </div>
+
   <!-- Navbar Placeholder -->
   <div id="navbar-placeholder"></div>
 
@@ -44,7 +52,7 @@
     </div>
   </section>
 
-  
+
 
   <section class="hero">
     <div class="container">
@@ -108,6 +116,16 @@
         // ignore
       }
     })();
+  </script>
+  <script>
+    window.addEventListener('load', function () {
+      const preloader = document.getElementById('page-preloader');
+      if (!preloader) return;
+      preloader.classList.add('page-preloader-hidden');
+      window.setTimeout(function () {
+        preloader.remove();
+      }, 500);
+    });
   </script>
   <script type="module" src="js/public-app.js"></script>
 </body>
