@@ -11,6 +11,9 @@ try {
   createClient = null;
 }
 
+const DEFAULT_SUPABASE_URL = 'https://ogzdkseybdwuqnsaletz.supabase.co';
+const DEFAULT_SUPABASE_KEY = 'sb_publishable_sM33fiXNtEIsm0Occ-l3fQ_q0UO1a6w';
+
 function getEnvValue(source, keys) {
   if (!source || typeof source !== 'object') return '';
   for (const key of keys) {
@@ -60,7 +63,12 @@ async function getSupabaseConfig() {
     console.warn('Unable to load runtime Supabase config from /api/config', err);
   }
 
-  return getSupabaseConfigFromMetaEnv();
+  const metaEnvConfig = getSupabaseConfigFromMetaEnv();
+  if (metaEnvConfig.url && metaEnvConfig.key) {
+    return metaEnvConfig;
+  }
+
+  return { url: DEFAULT_SUPABASE_URL, key: DEFAULT_SUPABASE_KEY };
 }
 
 let supabaseClient = null;
