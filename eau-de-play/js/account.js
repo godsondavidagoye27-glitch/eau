@@ -833,36 +833,53 @@ function applyBookingDiff(payload, userEmail) {
 async function init() {
   const storedUser = getStoredUser();
   const user = (await supabaseAuth.getCurrentUser()) || storedUser;
+  // Always wire up the avatar controls and preview so the builder is usable
+  // even when a visitor is not signed in (preview uses localStorage when available).
+  const avatarCreateBtn = document.getElementById('avatar-create-btn');
+  const savedOptions = getAvatarOptions();
+  setFormAvatarOptions(savedOptions);
 
+  // Attach live-preview listeners so users can see changes as they edit
+  try { attachAvatarFormListeners(); } catch (e) { /* ignore */ }
+
+  // create custom-styled select displays to guarantee consistent colors
+  try { createCustomSelects(); } catch (e) { /* ignore */ }
+
+  // ensure preview reflects current form values immediately (uses local cache/fallback)
+  try { createAvatarPlaceholder(); } catch (e) { /* ignore */ }
+
+  // If the user is not signed in, show helpful messaging and disable save button
   if (!user) {
-    document.getElementById('profile-email').textContent = 'Please sign in to view your account.';
-    document.getElementById('bookings-list').innerHTML = '<p>Please sign in to view your bookings.</p>';
-    document.getElementById('purchases-list').innerHTML = '<p>Please sign in to view your purchases.</p>';
-    // disable avatar creation when not signed in
-    const avatarCreateBtn = document.getElementById('avatar-create-btn');
+    const profileEmail = document.getElementById('profile-email');
+    if (profileEmail) profileEmail.textContent = 'Please sign in to view your account.';
+    const listEl = document.getElementById('bookings-list');
+    const purchasesEl = document.getElementById('purchases-list');
+    const upcomingEl = document.getElementById('upcoming-services');
+    if (listEl) listEl.innerHTML = '<p>Please sign in to view your bookings.</p>';
+    if (purchasesEl) purchasesEl.innerHTML = '<p>Please sign in to view your purchases.</p>';
+    if (upcomingEl) upcomingEl.innerHTML = '<p>Please sign in to view upcoming services.</p>';
+
     if (avatarCreateBtn) {
       avatarCreateBtn.disabled = true;
       avatarCreateBtn.textContent = 'Sign in to create avatar';
       avatarCreateBtn.title = 'You must be signed in to create and save an avatar';
       avatarCreateBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        // redirect to auth page
         window.location.href = 'auth.html';
       });
     }
+
+    // If there's a locally saved avatar, ensure it's rendered for preview
+    const storedAvatar = getStoredAvatar();
+    if (storedAvatar) renderAvatarPreview(storedAvatar);
     return;
   }
 
+  // Signed-in path: show profile email and prefer server-stored avatar
   const profileEmail = document.getElementById('profile-email');
-  if (profileEmail) {
-    profileEmail.textContent = user.email || user.id || 'Account user';
-  }
+  if (profileEmail) profileEmail.textContent = user.email || user.id || 'Account user';
 
-  const avatarCreateBtn = document.getElementById('avatar-create-btn');
   const storedAvatar = getStoredAvatar();
-  const savedOptions = getAvatarOptions();
-  setFormAvatarOptions(savedOptions);
-
   if (storedAvatar) {
     renderAvatarPreview(storedAvatar);
   } else if (user && user.id) {
@@ -872,15 +889,6 @@ async function init() {
       renderAvatarPreview(profileAvatar);
     }
   }
-
-  // Attach live-preview listeners so users can see changes as they edit
-  try { attachAvatarFormListeners(); } catch (e) { /* ignore */ }
-
-  // ensure preview reflects current form values immediately
-  try { createAvatarPlaceholder(); } catch (e) { /* ignore */ }
-
-  // create custom-styled select displays to guarantee consistent colors
-  try { createCustomSelects(); } catch (e) { /* ignore */ }
 
   if (avatarCreateBtn) {
     avatarCreateBtn.addEventListener('click', async () => {
