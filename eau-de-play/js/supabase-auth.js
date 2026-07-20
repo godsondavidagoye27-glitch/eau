@@ -85,13 +85,12 @@ export class SupabaseAuth {
   async signUp(email, password, metadata = {}) {
     try {
       const auth = await this.ensureAuthClient();
-      const { data, error } = await auth.signUp({
-        email,
-        password,
-        options: {
-          data: metadata
-        }
-      });
+      const payload = { email, password };
+      if (metadata && Object.keys(metadata).length) {
+        payload.options = { data: metadata };
+      }
+
+      const { data, error } = await auth.signUp(payload);
       if (error) throw error;
 
       const user = data?.user ? this.attachAdminRole(data.user) : null;
@@ -111,7 +110,7 @@ export class SupabaseAuth {
       };
     } catch (error) {
       const message = error?.message || (error && typeof error === 'object' ? JSON.stringify(error) : String(error)) || 'Unknown error';
-      console.error('❌ Sign up error:', message);
+      console.error('❌ Sign up error:', error, message);
       return { success: false, error: message };
     }
   }

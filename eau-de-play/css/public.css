@@ -54,6 +54,67 @@
   background-repeat: no-repeat;
 }
 
+.silent-disco-banner {
+  position: relative;
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: #ffffff;
+  background: linear-gradient(180deg, rgba(7,8,20,0.72), rgba(7,8,20,0.72)),
+              url("../assets/images/SILENTDISCO-1.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: var(--spacing-4xl) 0;
+}
+
+.silent-disco-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.silent-disco-banner .container {
+  position: relative;
+  z-index: 1;
+  max-width: 860px;
+  padding: 0 var(--spacing-lg);
+}
+
+.silent-disco-banner h2 {
+  font-size: clamp(3rem, 6vw, 4rem);
+  margin-bottom: var(--spacing-lg);
+  line-height: 1.02;
+  text-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+.silent-disco-banner .btn {
+  min-width: 180px;
+  padding: 16px 32px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.silent-disco-banner .btn[aria-disabled="true"] {
+  opacity: 0.88;
+  cursor: default;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .silent-disco-banner {
+    min-height: 50vh;
+    padding: var(--spacing-3xl) 0;
+  }
+
+  .silent-disco-banner h2 {
+    font-size: clamp(2.5rem, 8vw, 3rem);
+  }
+}
+
 @media (max-width: 768px) {
   .hero {
     min-height: 60vh;
