@@ -692,14 +692,14 @@
 
 /* ABOUT TEASER */
 .about-teaser {
-  width: min(100%, 1440px);
-  max-width: 100%;
-  padding: var(--spacing-5xl) var(--spacing-lg);
+  width: 100%;
+  max-width: none;
+  padding: var(--spacing-5xl) 0;
   background: linear-gradient(180deg, rgba(19,16,26,0.96), rgba(19,16,26,0.98));
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 28px;
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.16);
-  margin: var(--spacing-4xl) auto 0;
+  margin: var(--spacing-4xl) 0 0;
 }
 
 .about-teaser-content {
