@@ -108,8 +108,8 @@ const supabaseProxy = new Proxy({}, {
 });
 
 export const supabase = supabaseProxy;
-
-initializeSupabaseClient().catch((error) => {
+export const supabaseReady = initializeSupabaseClient();
+supabaseReady.catch((error) => {
   console.warn('Supabase initialization failed:', error);
 });
 

@@ -2,20 +2,31 @@
 // SUPABASE AUTHENTICATION MODULE
 // ============================================
 
-import { supabase } from './supabase.js';
+import { supabase, supabaseReady } from './supabase.js';
 
 export class SupabaseAuth {
   constructor() {
     this.client = supabase;
     this.currentUser = null;
-    this.initializeAuth();
-    // restore session on load so other modules relying on
-    // `eau-de-play-current-user` see the logged-in user
-    this.restoreSession().catch((e) => console.warn('Restore session failed', e));
+    this.ready = supabaseReady;
+
+    this.ready.then(() => {
+      this.initializeAuth();
+      // restore session on load so other modules relying on
+      // `eau-de-play-current-user` see the logged-in user
+      this.restoreSession().catch((e) => console.warn('Restore session failed', e));
+    }).catch((error) => {
+      console.warn('Supabase auth initialization failed', error);
+    });
   }
 
   // INITIALIZE AUTH STATE LISTENER
   initializeAuth() {
+    if (!this.client?.auth || typeof this.client.auth.onAuthStateChange !== 'function') {
+      console.warn('Supabase auth client is not ready; auth state listener not attached.');
+      return;
+    }
+
     this.client.auth.onAuthStateChange((event, session) => {
       console.log('🔐 Auth event:', event);
       if (session?.user) {
@@ -44,10 +55,19 @@ export class SupabaseAuth {
     return { ...user, role: 'user' };
   }
 
+  async ensureAuthClient() {
+    await this.ready;
+    if (!this.client?.auth) {
+      throw new Error('Supabase auth client not initialized');
+    }
+    return this.client.auth;
+  }
+
   // Try to restore an existing session on page load and sync localStorage
   async restoreSession() {
     try {
-      const { data } = await this.client.auth.getSession();
+      const auth = await this.ensureAuthClient();
+      const { data } = await auth.getSession();
       const session = data?.session || null;
       if (session?.user) {
         const user = this.attachAdminRole(session.user);
@@ -64,7 +84,8 @@ export class SupabaseAuth {
   // SIGN UP
   async signUp(email, password, metadata = {}) {
     try {
-      const { data, error } = await this.client.auth.signUp({
+      const auth = await this.ensureAuthClient();
+      const { data, error } = await auth.signUp({
         email,
         password,
         options: {
@@ -72,17 +93,34 @@ export class SupabaseAuth {
         }
       });
       if (error) throw error;
-      return { success: true, user: data.user };
+
+      const user = data?.user ? this.attachAdminRole(data.user) : null;
+      if (data?.session?.user) {
+        const sessionUser = this.attachAdminRole(data.session.user);
+        this.currentUser = sessionUser;
+        localStorage.setItem('eau-de-play-user', JSON.stringify(sessionUser));
+        localStorage.setItem('eau-de-play-current-user', JSON.stringify(sessionUser));
+        window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: sessionUser }));
+      }
+
+      return {
+        success: true,
+        user,
+        session: data?.session || null,
+        confirmationRequired: !data?.session
+      };
     } catch (error) {
-      console.error('❌ Sign up error:', error.message);
-      return { success: false, error: error.message };
+      const message = error?.message || (error && typeof error === 'object' ? JSON.stringify(error) : String(error)) || 'Unknown error';
+      console.error('❌ Sign up error:', message);
+      return { success: false, error: message };
     }
   }
 
   // SIGN IN
   async signIn(email, password) {
     try {
-      const { data, error } = await this.client.auth.signInWithPassword({
+      const auth = await this.ensureAuthClient();
+      const { data, error } = await auth.signInWithPassword({
         email,
         password
       });
@@ -97,15 +135,17 @@ export class SupabaseAuth {
       }
       return { success: true, user };
     } catch (error) {
-      console.error('❌ Sign in error:', error.message);
-      return { success: false, error: error.message };
+      const message = error?.message || (error && typeof error === 'object' ? JSON.stringify(error) : String(error)) || 'Unknown error';
+      console.error('❌ Sign in error:', message);
+      return { success: false, error: message };
     }
   }
 
   // SIGN OUT
   async signOut() {
     try {
-      const { error } = await this.client.auth.signOut();
+      const auth = await this.ensureAuthClient();
+      const { error } = await auth.signOut();
       if (error) throw error;
       this.currentUser = null;
       // clear both keys
@@ -114,21 +154,29 @@ export class SupabaseAuth {
       window.dispatchEvent(new CustomEvent('userLoggedOut'));
       return { success: true };
     } catch (error) {
-      console.error('❌ Sign out error:', error.message);
-      return { success: false, error: error.message };
+      const message = error?.message || (error && typeof error === 'object' ? JSON.stringify(error) : String(error)) || 'Unknown error';
+      console.error('❌ Sign out error:', message);
+      return { success: false, error: message };
     }
   }
 
   // GET CURRENT USER
   async getCurrentUser() {
     try {
-      const { data: { user }, error } = await this.client.auth.getUser();
-      if (error) throw error;
-      const normalizedUser = this.attachAdminRole(user);
+      const auth = await this.ensureAuthClient();
+      const { data, error } = await auth.getUser();
+      if (error) {
+        const message = String(error?.message || error || 'Unknown auth error');
+        if (message.includes('Auth session missing')) {
+          return null;
+        }
+        throw error;
+      }
+      const normalizedUser = this.attachAdminRole(data.user);
       this.currentUser = normalizedUser;
       return normalizedUser;
     } catch (error) {
-      console.error('❌ Get user error:', error.message);
+      console.error('❌ Get user error:', error?.message || (error && typeof error === 'object' ? JSON.stringify(error) : String(error)) || 'Unknown error');
       return null;
     }
   }
@@ -151,41 +199,47 @@ export class SupabaseAuth {
   // UPDATE USER METADATA
   async updateProfile(updates) {
     try {
-      const { data, error } = await this.client.auth.updateUser({
+      const auth = await this.ensureAuthClient();
+      const { data, error } = await auth.updateUser({
         data: updates
       });
       if (error) throw error;
       this.currentUser = data.user;
       return { success: true, user: data.user };
     } catch (error) {
-      console.error('❌ Update profile error:', error.message);
-      return { success: false, error: error.message };
+      const message = error?.message || (error && typeof error === 'object' ? JSON.stringify(error) : String(error)) || 'Unknown error';
+      console.error('❌ Update profile error:', message);
+      return { success: false, error: message };
     }
   }
 
   // RESET PASSWORD
   async resetPassword(email) {
     try {
-      const { error } = await this.client.auth.resetPasswordForEmail(email);
+      const auth = await this.ensureAuthClient();
+      const { error } = await auth.resetPasswordForEmail(email);
       if (error) throw error;
       return { success: true };
     } catch (error) {
-      console.error('❌ Reset password error:', error.message);
-      return { success: false, error: error.message };
+      const message = error?.message || (error && typeof error === 'object' ? JSON.stringify(error) : String(error)) || 'Unknown error';
+      console.error('❌ Reset password error:', message);
+      return { success: false, error: message };
     }
   }
 
   // UPDATE PASSWORD
   async updatePassword(newPassword) {
     try {
-      const { error } = await this.client.auth.updateUser({
+      const auth = await this.ensureAuthClient();
+      const { error } = await auth.updateUser({
         password: newPassword
       });
       if (error) throw error;
       return { success: true };
     } catch (error) {
-      console.error('❌ Update password error:', error.message);
-      return { success: false, error: error.message };
+      const message = error?.message || (error && typeof error === 'object' ? JSON.stringify(error) : String(error)) || 'Unknown error';
+      console.error('❌ Update password error:', message);
+      return { success: false, error: message };
     }
   }
 }
