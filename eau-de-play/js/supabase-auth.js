@@ -81,6 +81,21 @@ export class SupabaseAuth {
     }
   }
 
+  formatSignUpError(error) {
+    const rawMessage = error?.message || (error && typeof error === 'object' ? JSON.stringify(error) : String(error)) || 'Unknown error';
+    const normalized = rawMessage.toLowerCase();
+
+    if (/confirmation email/i.test(rawMessage) || /unexpected_failure/i.test(rawMessage) || /email/i.test(rawMessage) && /send/i.test(rawMessage)) {
+      return 'Unable to send the confirmation email right now. Please try again later or check your Supabase email delivery settings.';
+    }
+
+    if (/authretryablefetcherror/i.test(rawMessage) || /failed to fetch/i.test(normalized) || /network/i.test(normalized) || /timeout/i.test(normalized)) {
+      return 'A temporary signup error occurred. Please try again in a few minutes.';
+    }
+
+    return rawMessage;
+  }
+
   // SIGN UP
   async signUp(email, password, metadata = {}) {
     try {
@@ -109,7 +124,7 @@ export class SupabaseAuth {
         confirmationRequired: !data?.session
       };
     } catch (error) {
-      const message = error?.message || (error && typeof error === 'object' ? JSON.stringify(error) : String(error)) || 'Unknown error';
+      const message = this.formatSignUpError(error);
       console.error('❌ Sign up error:', error, message);
       return { success: false, error: message };
     }
