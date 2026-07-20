@@ -68,6 +68,12 @@ let supabaseClient = null;
 async function initializeSupabaseClient() {
   const { url, key } = await getSupabaseConfig();
 
+  console.log('Supabase config resolved:', {
+    url: url || '[missing]',
+    hasKey: !!key,
+    keyLength: key ? key.length : 0
+  });
+
   if (!createClient || !url || !key) {
     console.warn('Supabase credentials are missing; realtime features are unavailable until the site is configured.');
     supabaseClient = null;
