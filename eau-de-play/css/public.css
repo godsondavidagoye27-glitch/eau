@@ -690,7 +690,7 @@
 /* ABOUT TEASER */
 .about-teaser {
   padding: var(--spacing-5xl) var(--spacing-lg);
-  background: rgba(255, 255, 255, 0.95);
+  background: #fff;
   border-radius: 28px;
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.08);
   margin: var(--spacing-4xl) auto 0;
@@ -705,20 +705,27 @@
 
 .about-teaser h2 {
   margin-bottom: var(--spacing-lg);
-  color: var(--color-primary-dark);
+  color: #b8860b;
 }
 
 .about-teaser p {
   font-size: var(--font-size-lg);
   max-width: 680px;
   margin: 0 auto var(--spacing-2xl);
-  color: var(--color-text);
+  color: #333333;
 }
 
 .about-teaser .btn {
   min-width: 220px;
   padding: 14px 36px;
   border-radius: 28px;
+  background: #1a1a1a;
+  color: #ffffff;
+  border: 1px solid transparent;
+}
+
+.about-teaser .btn:hover {
+  background: #000000;
 }
 
 /* FEATURED PRODUCTS SECTION */
