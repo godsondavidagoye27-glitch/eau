@@ -5,8 +5,8 @@
 /* HERO SECTION */
 .hero {
   position: relative;
-  padding: 0;
-  min-height: 90vh;
+  padding: var(--spacing-4xl) 0;
+  min-height: 80vh;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -24,8 +24,8 @@
 .hero .container {
   position: relative;
   z-index: 2;
-  max-width: 940px;
-  padding: var(--spacing-4xl) var(--spacing-lg);
+  max-width: 900px;
+  padding: 0 var(--spacing-lg);
   text-align: center;
 }
 
@@ -41,13 +41,13 @@
   font-size: 1.15rem;
   margin-bottom: var(--spacing-3xl);
   color: rgba(255, 255, 255, 0.92);
-  max-width: 760px;
+  max-width: 700px;
   margin-left: auto;
   margin-right: auto;
 }
 
 .hero {
-  background: linear-gradient(180deg, rgba(7,8,20,0.9), rgba(7,8,20,0.74)),
+  background: linear-gradient(180deg, rgba(7,8,20,0.92), rgba(7,8,20,0.76)),
               url("../assets/images/IMG_3177.JPG");
   background-size: cover;
   background-position: center;
@@ -56,7 +56,7 @@
 
 .silent-disco-banner {
   position: relative;
-  min-height: 60vh;
+  min-height: 55vh;
   display: grid;
   place-items: center;
   text-align: center;
@@ -66,14 +66,15 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  padding: var(--spacing-4xl) 0;
+  padding: var(--spacing-5xl) 0;
+  margin: var(--spacing-4xl) 0;
 }
 
 .silent-disco-banner::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.38);
   pointer-events: none;
 }
 
@@ -136,11 +137,14 @@
 }
 
 .afro-home-banner {
-  padding: 0;
+  padding: var(--spacing-4xl) 0;
   color: white;
 }
 
 .afro-home-banner .afro-banner-inner {
+  min-height: 78vh;
+  display: grid;
+  place-items: center;
   border-radius: 32px;
   overflow: hidden;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
@@ -203,6 +207,14 @@
   .afro-home-banner p {
     font-size: 0.9rem;
   }
+}
+
+.afro-home-banner .eyebrow {
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .hero-cta-group {
@@ -295,6 +307,17 @@
     box-shadow: none;
     opacity: 0.9;
   }
+
+  .about-teaser {
+    padding: var(--spacing-4xl) var(--spacing-md);
+    margin: var(--spacing-4xl) var(--spacing-md) 0;
+  }
+
+  .about-teaser .btn {
+    width: 100%;
+    max-width: 320px;
+  }
+}
 
   /* Learn More button - prominent on mobile */
   .afro-home-banner .hero-cta-group .btn.btn-secondary {
@@ -613,24 +636,36 @@
 
 /* ABOUT TEASER */
 .about-teaser {
-  padding: var(--spacing-3xl) var(--spacing-lg);
-  background-color: var(--color-background-light);
+  padding: var(--spacing-5xl) var(--spacing-lg);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 28px;
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.08);
+  margin: var(--spacing-4xl) auto 0;
+  max-width: 1200px;
 }
 
 .about-teaser-content {
-  max-width: 1200px;
+  max-width: 960px;
   margin: 0 auto;
   text-align: center;
 }
 
 .about-teaser h2 {
   margin-bottom: var(--spacing-lg);
+  color: var(--color-primary-dark);
 }
 
 .about-teaser p {
   font-size: var(--font-size-lg);
-  max-width: 600px;
-  margin: 0 auto var(--spacing-xl);
+  max-width: 680px;
+  margin: 0 auto var(--spacing-2xl);
+  color: var(--color-text);
+}
+
+.about-teaser .btn {
+  min-width: 220px;
+  padding: 14px 36px;
+  border-radius: 28px;
 }
 
 /* FEATURED PRODUCTS SECTION */
