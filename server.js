@@ -289,7 +289,7 @@ const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_sM33fiXNtEIsm0Occ-l3fQ_q0UO1a6
 
 function getRuntimeConfigScript() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || process.env.SUPABASE_PROJECT_URL || DEFAULT_SUPABASE_URL;
-  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || DEFAULT_SUPABASE_ANON_KEY;
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || DEFAULT_SUPABASE_ANON_KEY;
   const paypalBusinessEmail = process.env.PAYPAL_BUSINESS_EMAIL || process.env.VITE_PAYPAL_BUSINESS_EMAIL || '';
   const apiUrl = process.env.VITE_API_URL || process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '';
 

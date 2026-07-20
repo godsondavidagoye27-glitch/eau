@@ -29,7 +29,7 @@ function getSupabaseConfigFromWindow() {
   const browserConfig = typeof window !== 'undefined' ? window.__SUPABASE_CONFIG__ : null;
 
   const url = getEnvValue(runtimeConfig, ['url', 'supabaseUrl', 'projectUrl']) || getEnvValue(appConfig, ['supabaseUrl', 'url']) || getEnvValue(browserConfig, ['url']) || '';
-  const key = getEnvValue(runtimeConfig, ['anonKey', 'supabaseAnonKey', 'serviceRoleKey', 'anon_key']) || getEnvValue(appConfig, ['supabaseAnonKey', 'anonKey']) || getEnvValue(browserConfig, ['anonKey']) || '';
+  const key = getEnvValue(runtimeConfig, ['anonKey', 'supabaseAnonKey', 'serviceRoleKey', 'anon_key', 'publishableKey', 'publishable_key']) || getEnvValue(appConfig, ['supabaseAnonKey', 'anonKey', 'publishableKey', 'publishable_key']) || getEnvValue(browserConfig, ['anonKey', 'publishableKey', 'publishable_key']) || '';
 
   return { url, key };
 }
@@ -37,7 +37,7 @@ function getSupabaseConfigFromWindow() {
 function getSupabaseConfigFromMetaEnv() {
   const envConfig = typeof import.meta !== 'undefined' ? import.meta.env : null;
   const url = getEnvValue(envConfig, ['VITE_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL', 'SUPABASE_PROJECT_URL']);
-  const key = getEnvValue(envConfig, ['VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY', 'SUPABASE_KEY']);
+  const key = getEnvValue(envConfig, ['VITE_SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY', 'SUPABASE_KEY', 'VITE_SUPABASE_PUBLISHABLE_KEY', 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'SUPABASE_PUBLISHABLE_KEY']);
   return { url, key };
 }
 
