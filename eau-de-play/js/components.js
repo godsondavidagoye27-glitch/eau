@@ -158,6 +158,20 @@ export function injectNavbarAndFooter(showFooter = false) {
     });
   }
 
+  function installNavPreloaderSuppressor() {
+    const navbarLinks = document.querySelectorAll('.navbar-nav a, .navbar-brand');
+    navbarLinks.forEach((link) => {
+      link.addEventListener('click', (event) => {
+        if (link.target && link.target !== '_self') return;
+        if (!link.href || link.href.startsWith('mailto:') || link.href.startsWith('tel:')) return;
+        if (link.href.indexOf(location.origin) !== 0) return;
+        sessionStorage.setItem('skipPreloader', 'true');
+      });
+    });
+  }
+
+  installNavPreloaderSuppressor();
+
   // Listen for auth events to update auth/account links
   function refreshAuthLinks(user) {
     const authLink = document.querySelector('.auth-link');

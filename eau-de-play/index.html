@@ -15,6 +15,13 @@
   <meta name="google-site-verification" content="-c4Z8QDJB78e2IX30DcG9vcNxZ_YTQlSFcav4Q9sh0g" />
 </head>
 <body>
+  <script>
+    if (sessionStorage.getItem('skipPreloader') === 'true') {
+      document.documentElement.classList.add('skip-preloader');
+      sessionStorage.removeItem('skipPreloader');
+    }
+  </script>
+
   <div class="page-preloader" id="page-preloader" aria-hidden="true">
     <div class="preloader-content">
       <div class="preloader-badge">EAU DE PLAY</div>

@@ -15,8 +15,11 @@
   transition: opacity 0.35s ease;
 }
 
-.page-preloader-hidden {
+.page-preloader-hidden,
+.skip-preloader .page-preloader {
   opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .preloader-content {
