@@ -46,6 +46,25 @@ function renderDashboardSummary(bookings, purchases) {
   if (upcomingCount) animateCount(upcomingCount, upcoming.length);
 }
 
+const AVATAR_STORAGE_KEY = 'eau-de-play-club-avatar';
+const AVATAR_OPTIONS_KEY = 'eau-de-play-avatar-options';
+const AVATAR_PROFILE_TABLE = 'profiles';
+const DEFAULT_AVATAR_OPTIONS = {
+  size: 'medium',
+  height: 'average',
+  skin: '#d69f77',
+  hair: '#f4d35e',
+  hairstyle: 'curly',
+  outfit: '#70d6ff',
+  accessory: 'none'
+};
+// extend defaults
+DEFAULT_AVATAR_OPTIONS.pattern = 'none';
+DEFAULT_AVATAR_OPTIONS.makeup = 'none';
+DEFAULT_AVATAR_OPTIONS.tattoo = 'none';
+
+
+
 function animateCount(element, target) {
   if (!element) return;
   const start = 0;
@@ -61,6 +80,506 @@ function animateCount(element, target) {
   }
   if (rafId) cancelAnimationFrame(rafId);
   requestAnimationFrame(step);
+}
+
+function getStoredAvatar() {
+  try {
+    return localStorage.getItem(AVATAR_STORAGE_KEY);
+  } catch (error) {
+    return null;
+  }
+}
+
+function saveAvatar(dataUrl) {
+  try {
+    localStorage.setItem(AVATAR_STORAGE_KEY, dataUrl);
+  } catch (error) {
+    console.warn('Unable to save avatar', error);
+  }
+}
+
+function renderAvatarPreview(dataUrl) {
+  const preview = document.getElementById('avatar-preview');
+  const previewSide = document.getElementById('avatar-preview-side');
+  if (!preview) return;
+  if (dataUrl) {
+    preview.style.backgroundImage = `url(${dataUrl})`;
+    preview.classList.add('has-avatar');
+    if (previewSide) { previewSide.style.backgroundImage = `url(${dataUrl})`; previewSide.classList.add('has-avatar'); }
+  } else {
+    preview.style.backgroundImage = '';
+    preview.classList.remove('has-avatar');
+    if (previewSide) { previewSide.style.backgroundImage = ''; previewSide.classList.remove('has-avatar'); }
+  }
+}
+
+function getAvatarOptions() {
+  try {
+    const stored = localStorage.getItem(AVATAR_OPTIONS_KEY);
+    return stored ? JSON.parse(stored) : { ...DEFAULT_AVATAR_OPTIONS };
+  } catch (error) {
+    return { ...DEFAULT_AVATAR_OPTIONS };
+  }
+}
+
+function saveAvatarOptions(options) {
+  try {
+    localStorage.setItem(AVATAR_OPTIONS_KEY, JSON.stringify(options));
+  } catch (error) {
+    console.warn('Unable to save avatar options', error);
+  }
+}
+
+function getFormAvatarOptions() {
+  const size = document.getElementById('avatar-size')?.value || DEFAULT_AVATAR_OPTIONS.size;
+  const height = document.getElementById('avatar-height')?.value || DEFAULT_AVATAR_OPTIONS.height;
+  const skin = document.getElementById('avatar-skin')?.value || DEFAULT_AVATAR_OPTIONS.skin;
+  const hair = document.getElementById('avatar-hair')?.value || DEFAULT_AVATAR_OPTIONS.hair;
+  const hairstyle = document.getElementById('avatar-hairstyle')?.value || DEFAULT_AVATAR_OPTIONS.hairstyle;
+  const outfit = document.getElementById('avatar-outfit')?.value || DEFAULT_AVATAR_OPTIONS.outfit;
+  const accessory = document.getElementById('avatar-accessory')?.value || DEFAULT_AVATAR_OPTIONS.accessory;
+  const pattern = document.getElementById('avatar-pattern')?.value || DEFAULT_AVATAR_OPTIONS.pattern || 'none';
+  const makeup = document.getElementById('avatar-makeup')?.value || DEFAULT_AVATAR_OPTIONS.makeup || 'none';
+  const tattoo = document.getElementById('avatar-tattoo')?.value || DEFAULT_AVATAR_OPTIONS.tattoo || 'none';
+  return { size, height, skin, hair, hairstyle, outfit, accessory, pattern, makeup, tattoo };
+}
+
+function setFormAvatarOptions(options) {
+  document.getElementById('avatar-size')?.value && (document.getElementById('avatar-size').value = options.size);
+  document.getElementById('avatar-height')?.value && (document.getElementById('avatar-height').value = options.height);
+  document.getElementById('avatar-skin')?.value && (document.getElementById('avatar-skin').value = options.skin);
+  document.getElementById('avatar-hair')?.value && (document.getElementById('avatar-hair').value = options.hair);
+  document.getElementById('avatar-hairstyle')?.value && (document.getElementById('avatar-hairstyle').value = options.hairstyle);
+  document.getElementById('avatar-outfit')?.value && (document.getElementById('avatar-outfit').value = options.outfit);
+  if (document.getElementById('avatar-accessory') && typeof options.accessory !== 'undefined') document.getElementById('avatar-accessory').value = options.accessory;
+  if (document.getElementById('avatar-pattern') && typeof options.pattern !== 'undefined') document.getElementById('avatar-pattern').value = options.pattern;
+  if (document.getElementById('avatar-makeup') && typeof options.makeup !== 'undefined') document.getElementById('avatar-makeup').value = options.makeup;
+  if (document.getElementById('avatar-tattoo') && typeof options.tattoo !== 'undefined') document.getElementById('avatar-tattoo').value = options.tattoo;
+}
+
+// Debounce helper
+function debounce(fn, wait = 120) {
+  let t = null;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), wait);
+  };
+}
+
+// Attach listeners to all avatar form controls so the preview updates live
+function attachAvatarFormListeners() {
+  const inputs = Array.from(document.querySelectorAll('[id^="avatar-"]'));
+  if (!inputs || inputs.length === 0) return;
+  const updater = debounce(() => { try { createAvatarPlaceholder(); } catch (e) { /* ignore */ } }, 90);
+  inputs.forEach((el) => {
+    el.addEventListener('input', updater);
+    el.addEventListener('change', updater);
+  });
+}
+
+// Create a custom visible display for selects while keeping the native select interactive.
+function createCustomSelects() {
+  const selects = Array.from(document.querySelectorAll('.avatar-builder-controls select'));
+  selects.forEach((select) => {
+    if (select.dataset.customized === '1') return;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'select-wrapper';
+    wrapper.style.position = 'relative';
+    wrapper.style.display = 'inline-block';
+    wrapper.style.width = select.style.width || '';
+
+    // insert wrapper before select and move select inside
+    select.parentNode.insertBefore(wrapper, select);
+    wrapper.appendChild(select);
+
+    // create visible display
+    const display = document.createElement('span');
+    display.className = 'select-display';
+    display.textContent = select.options[select.selectedIndex]?.text || '';
+    display.setAttribute('aria-hidden', 'true');
+    wrapper.appendChild(display);
+
+    // style the native select so it's invisible but still focusable/clickable
+    select.style.position = 'absolute';
+    select.style.inset = '0';
+    select.style.width = '100%';
+    select.style.height = '100%';
+    select.style.opacity = '0';
+    select.style.zIndex = '2';
+    select.style.cursor = 'pointer';
+
+    // when the native select changes, update display text
+    select.addEventListener('change', () => {
+      display.textContent = select.options[select.selectedIndex]?.text || '';
+      // trigger preview update
+      try { createAvatarPlaceholder(); } catch (e) { /* ignore */ }
+    });
+
+    // clicking the display should focus the native select
+    display.addEventListener('click', () => { select.focus(); select.click(); });
+
+    select.dataset.customized = '1';
+  });
+}
+
+function generateAvatarImage(options) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 420;
+  canvas.height = 420;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  // background
+  const bg = ctx.createRadialGradient(210, 210, 24, 210, 210, 220);
+  bg.addColorStop(0, 'rgba(255,255,255,0.16)');
+  bg.addColorStop(1, 'rgba(6,6,17,0.98)');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, 420, 420);
+
+  const bodyHeight = options.height === 'tall' ? 140 : options.height === 'short' ? 98 : 120;
+  const bodyWidth = options.size === 'large' ? 130 : options.size === 'small' ? 90 : 110;
+  const bodyX = 210 - bodyWidth / 2;
+  const bodyY = 230;
+
+  // body
+  ctx.fillStyle = options.outfit;
+  ctx.beginPath();
+  ctx.roundRect(bodyX, bodyY, bodyWidth, bodyHeight, 28);
+  ctx.fill();
+
+  // face
+  ctx.fillStyle = options.skin;
+  ctx.beginPath();
+  ctx.ellipse(210, 150, 72, 84, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // hair shape
+  ctx.fillStyle = options.hair;
+  ctx.beginPath();
+  if (options.hairstyle === 'bangs') {
+    ctx.moveTo(138, 130);
+    ctx.bezierCurveTo(138, 60, 282, 60, 282, 130);
+    ctx.lineTo(282, 190);
+    ctx.bezierCurveTo(260, 210, 240, 224, 210, 224);
+    ctx.bezierCurveTo(180, 224, 160, 210, 138, 190);
+  } else if (options.hairstyle === 'spiky') {
+    ctx.moveTo(138, 130);
+    ctx.lineTo(168, 86);
+    ctx.lineTo(190, 132);
+    ctx.lineTo(210, 94);
+    ctx.lineTo(232, 134);
+    ctx.lineTo(258, 92);
+    ctx.lineTo(282, 130);
+    ctx.lineTo(282, 192);
+    ctx.lineTo(138, 192);
+  } else {
+    ctx.ellipse(210, 118, 96, 72, 0, Math.PI, 0, false);
+    ctx.lineTo(118, 168);
+    ctx.lineTo(118, 192);
+    ctx.lineTo(302, 192);
+    ctx.lineTo(302, 168);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  // face accents
+  ctx.fillStyle = '#1f1f31';
+  ctx.beginPath();
+  ctx.arc(180, 148, 8, 0, Math.PI * 2);
+  ctx.arc(240, 148, 8, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(210, 180, 20, 0, Math.PI);
+  ctx.stroke();
+
+  // subtle highlights
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath();
+  ctx.arc(190, 128, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(225, 118, 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  // accessory simple rendering
+  if (options.accessory === 'sunglasses') {
+    ctx.fillStyle = 'rgba(20,20,20,0.95)';
+    ctx.fillRect(150, 136, 120, 22);
+    ctx.fillStyle = 'rgba(40,40,40,0.95)';
+    ctx.fillRect(150, 158, 44, 8);
+    ctx.fillRect(226, 158, 44, 8);
+  } else if (options.accessory === 'earring') {
+    ctx.fillStyle = '#ffd166';
+    ctx.beginPath(); ctx.arc(258, 160, 6, 0, Math.PI * 2); ctx.fill();
+  } else if (options.accessory === 'hat') {
+    ctx.fillStyle = '#222';
+    ctx.fillRect(120, 84, 180, 34);
+    ctx.beginPath(); ctx.ellipse(210, 130, 110, 28, 0, 0, Math.PI); ctx.fill();
+  } else if (options.accessory === 'mask') {
+    ctx.fillStyle = 'rgba(30,30,40,0.9)';
+    ctx.fillRect(162, 162, 96, 28);
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1; ctx.strokeRect(162, 162, 96, 28);
+  }
+
+  // eyes shading and lashes
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.ellipse(180, 148, 8, 6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(240, 148, 8, 6, 0, 0, Math.PI * 2); ctx.fill();
+  // whites
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(180, 146, 3, 2.2, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(240, 146, 3, 2.2, 0, 0, Math.PI * 2); ctx.fill();
+
+  // nose shading
+  ctx.fillStyle = 'rgba(0,0,0,0.06)'; ctx.beginPath(); ctx.moveTo(210,156); ctx.lineTo(206,170); ctx.lineTo(214,170); ctx.closePath(); ctx.fill();
+
+  // lips
+  ctx.fillStyle = 'rgba(180,60,90,0.95)'; ctx.beginPath(); ctx.ellipse(210,192,18,8,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fillRect(202,186,16,4);
+
+  // clothing details: collar, pattern
+  ctx.fillStyle = shadeColor(options.outfit, -12);
+  ctx.beginPath(); ctx.moveTo(bodyX, bodyY); ctx.lineTo(bodyX + bodyWidth, bodyY); ctx.lineTo(bodyX + bodyWidth, bodyY + 26); ctx.lineTo(bodyX, bodyY + 26); ctx.closePath(); ctx.fill();
+  // add subtle stripes or dot pattern depending on outfit color
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  for (let i = 0; i < 8; i++) { ctx.fillRect(bodyX + i * 14 + 6, bodyY + 36, 6, bodyHeight - 50); }
+
+  // accessory variants
+  if (options.accessory === 'necklace') {
+    ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(210, 238, 36, 0.9 * Math.PI, 2.1 * Math.PI); ctx.stroke();
+  } else if (options.accessory === 'scarf') {
+    ctx.fillStyle = '#222'; ctx.fillRect(162, 238, 96, 20); ctx.fillRect(170, 256, 64, 18);
+  } else if (options.accessory === 'headphones') {
+    ctx.fillStyle = '#111'; ctx.fillRect(124, 110, 20, 44); ctx.fillRect(276, 110, 20, 44);
+    ctx.beginPath(); ctx.arc(210, 96, 86, 0.75 * Math.PI, 0.25 * Math.PI); ctx.lineWidth = 10; ctx.strokeStyle = '#111'; ctx.stroke();
+  } else if (options.accessory === 'chain') {
+    ctx.strokeStyle = '#e0d4b5'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(176,228); ctx.quadraticCurveTo(210,246,244,228); ctx.stroke();
+  }
+
+  return canvas.toDataURL('image/png');
+}
+
+function generateAvatarSVGImage(options) {
+  const bodyHeight = options.height === 'tall' ? 140 : options.height === 'short' ? 98 : 120;
+  const bodyWidth = options.size === 'large' ? 130 : options.size === 'small' ? 90 : 110;
+  const faceCx = 210, faceCy = 150, faceRx = 72, faceRy = 84;
+
+  // defs for patterns
+  const patternId = options.pattern && options.pattern !== 'none' ? `pattern-${options.pattern}` : '';
+  let patternDef = '';
+  if (options.pattern === 'stripes') {
+    patternDef = `<pattern id="${patternId}" patternUnits="userSpaceOnUse" width="14" height="14"><rect width="14" height="14" fill="${options.outfit}"/><rect width="7" height="14" fill="rgba(255,255,255,0.06)"/></pattern>`;
+  } else if (options.pattern === 'dots') {
+    patternDef = `<pattern id="${patternId}" patternUnits="userSpaceOnUse" width="16" height="16"><rect width="16" height="16" fill="${options.outfit}"/><circle cx="8" cy="8" r="3" fill="rgba(255,255,255,0.06)"/></pattern>`;
+  } else if (options.pattern === 'gradient') {
+    patternDef = `<linearGradient id="grad-${patternId}" x1="0" x2="1"><stop offset="0%" stop-color="${options.outfit}" stop-opacity="1"/><stop offset="100%" stop-color="${shadeColor(options.outfit,-30)}" stop-opacity="1"/></linearGradient>`;
+  } else if (options.pattern === 'chevron') {
+    patternDef = `<pattern id="${patternId}" patternUnits="userSpaceOnUse" width="24" height="24"><rect width="24" height="24" fill="${options.outfit}"/><path d="M0 12 L6 6 L12 12 L18 6 L24 12 L24 24 L0 24 Z" fill="rgba(255,255,255,0.04)"/></pattern>`;
+  }
+
+  // accessory layers (simple)
+  const accessorySVG = (() => {
+    switch (options.accessory) {
+      case 'sunglasses': return `<rect x="150" y="136" width="120" height="22" fill="#111" rx="6"/>`;
+      case 'earring': return `<circle cx="258" cy="160" r="6" fill="#ffd166"/>`;
+      case 'hat': return `<rect x="120" y="84" width="180" height="34" fill="#222" rx="6"/><ellipse cx="210" cy="130" rx="110" ry="28" fill="#222"/>`;
+      case 'mask': return `<rect x="162" y="162" width="96" height="28" fill="#1e1e28" rx="6"/>`;
+      case 'necklace': return `<path d="M176 238 Q210 256 244 238" stroke="#ffd166" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+      case 'scarf': return `<rect x="162" y="238" width="96" height="20" fill="#222" rx="6"/>`;
+      case 'headphones': return `<rect x="124" y="110" width="20" height="44" fill="#111" rx="6"/><rect x="276" y="110" width="20" height="44" fill="#111" rx="6"/><path d="M124 130 C160 10 260 10 296 130" stroke="#111" stroke-width="10" fill="none" stroke-linecap="round"/>`;
+      case 'chain': return `<path d="M176 228 Q210 246 244 228" stroke="#e0d4b5" stroke-width="3" fill="none"/>`;
+      default: return '';
+    }
+  })();
+
+  // makeup
+  const makeupSVG = (() => {
+    if (options.makeup === 'glow') return `<circle cx="190" cy="128" r="10" fill="rgba(255,200,220,0.18)"/><circle cx="225" cy="118" r="7" fill="rgba(255,200,220,0.14)"/>`;
+    if (options.makeup === 'smokey') return `<ellipse cx="180" cy="146" rx="12" ry="6" fill="rgba(30,30,40,0.6)"/><ellipse cx="240" cy="146" rx="12" ry="6" fill="rgba(30,30,40,0.6)"/>`;
+    if (options.makeup === 'bold') return `<ellipse cx="210" cy="192" rx="18" ry="8" fill="#b43c5a"/>`;
+    return '';
+  })();
+
+  // tattoo
+  const tattooSVG = (() => {
+    if (options.tattoo === 'star') return `<polygon points="210,200 216,214 232,214 218,224 224,238 210,228 196,238 202,224 188,214 204,214" fill="rgba(0,0,0,0.24)" transform="translate(40,10) scale(0.6)"/>`;
+    if (options.tattoo === 'music') return `<path d="M10 10 L10 40 L30 34" stroke="#111" stroke-width="3" fill="none" transform="translate(240,200) scale(0.6)"/>`;
+    if (options.tattoo === 'tribal') return `<path d="M0 0 C10 10, 20 10, 30 0" stroke="#111" stroke-width="3" fill="none" transform="translate(220,210) scale(0.8)"/>`;
+    return '';
+  })();
+
+  const svg = `<?xml version="1.0" encoding="UTF-8"?><svg xmlns='http://www.w3.org/2000/svg' width='420' height='420' viewBox='0 0 420 420'>
+    <defs>
+      ${patternDef}
+    </defs>
+    <rect width='100%' height='100%' fill='black' />
+    <g>
+      <!-- background glow -->
+      <radialGradient id='g1' cx='50%' cy='50%'><stop offset='0%' stop-color='rgba(255,255,255,0.12)'/><stop offset='100%' stop-color='rgba(6,6,17,1)'/></radialGradient>
+      <rect width='100%' height='100%' fill='url(#g1)' />
+      <!-- body -->
+      <rect x='${210 - bodyWidth/2}' y='${230}' width='${bodyWidth}' height='${bodyHeight}' rx='28' fill='${options.pattern === 'gradient' ? `url(#grad-${patternId})` : (options.pattern !== 'none' ? `url(#${patternId})` : options.outfit)}' />
+      <!-- face -->
+      <ellipse cx='${faceCx}' cy='${faceCy}' rx='${faceRx}' ry='${faceRy}' fill='${options.skin}' />
+      <!-- hair (simple) -->
+      <path d='M118 168 C150 60 270 60 302 168 L302 192 L118 192 Z' fill='${options.hair}' />
+      <!-- eyes -->
+      <circle cx='180' cy='148' r='8' fill='#111' />
+      <circle cx='240' cy='148' r='8' fill='#111' />
+      <circle cx='180' cy='146' r='3' fill='#fff' />
+      <circle cx='240' cy='146' r='3' fill='#fff' />
+      <!-- mouth -->
+      <ellipse cx='210' cy='192' rx='18' ry='8' fill='rgba(180,60,90,0.95)' />
+      <!-- accessories -->
+      ${accessorySVG}
+      <!-- makeup -->
+      ${makeupSVG}
+      <!-- tattoo -->
+      ${tattooSVG}
+    </g>
+  </svg>`;
+
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+// small color shading helper
+function shadeColor(color, percent) {
+  // color expected as hex like #rrggbb
+  try {
+    const num = parseInt(color.replace('#',''),16);
+    let r = (num >> 16) + percent;
+    let g = ((num >> 8) & 0x00FF) + percent;
+    let b = (num & 0x0000FF) + percent;
+    r = Math.max(0, Math.min(255, r)); g = Math.max(0, Math.min(255, g)); b = Math.max(0, Math.min(255, b));
+    return `rgb(${r},${g},${b})`;
+  } catch (e) { return color; }
+}
+
+async function saveAvatarToSupabase(userId, dataUrl) {
+  if (!userId || !dataUrl) return null;
+  // Prefer uploading the avatar to Supabase Storage and save the public URL
+  try {
+    const uploadedUrl = await uploadAvatarToStorage(userId, dataUrl);
+    if (!uploadedUrl) {
+      // fallback to storing dataUrl directly if upload failed
+      const { data, error } = await supabase
+        .from('users')
+        .upsert({ id: userId, avatar_url: dataUrl }, { onConflict: 'id' })
+        .select('avatar_url')
+        .single();
+      if (error) throw error;
+      return data?.avatar_url || null;
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .upsert({ id: userId, avatar_url: uploadedUrl }, { onConflict: 'id' })
+      .select('avatar_url')
+      .single();
+    if (error) throw error;
+    return data?.avatar_url || uploadedUrl || null;
+  } catch (error) {
+    console.warn('Unable to save avatar to Supabase', error);
+    return null;
+  }
+}
+
+// Upload a data URL (svg/png) to Supabase Storage under bucket 'avatars'
+async function uploadAvatarToStorage(userId, dataUrl) {
+  if (!userId || !dataUrl || !supabase?.storage) return null;
+  try {
+    const matches = dataUrl.match(/^data:(image\/[a-zA-Z+]+);base64,(.*)$/);
+    if (!matches) throw new Error('Invalid data URL');
+    const mime = matches[1];
+    const b64 = matches[2];
+    const byteChars = atob(b64);
+    const byteNumbers = new Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: mime });
+
+    const ext = mime.includes('svg') ? 'svg' : (mime.split('/')[1] || 'png');
+    const filePath = `${userId}/${Date.now()}.${ext}`;
+    const bucket = 'avatars';
+
+    const { data: uploadData, error: uploadErr } = await supabase.storage.from(bucket).upload(filePath, blob, { upsert: true });
+    if (uploadErr) {
+      console.warn('Storage upload error', uploadErr.message || uploadErr);
+      return null;
+    }
+
+    // get public URL
+    const { data: pubData, error: pubErr } = supabase.storage.from(bucket).getPublicUrl(filePath);
+    if (pubErr) {
+      console.warn('Get public URL error', pubErr.message || pubErr);
+      return null;
+    }
+    return pubData?.publicUrl || pubData?.publicURL || null;
+  } catch (err) {
+    console.warn('uploadAvatarToStorage failed', err);
+    return null;
+  }
+}
+
+async function loadProfileAvatar(userId) {
+  if (!userId) return null;
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('avatar_url')
+      .eq('id', userId)
+      .single();
+    if (error) {
+      console.warn('Unable to load avatar from Supabase', error);
+      return null;
+    }
+    return data?.avatar_url || null;
+  } catch (error) {
+    console.warn('Unable to load avatar profile', error);
+    return null;
+  }
+}
+
+function createAvatarPlaceholder() {
+  const options = getFormAvatarOptions();
+  saveAvatarOptions(options);
+  // synchronous placeholder retained for compatibility — generate and save locally
+  let dataUrl = null;
+  try { dataUrl = generateAvatarSVGImage(options); } catch (e) { dataUrl = null; }
+  if (!dataUrl) dataUrl = generateAvatarImage(options);
+  if (!dataUrl) return null;
+  saveAvatar(dataUrl);
+  renderAvatarPreview(dataUrl);
+  return dataUrl;
+}
+
+// Async creation + save to Supabase (call when user clicks Create)
+async function createAndSaveAvatarToSupabase(userId) {
+  const options = getFormAvatarOptions();
+  saveAvatarOptions(options);
+  let dataUrl = null;
+  try { dataUrl = generateAvatarSVGImage(options); } catch (e) { dataUrl = null; }
+  if (!dataUrl) dataUrl = generateAvatarImage(options);
+  if (!dataUrl) throw new Error('Avatar generation failed');
+  saveAvatar(dataUrl);
+  renderAvatarPreview(dataUrl);
+
+  if (userId) {
+    try {
+      const saved = await saveAvatarToSupabase(userId, dataUrl);
+      if (saved) {
+        // ensure local copy is the persisted one
+        saveAvatar(saved);
+        renderAvatarPreview(saved);
+        return saved;
+      }
+    } catch (err) {
+      console.warn('Auto-save to Supabase failed', err);
+    }
+  }
+  return dataUrl;
 }
 
 function renderBookings(bookings) {
@@ -319,12 +838,62 @@ async function init() {
     document.getElementById('profile-email').textContent = 'Please sign in to view your account.';
     document.getElementById('bookings-list').innerHTML = '<p>Please sign in to view your bookings.</p>';
     document.getElementById('purchases-list').innerHTML = '<p>Please sign in to view your purchases.</p>';
+    // disable avatar creation when not signed in
+    const avatarCreateBtn = document.getElementById('avatar-create-btn');
+    if (avatarCreateBtn) {
+      avatarCreateBtn.disabled = true;
+      avatarCreateBtn.textContent = 'Sign in to create avatar';
+      avatarCreateBtn.title = 'You must be signed in to create and save an avatar';
+      avatarCreateBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        // redirect to auth page
+        window.location.href = 'auth.html';
+      });
+    }
     return;
   }
 
   const profileEmail = document.getElementById('profile-email');
   if (profileEmail) {
     profileEmail.textContent = user.email || user.id || 'Account user';
+  }
+
+  const avatarCreateBtn = document.getElementById('avatar-create-btn');
+  const storedAvatar = getStoredAvatar();
+  const savedOptions = getAvatarOptions();
+  setFormAvatarOptions(savedOptions);
+
+  if (storedAvatar) {
+    renderAvatarPreview(storedAvatar);
+  } else if (user && user.id) {
+    const profileAvatar = await loadProfileAvatar(user.id);
+    if (profileAvatar) {
+      saveAvatar(profileAvatar);
+      renderAvatarPreview(profileAvatar);
+    }
+  }
+
+  // Attach live-preview listeners so users can see changes as they edit
+  try { attachAvatarFormListeners(); } catch (e) { /* ignore */ }
+
+  // ensure preview reflects current form values immediately
+  try { createAvatarPlaceholder(); } catch (e) { /* ignore */ }
+
+  // create custom-styled select displays to guarantee consistent colors
+  try { createCustomSelects(); } catch (e) { /* ignore */ }
+
+  if (avatarCreateBtn) {
+    avatarCreateBtn.addEventListener('click', async () => {
+      if (!user || !user.id) return;
+      avatarCreateBtn.disabled = true;
+      try {
+        await createAndSaveAvatarToSupabase(user.id);
+      } catch (err) {
+        console.error('Avatar creation failed', err);
+      } finally {
+        avatarCreateBtn.disabled = false;
+      }
+    });
   }
 
   // show skeleton loaders while we fetch

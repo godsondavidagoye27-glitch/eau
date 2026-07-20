@@ -180,6 +180,118 @@
             <div class="profile-box">
               <h3>Profile</h3>
               <p id="profile-email">Loading your account…</p>
+              <div class="avatar-box">
+                <div id="avatar-preview" class="avatar-preview"></div>
+                <div class="avatar-builder-controls">
+                  <div class="avatar-builder-row">
+                    <label for="avatar-size">Size</label>
+                    <select id="avatar-size">
+                      <option value="small">Small</option>
+                      <option value="medium" selected>Medium</option>
+                      <option value="large">Large</option>
+                    </select>
+                  </div>
+                  <div class="avatar-builder-row">
+                    <label for="avatar-height">Height</label>
+                    <select id="avatar-height">
+                      <option value="short">Short</option>
+                      <option value="average" selected>Average</option>
+                      <option value="tall">Tall</option>
+                      <option value="giant">Giant</option>
+                    </select>
+                  </div>
+                  <div class="avatar-builder-row">
+                    <label for="avatar-skin">Skin</label>
+                    <select id="avatar-skin">
+                      <option value="#ffdbb4">Porcelain</option>
+                      <option value="#ffcc99">Light</option>
+                      <option value="#f0b486">Fair</option>
+                      <option value="#d69f77" selected>Tan</option>
+                      <option value="#a56b46">Olive</option>
+                      <option value="#8b5a2b">Deep</option>
+                      <option value="#5a3826">Ebony</option>
+                    </select>
+                  </div>
+                  <div class="avatar-builder-row">
+                    <label for="avatar-hair">Hair</label>
+                    <select id="avatar-hair">
+                      <option value="#111111">Black</option>
+                      <option value="#2c2c2c">Jet Black</option>
+                      <option value="#66442e">Brown</option>
+                      <option value="#a35a2c">Chestnut</option>
+                      <option value="#f4d35e" selected>Blonde</option>
+                      <option value="#c97f36">Copper</option>
+                      <option value="#cfcfcf">Silver</option>
+                    </select>
+                  </div>
+                  <div class="avatar-builder-row">
+                    <label for="avatar-hairstyle">Hair style</label>
+                    <select id="avatar-hairstyle">
+                      <option value="curly" selected>Curly</option>
+                      <option value="bangs">Bangs</option>
+                      <option value="spiky">Spiky</option>
+                      <option value="afro">Afro</option>
+                      <option value="ponytail">Ponytail</option>
+                      <option value="buzz">Buzz Cut</option>
+                    </select>
+                  </div>
+                  <div class="avatar-builder-row">
+                    <label for="avatar-outfit">Outfit</label>
+                    <select id="avatar-outfit">
+                      <option value="#70d6ff" selected>Electric Blue</option>
+                      <option value="#82d173">Neon Green</option>
+                      <option value="#ff8a00">Sunset Orange</option>
+                      <option value="#c56cff">Violet Glow</option>
+                      <option value="#ffffff">Classic White</option>
+                      <option value="#000000">Midnight Black</option>
+                    </select>
+                  </div>
+                  <div class="avatar-builder-row">
+                    <label for="avatar-pattern">Outfit Pattern</label>
+                    <select id="avatar-pattern">
+                      <option value="none" selected>None</option>
+                      <option value="stripes">Stripes</option>
+                      <option value="dots">Dots</option>
+                      <option value="gradient">Gradient</option>
+                      <option value="chevron">Chevron</option>
+                    </select>
+                  </div>
+                  <div class="avatar-builder-row">
+                    <label for="avatar-makeup">Makeup</label>
+                    <select id="avatar-makeup">
+                      <option value="none" selected>None</option>
+                      <option value="glow">Glow</option>
+                      <option value="smokey">Smokey Eyes</option>
+                      <option value="bold">Bold Lips</option>
+                    </select>
+                  </div>
+                  <div class="avatar-builder-row">
+                    <label for="avatar-tattoo">Tattoo</label>
+                    <select id="avatar-tattoo">
+                      <option value="none" selected>None</option>
+                      <option value="star">Star</option>
+                      <option value="music">Music Note</option>
+                      <option value="tribal">Tribal</option>
+                    </select>
+                  </div>
+                  <div class="avatar-builder-row">
+                    <label for="avatar-accessory">Accessory</label>
+                    <select id="avatar-accessory">
+                      <option value="none" selected>None</option>
+                      <option value="sunglasses">Sunglasses</option>
+                      <option value="earring">Earring</option>
+                      <option value="hat">Hat</option>
+                      <option value="mask">Mask</option>
+                      <option value="necklace">Necklace</option>
+                      <option value="scarf">Scarf</option>
+                      <option value="headphones">Headphones</option>
+                      <option value="chain">Chain</option>
+                    </select>
+                  </div>
+                </div>
+                <button id="avatar-create-btn" type="button" class="btn btn-glow">Create avatar</button>
+                <p class="avatar-note">Design your club avatar here. No uploads allowed — your avatar is generated and saved for every visit.</p>
+              </div>
               <button id="signout-btn" class="btn">Sign Out</button>
             </div>
 
@@ -199,6 +311,11 @@
           </div>
 
           <div class="account-right">
+            <div class="avatar-side-box">
+              <h3>Your Avatar</h3>
+              <div id="avatar-preview-side" class="avatar-preview-side"></div>
+              <p class="small-text">Preview of the avatar used in the club. Create or update on the left.</p>
+            </div>
             <div class="upcoming-services-box">
               <h3>Upcoming Services</h3>
               <div id="upcoming-services">

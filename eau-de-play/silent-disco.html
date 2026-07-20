@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Silent Disco - EAU DE PLAY</title>
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/public.css">
+</head>
+<body>
+  <!-- Navbar Placeholder -->
+  <div id="navbar-placeholder"></div>
+
+  <section class="silent-disco-hero">
+    <div class="hero-layer"></div>
+    <div class="container silent-disco-container">
+      <div class="silent-disco-copy">
+        <span class="eyebrow">Silent Disco</span>
+        <h1>Turn the night into a glowing soundscape</h1>
+        <p>Plug in, tune out, and move to your own beat. Silent Disco blends immersive lights, wireless channels, and a crowd that dances in perfect harmony.</p>
+        <div class="hero-actions">
+          <a href="about.html" class="btn btn-secondary">OUR STORY</a>
+          <button class="btn btn-large btn-glow" disabled>tickets coming soon</button>
+        </div>
+        <div class="channel-selection" aria-label="Audio channel preview">
+          <button class="channel-pill active" type="button">Channel 1</button>
+          <button class="channel-pill" type="button">Channel 2</button>
+          <button class="channel-pill" type="button">Channel 3</button>
+        </div>
+      </div>
+
+      <div class="silent-disco-visuals" aria-hidden="true">
+        <div class="visual-chip chip-1"></div>
+        <div class="visual-chip chip-2"></div>
+        <div class="visual-chip chip-3"></div>
+        <div class="headphone-ring"></div>
+        <div class="headphone-core"></div>
+        <div class="audio-beam audio-beam-1"></div>
+        <div class="audio-beam audio-beam-2"></div>
+        <div class="audio-beam audio-beam-3"></div>
+
+        <div class="disco-stage-wrapper" aria-label="3D interactive disco stage">
+          <div class="disco-stage" tabindex="0">
+            <div class="stage-platform"></div>
+            <div class="stage-ring"></div>
+
+            <div class="stage-light stage-light-1"></div>
+            <div class="stage-light stage-light-2"></div>
+            <div class="stage-light stage-light-3"></div>
+
+            <div class="stage-pod stage-pod-1"><span>Channel 1</span></div>
+            <div class="stage-pod stage-pod-2"><span>Channel 2</span></div>
+            <div class="stage-pod stage-pod-3"><span>Channel 3</span></div>
+          </div>
+          <div class="stage-hud">
+            <div class="stage-hud-label">Drag across the stage to tilt the sound sphere</div>
+            <button type="button" class="btn btn-secondary stage-spin-btn">Spin the stage</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="audio-spectrum" aria-hidden="true"></div>
+  </section>
+
+  <section class="silent-disco-details">
+    <div class="container">
+      <div class="silence-grid">
+        <div class="silence-card reveal-card">
+          <h2>What to Expect</h2>
+          <p>Wireless headphones, multiple channels, and a crowd sharing a silent vibe. Choose a DJ, let the lights guide you, and dance without a sound limit.</p>
+        </div>
+        <div class="silence-card reveal-card">
+          <h2>How It Works</h2>
+          <p>Each guest receives a headset with three live channels. Switch between DJs, hear special mixes, and enjoy the unique energy of a fully immersive silent party.</p>
+        </div>
+        <div class="silence-card reveal-card">
+          <h2>Why It's Epic</h2>
+          <p>Silent Discos are social, safe, and unforgettable. Grab a headphone, let the crowd move, and experience the magic of music without noise boundaries.</p>
+        </div>
+      </div>
+
+      <div class="ticket-placeholder reveal-card">
+        <h2>Ticket Sales</h2>
+        <p>Tickets will be available through our external partner soon. Bookmark this page for the official sale link and early access invites.</p>
+        <a href="#" class="btn btn-secondary" aria-disabled="true">Ticket sales coming soon</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="silent-disco-club">
+    <div class="container">
+      <div class="club-top">
+        <div class="club-intro">
+          <span class="eyebrow">Club Experience</span>
+          <h2>Enter the glowing Silent Disco club</h2>
+          <p>Spin the stage, follow the lights, and bring your avatar into the crowd. The club logo pulses to the beat and the room responds as you move.</p>
+        </div>
+        <div class="club-cta">
+          <p>Tap the animated logo to visit our club page, or click your avatar below to preview the party-ready look.</p>
+        </div>
+      </div>
+
+      <div class="club-scene">
+        <div class="club-stage" aria-label="Silent Disco club stage">
+          <div class="club-floor"></div>
+          <div class="club-logo-card">
+            <a href="about.html" class="club-logo-link" title="Visit the club website">
+              <div class="club-logo-glow"></div>
+              <div class="club-logo-inner">
+                <span class="club-logo-mark">EDP</span>
+                <span class="club-logo-text">Silent Disco</span>
+              </div>
+            </a>
+          </div>
+          <div class="club-avatar-anchor" title="Club avatar preview">
+            <div class="club-avatar"></div>
+          </div>
+          <div class="club-person club-person-1"></div>
+          <div class="club-person club-person-2"></div>
+          <div class="club-person club-person-3"></div>
+        </div>
+      </div>
+
+      <div class="club-access-panel">
+        <div class="club-access-status" id="club-access-status">Checking desktop and headset access...</div>
+        <div class="club-access-actions">
+          <input id="club-spotify-input" placeholder="Paste Spotify playlist/track URL or URI" aria-label="Spotify playlist or track" />
+          <button id="club-spotify-play" class="btn btn-secondary" type="button">Play via Spotify</button>
+          <button id="club-enable-audio" class="btn btn-secondary" type="button">Enable audio</button>
+          <button id="club-enter-btn" class="btn btn-large btn-glow" type="button" disabled>Enter the club</button>
+        </div>
+      </div>
+      <div id="club-spotify-embed" style="margin-top:12px; display:none; max-width:100%;"></div>
+
+      <div class="club-venue-grid">
+        <section class="club-booking-card">
+          <h3>Book a table</h3>
+          <p>Reserve your VIP table and pay securely online. You must use a desktop and have a club avatar to enter.</p>
+          <form id="club-booking-form" class="club-booking-form">
+            <div class="field-group">
+              <label for="tableName">Name</label>
+              <input id="tableName" name="tableName" placeholder="Your name" required />
+            </div>
+            <div class="field-group">
+              <label for="tableGuests">Party size</label>
+              <select id="tableGuests">
+                <option value="2">2 people</option>
+                <option value="4">4 people</option>
+                <option value="6">6 people</option>
+                <option value="8">8 people</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="tableDate">Date & time</label>
+              <input id="tableDate" name="tableDate" type="datetime-local" required />
+            </div>
+            <div class="field-group">
+              <button class="btn btn-secondary" id="club-booking-submit" type="submit">Pay for table</button>
+            </div>
+            <div id="club-booking-status" class="club-status"></div>
+          </form>
+        </section>
+
+        <section class="club-review-card">
+          <h3>Rate the club</h3>
+          <p>Tell us what you love and help other guests discover the Silent Disco.</p>
+          <div class="club-rating" id="club-rating-stars" aria-label="Club rating selector">
+            <button type="button" data-value="1">★</button>
+            <button type="button" data-value="2">★</button>
+            <button type="button" data-value="3">★</button>
+            <button type="button" data-value="4">★</button>
+            <button type="button" data-value="5">★</button>
+          </div>
+          <textarea id="club-review-text" placeholder="Leave a review for other guests" rows="4"></textarea>
+          <button id="club-review-submit" class="btn btn-secondary" type="button">Submit review</button>
+          <div id="club-review-status" class="club-status"></div>
+          <div class="club-review-list" id="club-review-list"></div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-placeholder"></div>
+  <script type="module" src="js/public-app.js"></script>
+  <script type="module" src="js/silent-disco.js"></script>
+</body>
+</html>
