@@ -1277,9 +1277,6 @@
 }
 
 .afro-home-banner .afro-banner-inner {
-  position: relative;
-  max-width: 1280px;
-  margin: 0 auto;
   min-height: 78vh;
   display: grid;
   place-items: center;
@@ -1291,25 +1288,6 @@
   background-position: center;
 }
 
-.afro-home-banner .afro-banner-inner::before,
-.afro-home-banner .afro-banner-inner::after {
-  content: '';
-  position: absolute;
-  top: 12%;
-  bottom: 12%;
-  width: 5px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.02));
-  pointer-events: none;
-}
-
-.afro-home-banner .afro-banner-inner::before {
-  left: 0;
-}
-
-.afro-home-banner .afro-banner-inner::after {
-  right: 0;
-}
-
 .afro-home-banner .afro-home-banner-content {
   padding: var(--spacing-4xl) var(--spacing-lg);
   background: rgba(12, 10, 21, 0.32);
@@ -1318,8 +1296,6 @@
 
 .silent-disco-banner {
   position: relative;
-  max-width: 1240px;
-  margin: 0 auto;
   min-height: 55vh;
   display: grid;
   place-items: center;
@@ -1332,39 +1308,6 @@
   background-repeat: no-repeat;
   padding: var(--spacing-5xl) var(--spacing-lg);
   margin: var(--spacing-4xl) 0;
-  border-radius: 32px;
-  overflow: hidden;
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.25);
-}
-
-.silent-disco-banner::before,
-.silent-disco-banner::after {
-  content: '';
-  position: absolute;
-  top: 12%;
-  bottom: 12%;
-  width: 5px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.03));
-  pointer-events: none;
-}
-
-.silent-disco-banner::before {
-  left: 0;
-}
-
-.silent-disco-banner::after {
-  right: 0;
-}
-
-@media (max-width: 1024px) {
-  .afro-home-banner .afro-banner-inner::before,
-  .afro-home-banner .afro-banner-inner::after,
-  .silent-disco-banner::before,
-  .silent-disco-banner::after {
-    display: none;
-  }
-}
-
 }
 
 @media (max-width: 480px) {
