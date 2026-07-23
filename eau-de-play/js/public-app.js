@@ -406,11 +406,6 @@ export class PublicApp {
     const galleryImages = (config.galleryImages || [])
       .filter((image) => this.isRenderableMediaValue(image?.src));
 
-    const galleryVideosHtml = (config.galleryVideos || [])
-      .filter((video) => this.isRenderableMediaValue(video?.embedUrl))
-      .map((video, index) => `<div class="gallery-card">${this.formatVideoEmbed(video.embedUrl)}<div class="gallery-card-label">Video ${index + 1}</div></div>`)
-      .join('');
-
     const gallerySlidesHtml = galleryImages
       .map((image, index) => `<div class="gallery-slide${index === 0 ? ' active' : ''}" role="group" aria-roledescription="slide" aria-label="Slide ${index + 1} of ${galleryImages.length}"><img src="${image.src}" alt="AFRO PULSE image ${index + 1}"><div class="gallery-card-label">Moment ${index + 1}</div></div>`)
       .join('');
@@ -421,11 +416,7 @@ export class PublicApp {
              ${gallerySlidesHtml}
            </div>
          </section>`
-      : '';
-
-    const galleryImagesHtml = galleryImages
-      .map((image, index) => `<div class="gallery-card"><img src="${image.src}" alt="AFRO PULSE image ${index + 1}"><div class="gallery-card-label">Moment ${index + 1}</div></div>`)
-      .join('');
+      : `<section class="gallery-slideshow-section container"><div class="gallery-slideshow gallery-placeholder">No gallery images are available at the moment.</div></section>`;
 
     const pageContent = document.getElementById('gallery-page-content');
     if (!pageContent) return;
@@ -443,14 +434,6 @@ export class PublicApp {
       </section>
 
       ${gallerySlideshowHtml}
-
-      <section class="gallery-grid-section container">
-        <div class="section-title">
-          <h2>AFRO PULSE Gallery</h2>
-          <p>Every shot captures the essence and energy of our event.</p>
-        </div>
-        <div class="gallery-grid">${galleryImagesHtml}${galleryVideosHtml}</div>
-      </section>
     `;
 
     this.startGallerySlideshow();
