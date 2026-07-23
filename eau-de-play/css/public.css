@@ -1356,10 +1356,15 @@
   right: 0;
 }
 
-@media (max-width: 768px) {
-  .afro-home-banner .afro-home-banner-content {
-    padding: var(--spacing-2xl) var(--spacing-lg);
+@media (max-width: 1024px) {
+  .afro-home-banner .afro-banner-inner::before,
+  .afro-home-banner .afro-banner-inner::after,
+  .silent-disco-banner::before,
+  .silent-disco-banner::after {
+    display: none;
   }
+}
+
 }
 
 @media (max-width: 480px) {
