@@ -10,6 +10,7 @@ export class PublicApp {
   constructor() {
     this.db = new Database();
     this.syncInterval = null;
+    this.gallerySlideshowInterval = null;
     this.hasInitialRender = false;
     this.init();
   }
@@ -377,15 +378,53 @@ export class PublicApp {
     this.renderGalleryPage(eventConfig);
   }
 
+  startGallerySlideshow() {
+    if (typeof window === 'undefined') return;
+    if (this.gallerySlideshowInterval) {
+      window.clearInterval(this.gallerySlideshowInterval);
+      this.gallerySlideshowInterval = null;
+    }
+
+    const slides = Array.from(document.querySelectorAll('.gallery-slide'));
+    if (!slides.length) return;
+
+    let currentIndex = slides.findIndex((slide) => slide.classList.contains('active'));
+    if (currentIndex < 0) currentIndex = 0;
+
+    slides.forEach((slide, index) => {
+      slide.classList.toggle('active', index === currentIndex);
+    });
+
+    this.gallerySlideshowInterval = window.setInterval(() => {
+      slides[currentIndex].classList.remove('active');
+      currentIndex = (currentIndex + 1) % slides.length;
+      slides[currentIndex].classList.add('active');
+    }, 4500);
+  }
+
   renderGalleryPage(config) {
-    const galleryImagesHtml = (config.galleryImages || [])
-      .filter((image) => this.isRenderableMediaValue(image?.src))
-      .map((image, index) => `<div class="gallery-card"><img src="${image.src}" alt="AFRO PULSE image ${index + 1}"><div class="gallery-card-label">Moment ${index + 1}</div></div>`)
-      .join('');
+    const galleryImages = (config.galleryImages || [])
+      .filter((image) => this.isRenderableMediaValue(image?.src));
 
     const galleryVideosHtml = (config.galleryVideos || [])
       .filter((video) => this.isRenderableMediaValue(video?.embedUrl))
       .map((video, index) => `<div class="gallery-card">${this.formatVideoEmbed(video.embedUrl)}<div class="gallery-card-label">Video ${index + 1}</div></div>`)
+      .join('');
+
+    const gallerySlidesHtml = galleryImages
+      .map((image, index) => `<div class="gallery-slide${index === 0 ? ' active' : ''}" role="group" aria-roledescription="slide" aria-label="Slide ${index + 1} of ${galleryImages.length}"><img src="${image.src}" alt="AFRO PULSE image ${index + 1}"><div class="gallery-card-label">Moment ${index + 1}</div></div>`)
+      .join('');
+
+    const gallerySlideshowHtml = gallerySlidesHtml
+      ? `<section class="gallery-slideshow-section container">
+           <div class="gallery-slideshow" aria-live="polite">
+             ${gallerySlidesHtml}
+           </div>
+         </section>`
+      : '';
+
+    const galleryImagesHtml = galleryImages
+      .map((image, index) => `<div class="gallery-card"><img src="${image.src}" alt="AFRO PULSE image ${index + 1}"><div class="gallery-card-label">Moment ${index + 1}</div></div>`)
       .join('');
 
     const pageContent = document.getElementById('gallery-page-content');
@@ -403,6 +442,8 @@ export class PublicApp {
         </div>
       </section>
 
+      ${gallerySlideshowHtml}
+
       <section class="gallery-grid-section container">
         <div class="section-title">
           <h2>AFRO PULSE Gallery</h2>
@@ -412,6 +453,7 @@ export class PublicApp {
       </section>
     `;
 
+    this.startGallerySlideshow();
   }
 
   // HOME PAGE SETUP
