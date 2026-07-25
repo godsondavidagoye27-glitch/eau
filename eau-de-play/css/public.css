@@ -1272,15 +1272,18 @@
 }
 
 .afro-home-banner {
-  padding: var(--spacing-4xl) 0;
+  padding: var(--spacing-4xl) var(--spacing-xl);
   color: white;
 }
 
 .afro-home-banner .afro-banner-inner {
   min-height: 78vh;
+  max-width: 1440px;
+  margin: 0 auto;
   display: grid;
   place-items: center;
   border-radius: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   overflow: hidden;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
   background: linear-gradient(180deg, rgba(7,8,20,0.30), rgba(7,8,20,0.30)), url('../assets/images/IMG_1427.JPG');
@@ -1307,14 +1310,34 @@
   background-position: center;
   background-repeat: no-repeat;
   padding: var(--spacing-5xl) var(--spacing-lg);
-  margin: var(--spacing-4xl) 0;
+  margin: var(--spacing-4xl) var(--spacing-xl);
+  border-radius: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .afro-home-banner {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .afro-home-banner .afro-banner-inner {
+    max-width: none;
+    margin: 0;
+    border-radius: 0;
+    border: none;
+  }
+
+  .silent-disco-banner {
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 0;
+    border: none;
+  }
 }
 
 @media (max-width: 480px) {
-  .afro-home-banner .afro-banner-inner {
-    border-radius: 0;
-  }
-
   .afro-home-banner .afro-home-banner-content {
     padding: var(--spacing-xl) var(--spacing-md);
   }
@@ -1528,19 +1551,22 @@
 
 .afro-event-header {
   display: flex;
-  justify-content: space-between;
-  gap: var(--spacing-3xl);
+  flex-direction: column;
   align-items: center;
+  text-align: center;
+  gap: var(--spacing-xl);
   border-bottom: 1px solid var(--color-border);
 }
 
 .event-header-copy {
   max-width: 720px;
+  margin: 0 auto;
 }
 
 .event-header-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: var(--spacing-md);
   justify-content: center;
 }
@@ -1757,7 +1783,8 @@
 @media (max-width: 900px) {
   .afro-event-header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
   }
 
   .preview-card {
@@ -3617,4 +3644,3 @@ body.home-background {
     margin-top: 20px;
   }
 }
-
