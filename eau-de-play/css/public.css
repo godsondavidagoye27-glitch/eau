@@ -395,7 +395,7 @@
   }
 }
 
-.silent-disco-banner::before {
+.silent-disco-banner-inner::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -1274,6 +1274,10 @@
 .afro-home-banner {
   padding: var(--spacing-4xl) var(--spacing-xl);
   color: white;
+  background-image: url('../assets/images/YOUR-BORDER-IMAGE.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .afro-home-banner .afro-banner-inner {
@@ -1298,6 +1302,14 @@
 }
 
 .silent-disco-banner {
+  padding: var(--spacing-4xl) var(--spacing-xl);
+  background-image: url('../assets/images/YOUR-BORDER-IMAGE.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.silent-disco-banner-inner {
   position: relative;
   min-height: 55vh;
   display: grid;
@@ -1310,7 +1322,6 @@
   background-position: center;
   background-repeat: no-repeat;
   padding: var(--spacing-5xl) var(--spacing-lg);
-  margin: var(--spacing-4xl) var(--spacing-xl);
   border-radius: 32px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   overflow: hidden;
@@ -1320,6 +1331,7 @@
   .afro-home-banner {
     padding-left: 0;
     padding-right: 0;
+    background-image: none;
   }
 
   .afro-home-banner .afro-banner-inner {
@@ -1330,8 +1342,12 @@
   }
 
   .silent-disco-banner {
-    margin-left: 0;
-    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+    background-image: none;
+  }
+
+  .silent-disco-banner-inner {
     border-radius: 0;
     border: none;
   }
