@@ -1299,6 +1299,9 @@
   padding: var(--spacing-4xl) var(--spacing-lg);
   background: rgba(12, 10, 21, 0.32);
   backdrop-filter: blur(6px);
+  margin: 0 auto;
+  max-width: 760px;
+  text-align: center;
 }
 
 .silent-disco-banner {
