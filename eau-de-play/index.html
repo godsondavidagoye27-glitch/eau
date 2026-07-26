@@ -6,12 +6,14 @@
   <link rel="icon" href="/assets/images/EAUDEYPLAYLOGO.png" type="image/png">
   <link rel="shortcut icon" href="/assets/images/EAUDEYPLAYLOGO.png" type="image/png">
   <title>EAU DE PLAY - Unlock Success with a Splash of Fun</title>
-  
+
   <!-- CSS Links -->
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/global.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/public.css">
+  <!-- Redesign layer: restyles the above, load last -->
+  <link rel="stylesheet" href="css/theme-redesign.css">
   <meta name="google-site-verification" content="-c4Z8QDJB78e2IX30DcG9vcNxZ_YTQlSFcav4Q9sh0g" />
 </head>
 <body>
@@ -33,50 +35,157 @@
   <!-- Navbar Placeholder -->
   <div id="navbar-placeholder"></div>
 
-  <!-- Hero Section -->
-
-
-  <!-- AFRO PULSE Banner (recreated original) -->
+  <!-- AFRO PULSE Hero Banner -->
   <section class="afro-home-banner">
     <div class="afro-banner-inner" style="background-image: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('assets/images/IMG_1427.JPG'); background-size:cover; background-position:center;">
       <div class="container afro-home-banner-content">
-        <span class="eyebrow">AFRO PULSE '27</span>
-        <h2>AFRO PULSE '27</h2>
-        <p>Every edition set to spark up summer seasons in Iceland. Sign up for the next experience, join our community to stay updated on newsletters and reserve your tickets for AFRO PULSE '27.</p>
+        <span class="eyebrow">EAU DE PLAY PRESENTS</span>
+        <h2>AFRO<br>PULSE '27</h2>
+        <p>Every edition set to spark up summer seasons in Iceland. Join our community to stay updated on newsletters and reserve your tickets for AFRO PULSE '27.</p>
         <div class="hero-cta-group">
-          <a href="afro-pulse-27.html" class="btn btn-large">Get Tickets</a>
-          <a href="afro-pulse-27.html#newsletter-section" class="btn btn-secondary">Learn More</a>
+          <a href="afro-pulse-27.html" class="btn btn-large">Coming Soon</a>
+          <a href="afro-pulse-27.html#newsletter-section" class="btn btn-secondary">Join Newsletter</a>
         </div>
       </div>
     </div>
   </section>
 
+  <section class="silent-disco-banner">
+    <div class="container">
+      <span class="eyebrow">Coming To Reykjavík</span>
+      <h2>Link It Up</h2>
+      <p>An immersive silent disco night — wireless headsets, three live channels, one glowing dancefloor.</p>
+      <a href="silent-disco.html" class="btn btn-secondary">Coming Soon</a>
+    </div>
+  </section>
 
-<section class="silent-disco-banner">
-    <div class="silent-disco-banner-inner">
-      <div class="container">
-        <h2>LINK IT UP</h2>
-        <a href="silent-disco.html" class="btn btn-secondary">COMING SOON</a>
+  <!-- More Than An Event -->
+  <section class="silent-disco-banner">
+    <div class="container">
+      <span class="eyebrow">Coming To Reykjavík</span>
+      <h2>Link It Up</h2>
+      <p>An immersive silent disco night — wireless headsets, three live channels, one glowing dancefloor.</p>
+      <a href="silent-disco.html" class="btn btn-secondary">Coming Soon</a>
+    </div>
+  </section>
+
+  <!-- More Than An Event -->
+  <section class="movement-section">
+    <div class="movement-grid">
+      <div class="movement-text">
+        <span class="eyebrow">We Are Eau De Play</span>
+        <h2>More Than<br>An Event.<br>It's A Movement.</h2>
+        <p>Eau De Play Inc. is a creative platform curating unforgettable experiences that celebrate African culture, music and community — right here in Iceland and beyond.</p>
+        <a href="about.html" class="btn btn-secondary">Learn More</a>
+      </div>
+      <div class="movement-frame" id="movement-frame" role="button" tabindex="0" aria-label="Click to see more photos">
+        <img src="assets/images/IMG_1521.JPG" alt="Crowd at an Eau De Play event" id="movement-frame-img">
       </div>
     </div>
   </section>
 
+  <script>
+    (function () {
+      var gallery = [
+        'assets/images/IMG_1521.JPG',
+        'assets/images/IMG_1427.JPG',
+        'assets/images/IMG_1599.JPG',
+        'assets/images/IMG_1632.JPG',
+        'assets/images/IMG_0971.JPG',
+        'assets/images/IMG_1027.JPG',
+        'assets/images/IMG_1081.JPG'
+      ];
+      var frame = document.getElementById('movement-frame');
+      var img = document.getElementById('movement-frame-img');
+      if (!frame || !img) return;
+      var index = 0;
 
+      function nextImage() {
+        index = (index + 1) % gallery.length;
+        img.classList.add('is-swapping');
+        window.setTimeout(function () {
+          img.src = gallery[index];
+          img.classList.remove('is-swapping');
+        }, 180);
+      }
 
-  <section class="hero">
-    <div class="container">
-      <h1>Unlock Success with a Splash of Fun</h1>
-      <p>Premium creative services and exclusive merchandise for unforgettable experiences</p>
-      <a href="services.html" class="btn">EXPLORE SERVICES</a>
+      frame.addEventListener('click', nextImage);
+      frame.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); nextImage(); }
+      });
+    })();
+  </script>
+
+  <!-- What's Next -->
+  <section class="events-next-section">
+    <div class="events-next-header">
+      <span class="eyebrow">Upcoming Events</span>
+      <h2>What's Next</h2>
+    </div>
+    <div class="events-next-grid">
+      <article class="event-card">
+        <div class="event-card-image">
+          <span class="event-card-tag">Summer '27</span>
+          <img src="assets/images/IMG_1427.JPG" alt="AFRO PULSE '27">
+        </div>
+        <div class="event-card-body">
+          <h3>Afro Pulse '27</h3>
+          <div class="event-card-meta">
+            <span>June 2027</span>
+            <span>Reykjavík, Iceland</span>
+          </div>
+          <a href="afro-pulse-27.html" class="btn btn-secondary">Coming Soon</a>
+        </div>
+      </article>
+
+      <article class="event-card">
+        <div class="event-card-image">
+          <span class="event-card-tag">Silent Disco</span>
+          <img src="assets/images/SILENTDISCO-1.jpg" alt="link it up silent disco">
+        </div>
+        <div class="event-card-body">
+          <h3>Silent Disco</h3>
+          <div class="event-card-meta">
+            <span>December 2026</span>
+            <span>Reykjavík, Iceland</span>
+          </div>
+          <a href="services.html" class="btn btn-secondary">View Details</a>
+        </div>
+      </article>
+
+      <article class="event-card">
+        <div class="event-card-image">
+          <span class="event-card-tag">Spring '26</span>
+          <img src="assets/images/IMG_1632.JPG" alt="Culture Wave">
+        </div>
+        <div class="event-card-body">
+          <h3>Culture Wave</h3>
+          <div class="event-card-meta">
+            <span>April 2026</span>
+            <span>Reykjavík, Iceland</span>
+          </div>
+          <a href="services.html" class="btn btn-secondary">View Details</a>
+        </div>
+      </article>
     </div>
   </section>
 
-  <!-- Silent Disco Banner -->
-  
+  <!-- On Our Instagram -->
+  <section class="instagram-section">
+    <span class="eyebrow">The Energy</span>
+    <h2>On Our Instagram</h2>
+    <div class="instagram-grid">
+      <a href="https://instagram.com" target="_blank" rel="noopener"><img src="assets/images/IMG_0971.JPG" alt="Instagram post"></a>
+      <a href="https://instagram.com" target="_blank" rel="noopener"><img src="assets/images/IMG_1027.JPG" alt="Instagram post"></a>
+      <a href="https://instagram.com" target="_blank" rel="noopener"><img src="assets/images/IMG_1081.JPG" alt="Instagram post"></a>
+      <a href="https://instagram.com" target="_blank" rel="noopener"><img src="assets/images/IMG_1953.JPG" alt="Instagram post"></a>
+      <a href="https://instagram.com" target="_blank" rel="noopener"><img src="assets/images/IMG_2060.JPG" alt="Instagram post"></a>
+      <a href="https://instagram.com" target="_blank" rel="noopener"><img src="assets/images/IMG_2128.JPG" alt="Instagram post"></a>
+    </div>
+    <a href="https://instagram.com" target="_blank" rel="noopener" class="btn btn-secondary" style="margin-top:2rem;">Follow @eaudeyplay</a>
+  </section>
 
-  
-
-  <!-- About Teaser placed before footer -->
+  <!-- About Teaser -->
   <section class="about-teaser">
     <div class="about-teaser-content">
       <h2>Get to Know Us</h2>
@@ -85,9 +194,11 @@
     </div>
   </section>
 
+  <!-- Footer Placeholder -->
+  <div id="footer-placeholder"></div>
+
   <!-- Scripts -->
   <script>
-    // Preserve the original AFRO banner HTML immediately, before any module runs
     (function(){
       try {
         var el = document.querySelector('.afro-home-banner-content');
@@ -98,7 +209,6 @@
     })();
   </script>
   <script>
-    // Remove any duplicate .afro-home-banner elements (keep the first one)
     (function(){
       function removeExtraAfro() {
         try {
@@ -108,22 +218,14 @@
               banners[i].remove();
             }
           }
-        } catch (e) {
-          // ignore
-        }
+        } catch (e) {}
       }
-
       removeExtraAfro();
-
-      // Observe briefly for dynamic insertions and remove extras if they appear
       try {
         const mo = new MutationObserver(() => removeExtraAfro());
         mo.observe(document.body, { childList: true, subtree: true });
-        // stop observing after 6s to avoid long-running observers
         setTimeout(() => mo.disconnect(), 6000);
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
     })();
   </script>
   <script>

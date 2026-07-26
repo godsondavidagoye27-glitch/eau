@@ -26,7 +26,7 @@ export class PublicApp {
     // Setup event listeners
     if (typeof window !== 'undefined') {
       window.addEventListener('siteDataUpdated', () => {
-        this.syncSharedData();
+        this.renderCurrentPage();
       });
     }
 
@@ -73,20 +73,12 @@ export class PublicApp {
       const supabaseContent = await this.db.fetchSiteDataFromSupabase();
       if (supabaseContent && typeof supabaseContent === 'object') {
         this.db.syncFromServerData(supabaseContent);
+        this.renderCurrentPage();
         return;
       }
+      console.warn('No site data found in Supabase yet — falling back to local/default data. Run site-data-schema.sql if you have not already.');
     } catch (err) {
       console.warn('Failed to fetch site data from Supabase', err);
-    }
-
-    try {
-      const response = await fetch('/api/site-data');
-      if (response.ok) {
-        const data = await response.json();
-        this.db.syncFromServerData(data);
-      }
-    } catch (err) {
-      console.warn('Failed to fetch initial site data', err);
     }
   }
 
@@ -128,15 +120,20 @@ export class PublicApp {
 
   async syncSharedData() {
     try {
-      const response = await fetch('/api/site-data');
-      if (!response.ok) return;
-      const data = await response.json();
-      
-      // Sync silently without triggering re-renders
-      this.db.syncFromServerData(data);
+      const supabaseContent = await this.db.fetchSiteDataFromSupabase();
+      if (supabaseContent && typeof supabaseContent === 'object') {
+        this.db.syncFromServerData(supabaseContent);
+        this.renderCurrentPage();
+        return;
+      }
     } catch (err) {
-      console.warn('Failed to sync shared site data', err);
+      console.warn('Failed to sync site data from Supabase', err);
     }
+  }
+
+  renderCurrentPage() {
+    if (typeof document === 'undefined') return;
+    this.setupPageSpecificLogic();
   }
 
   // AFRO PULSE '27 PAGE SETUP
@@ -244,7 +241,7 @@ export class PublicApp {
   renderAfroPulsePage(config) {
     const ticketButtonHtml = config.ticketUrl
       ? `<a id="ticket-action-button" href="${config.ticketUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-large">${config.ticketButtonText || 'Get Tickets'}</a>`
-      : `<button id="ticket-action-button" type="button" class="btn btn-large btn-disabled" disabled>Coming Soon</button>`;
+      : '';
 
     const galleryImagesHtml = (config.galleryImages || [])
       .filter((image) => this.isRenderableMediaValue(image?.src))
@@ -612,7 +609,7 @@ export class PublicApp {
     const container = document.getElementById('products-container');
     if (!container) return;
 
-    const merchandise = this.db.getByCategory('merchandise', 'merchandise');
+    const merchandise = this.db.getByCategory('products', 'merchandise');
     const safeSrc = (src) => {
       if (!src) return '';
       const trimmed = src.trim();

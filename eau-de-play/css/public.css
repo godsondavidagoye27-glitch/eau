@@ -1568,10 +1568,23 @@
 .afro-event-header {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  text-align: center;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-3xl);
   border-bottom: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.afro-event-header .event-header-copy,
+.afro-event-header .event-header-actions {
+  width: 100%;
+  max-width: 900px;
+}
+
+.afro-event-header .event-header-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .event-header-copy {
